@@ -1,0 +1,562 @@
+"use client";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Loader2, Send, Sparkles, X } from "lucide-react";
+import AssessmentResultsPage from "./assessment-results-page";
+import AssessmentGeneratingPage from "./assessment-generating-page";
+
+type ChatMessage = { id: string; text: string; isUser: boolean };
+type AxisProgress = { axis: string; covered: number; total: number };
+type AssessmentState = { id: number; status: string; axis: string | null; version: number; progress: AxisProgress[] };
+type Option = { code: string; label: string };
+type FinalReport = {
+  assessment_id: number;
+  summary: {
+    overall_score_percent: number;
+    overall_maturity_band: string;
+    strongest_axis: string;
+    strongest_axis_score_percent: number;
+    priority_axis: string;
+    priority_axis_score_percent: number;
+    strengths_count: number;
+    pain_points_count: number;
+  };
+  axes: { axis: string; score_percent: number; maturity_band: string }[];
+  strengths: {
+    axis: string;
+    capability: string;
+    maturity_band: string;
+    rationale: string | null;
+    recommendation: string | null;
+    priority: string | null;
+  }[];
+  pain_points: {
+    axis: string;
+    capability: string;
+    maturity_band: string;
+    rationale: string | null;
+    recommendation: string | null;
+    priority: string | null;
+  }[];
+  capabilities: {
+    axis: string;
+    capability: string;
+    maturity_band: string;
+    confidence: number | null;
+    rationale: string | null;
+    recommendation: string | null;
+    priority: string | null;
+  }[];
+  benchmarks: {
+    title: string;
+    url: string;
+    site_name: string | null;
+    published_at: string | null;
+    summary: string | null;
+    method_signal: string | null;
+  }[];
+};
+
+type Props = { onBack?: () => void };
+type OnboardingStage = "await_company_name" | "await_sector_choice" | "await_size_choice" | "assessment_active" | "completed";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
+const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
+
+export default function AssessmentChatStatic({ onBack }: Props) {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: crypto.randomUUID(),
+      text: "Welcome. I am your CX assessment assistant. To begin, what is your company name?",
+      isUser: false,
+    },
+  ]);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [assessment, setAssessment] = useState<AssessmentState | null>(null);
+  const [stage, setStage] = useState<OnboardingStage>("await_company_name");
+  const [companyName, setCompanyName] = useState("");
+  const [selectedSector, setSelectedSector] = useState<Option | null>(null);
+  const [sectorOptions, setSectorOptions] = useState<Option[]>([]);
+  const [sizeOptions, setSizeOptions] = useState<Option[]>([]);
+  const [finalReport, setFinalReport] = useState<FinalReport | null>(null);
+  const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showGeneratingPage, setShowGeneratingPage] = useState(false);
+  const [isReportFetching, setIsReportFetching] = useState(false);
+  const [isGeneratingMinDelayDone, setIsGeneratingMinDelayDone] = useState(false);
+  const [submittedAnswersCount, setSubmittedAnswersCount] = useState(0);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  const progressByAxis = useMemo(
+    () => new Map((assessment?.progress ?? []).map((item) => [item.axis, item])),
+    [assessment]
+  );
+  const progressStats = useMemo(() => {
+    const rows = assessment?.progress ?? [];
+    const totalCovered = rows.reduce((sum, row) => sum + Math.max(0, row.covered ?? 0), 0);
+    const totalQuestions = rows.reduce((sum, row) => sum + Math.max(0, row.total ?? 0), 0);
+    const realPercent = totalQuestions > 0 ? Math.round((totalCovered / totalQuestions) * 100) : 0;
+    const conversationalTarget = Math.max(totalQuestions + 6, 12);
+    const turnPercent = Math.round((submittedAnswersCount / conversationalTarget) * 100);
+    const percent =
+      assessment?.status === "completed"
+        ? 100
+        : Math.min(95, Math.max(realPercent, Math.max(0, turnPercent)));
+    const currentAxisIndex = Math.max(0, AXIS_ORDER.indexOf(assessment?.axis ?? AXIS_ORDER[0]));
+    const barClass =
+      assessment?.axis === "MANAGE"
+        ? "bg-blue-500"
+        : assessment?.axis === "ANALYZE"
+          ? "bg-amber-500"
+          : assessment?.axis === "IMPROVE"
+            ? "bg-emerald-500"
+            : "bg-violet-500";
+    return {
+      totalCovered,
+      totalQuestions,
+      percent,
+      realPercent,
+      currentAxisIndex,
+      barClass,
+    };
+  }, [assessment, submittedAnswersCount]);
+
+  const appendAssistant = (text: string) => {
+    setMessages((prev) => [...prev, { id: crypto.randomUUID(), text, isUser: false }]);
+  };
+  const appendUser = (text: string) => {
+    setMessages((prev) => [...prev, { id: crypto.randomUUID(), text, isUser: true }]);
+  };
+
+  const fetchAssessmentSnapshot = async (assessmentId: number): Promise<AssessmentState> => {
+    const response = await fetch(`${API_BASE_URL}/assessments/${assessmentId}`);
+    if (!response.ok) throw new Error("Failed to fetch assessment");
+    const payload = await response.json();
+    return {
+      id: payload.id,
+      status: payload.status,
+      axis: payload.current_axis,
+      version: payload.state_version,
+      progress: payload.progress ?? [],
+    };
+  };
+
+  const fetchNextQuestion = async (assessmentId: number): Promise<string | null> => {
+    const response = await fetch(`${API_BASE_URL}/assessments/${assessmentId}/next-question`);
+    if (!response.ok) throw new Error("Failed to fetch next question");
+    const payload = await response.json();
+    return payload.question ?? payload.message ?? null;
+  };
+
+  const fetchReferenceOptions = async () => {
+    const response = await fetch(`${API_BASE_URL}/reference/options`);
+    if (!response.ok) throw new Error("Failed to fetch options");
+    const payload = await response.json();
+    setSectorOptions(payload.sectors ?? []);
+    setSizeOptions(payload.company_sizes ?? []);
+    return payload as { sectors: Option[]; company_sizes: Option[] };
+  };
+
+  const startAssessment = async (payload: { company_name: string; sector?: string; size?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/assessments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error(String(response.status));
+    const data = await response.json();
+    const snapshot = await fetchAssessmentSnapshot(Number(data.assessment_id));
+    setAssessment(snapshot);
+    setStage(snapshot.status === "completed" ? "completed" : "assessment_active");
+    const question = await fetchNextQuestion(snapshot.id);
+    if (question) appendAssistant(question);
+  };
+
+  const fetchFinalReport = async (assessmentId: number): Promise<FinalReport | null> => {
+    const response = await fetch(`${API_BASE_URL}/assessments/${assessmentId}/final-report`);
+    if (!response.ok) return null;
+    const payload = await response.json();
+    setFinalReport(payload);
+    return payload;
+  };
+
+  const parseChoice = (text: string, options: Option[]): Option | null => {
+    const value = text.trim().toLowerCase();
+    const byCode = options.find((opt) => opt.code.toLowerCase() === value);
+    if (byCode) return byCode;
+    const byLabel = options.find((opt) => opt.label.toLowerCase() === value);
+    if (byLabel) return byLabel;
+    const index = Number(value);
+    if (!Number.isNaN(index) && index >= 1 && index <= options.length) return options[index - 1];
+    return null;
+  };
+
+  const handleOnboardingMessage = async (userText: string) => {
+    if (stage === "await_company_name") {
+      setCompanyName(userText);
+      setIsTyping(true);
+      try {
+        await startAssessment({ company_name: userText });
+      } catch {
+        const opts = await fetchReferenceOptions();
+        setStage("await_sector_choice");
+        const sectorList = opts.sectors.slice(0, 10).map((opt, idx) => `${idx + 1}. ${opt.label}`).join(" | ");
+        appendAssistant(
+          `Thanks. I could not confidently infer your sector from the name alone. Please choose your sector: ${sectorList}`
+        );
+      } finally {
+        setIsTyping(false);
+      }
+      return;
+    }
+
+    if (stage === "await_sector_choice") {
+      const option = parseChoice(userText, sectorOptions);
+      if (!option) {
+        appendAssistant("I did not catch that sector choice. Please reply with a number or exact sector label.");
+        return;
+      }
+      setSelectedSector(option);
+      setStage("await_size_choice");
+      const sizeList = sizeOptions.slice(0, 10).map((opt, idx) => `${idx + 1}. ${opt.label}`).join(" | ");
+      appendAssistant(`Great. Now choose your company size: ${sizeList}`);
+      return;
+    }
+
+    if (stage === "await_size_choice") {
+      const option = parseChoice(userText, sizeOptions);
+      if (!option) {
+        appendAssistant("I did not catch that size choice. Please reply with a number or exact size label.");
+        return;
+      }
+      setIsTyping(true);
+      try {
+        await startAssessment({
+          company_name: companyName,
+          sector: selectedSector?.code,
+          size: option.code,
+        });
+      } catch {
+        appendAssistant("I could not start the assessment yet. Please try again.");
+      } finally {
+        setIsTyping(false);
+      }
+      return;
+    }
+  };
+
+  const handleAssessmentMessage = async (userText: string) => {
+    if (!assessment) return;
+    setIsTyping(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/assessments/${assessment.id}/answers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": crypto.randomUUID(),
+        },
+        body: JSON.stringify({
+          answer: userText,
+          expected_axis: assessment.axis,
+          expected_version: assessment.version,
+        }),
+      });
+
+      if (response.status === 409) {
+        const snapshot = await fetchAssessmentSnapshot(assessment.id);
+        setAssessment(snapshot);
+        appendAssistant("We got out of sync. I refreshed the state. Please continue with the latest question.");
+        return;
+      }
+
+      if (!response.ok) {
+        appendAssistant("I could not process that answer. Please try once more.");
+        return;
+      }
+
+      const snapshot = await fetchAssessmentSnapshot(assessment.id);
+      setAssessment(snapshot);
+      setSubmittedAnswersCount((prev) => prev + 1);
+      if (snapshot.status === "completed") {
+        setStage("completed");
+        appendAssistant("Thank you — we now have enough evidence to build your CX maturity report.");
+        return;
+      }
+
+      const question = await fetchNextQuestion(assessment.id);
+      if (question) appendAssistant(question);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleSubmit = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+    if (!input.trim()) return;
+    const text = input.trim();
+    appendUser(text);
+    setInput("");
+    if (stage === "assessment_active") {
+      await handleAssessmentMessage(text);
+      return;
+    }
+    if (stage === "completed") return;
+    await handleOnboardingMessage(text);
+  };
+
+  const clearChat = () => {
+    setInput("");
+    setAssessment(null);
+    setCompanyName("");
+    setSelectedSector(null);
+    setSectorOptions([]);
+    setSizeOptions([]);
+    setFinalReport(null);
+    setShowRecommendations(false);
+    setShowGeneratingPage(false);
+    setIsReportFetching(false);
+    setIsGeneratingMinDelayDone(false);
+    setSubmittedAnswersCount(0);
+    setStage("await_company_name");
+    setMessages([
+      {
+        id: crypto.randomUUID(),
+        text: "Welcome. I am your CX assessment assistant. To begin, what is your company name?",
+        isUser: false,
+      },
+    ]);
+  };
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
+  useEffect(() => {
+    if (!showGeneratingPage) return;
+    if (!isGeneratingMinDelayDone) return;
+    if (isReportFetching) return;
+    if (!finalReport) return;
+    setShowGeneratingPage(false);
+    setShowRecommendations(true);
+    setIsGeneratingMinDelayDone(false);
+  }, [showGeneratingPage, isGeneratingMinDelayDone, isReportFetching, finalReport]);
+
+  const handleGenerateReportClick = async () => {
+    if (!assessment) return;
+    setIsReportFetching(true);
+    setIsGeneratingMinDelayDone(false);
+    setShowGeneratingPage(true);
+    try {
+      await fetchFinalReport(assessment.id);
+    } finally {
+      setIsReportFetching(false);
+    }
+  };
+
+  if (showRecommendations && assessment) {
+    if (!finalReport) {
+      return (
+        <div className="min-h-screen bg-slate-50 px-4 py-8">
+          <div className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-sm text-slate-600">Final report is not available yet. Please return to chat and try again.</p>
+            <button
+              type="button"
+              onClick={() => setShowRecommendations(false)}
+              className="mt-4 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              Back to chat
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <AssessmentResultsPage report={finalReport} onBack={() => setShowRecommendations(false)} />;
+  }
+
+  if (showGeneratingPage) {
+    return (
+      <AssessmentGeneratingPage
+        onDone={() => {
+          setIsGeneratingMinDelayDone(true);
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white px-4 py-8">
+      <div className="mx-auto w-full max-w-3xl">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <div className="flex items-center gap-2">
+              {onBack ? (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Back to landing"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+              ) : null}
+              <Sparkles className="h-5 w-5 text-violet-500" />
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">CX Maturity Assessment Assistant</h2>
+                <p className="text-xs text-slate-500">
+                  {assessment ? `Assessment #${assessment.id} - ${assessment.status}` : "Profiling in chat"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={clearChat}
+              className="rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Clear chat"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {assessment ? (
+            <div className="border-b border-slate-100 px-5 py-3">
+              <div className="mb-3 flex items-center justify-between text-xs text-slate-600">
+                <span>
+                  Axis {Math.max(1, progressStats.currentAxisIndex + 1)} of {AXIS_ORDER.length}
+                </span>
+                <span>
+                  {progressStats.percent}% complete ({progressStats.totalCovered}/{progressStats.totalQuestions})
+                </span>
+              </div>
+              <div className="mb-3 h-2 w-full rounded-full bg-slate-100">
+                <div
+                  className={`h-2 rounded-full transition-all duration-500 ${progressStats.barClass}`}
+                  style={{
+                    width: `${progressStats.percent}%`,
+                  }}
+                />
+              </div>
+              <p className="mb-3 text-[11px] text-slate-500">
+                Capability coverage: {progressStats.realPercent}%. Conversation progress is adaptively smoothed to keep momentum.
+              </p>
+              <div className="flex items-center gap-2">
+                {AXIS_ORDER.map((axis, index) => {
+                  const row = progressByAxis.get(axis);
+                  const completed = row ? row.covered >= row.total : false;
+                  const current = assessment.axis === axis;
+                  const badgeClass = completed
+                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                    : current
+                      ? "bg-violet-100 text-violet-700 border-violet-200"
+                      : "bg-slate-100 text-slate-500 border-slate-200";
+                  return (
+                    <React.Fragment key={axis}>
+                      <div className={`rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass}`}>
+                        {axis}
+                      </div>
+                      {index < AXIS_ORDER.length - 1 ? (
+                        <div className={`h-0.5 flex-1 ${completed ? "bg-emerald-300" : "bg-slate-200"}`} />
+                      ) : null}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="h-[520px] overflow-y-auto bg-white px-5 py-4">
+            <div className="space-y-4">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                      msg.isUser
+                        ? "rounded-tr-none bg-slate-900 text-white"
+                        : "rounded-tl-none border border-slate-200 bg-slate-50 text-slate-800"
+                    }`}
+                  >
+                    {msg.text}
+                  </motion.div>
+                </div>
+              ))}
+
+              {isTyping ? (
+                <div className="flex justify-start">
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-[80%] rounded-2xl rounded-tl-none border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
+                  >
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Assistant is thinking...</span>
+                    </div>
+                  </motion.div>
+                </div>
+              ) : null}
+              <div ref={endRef} />
+            </div>
+          </div>
+
+          <form
+            onSubmit={handleSubmit}
+            className={`border-t px-4 py-4 transition ${
+              isFocused ? "border-violet-300 bg-violet-50/30" : "border-slate-100 bg-white"
+            }`}
+          >
+            <div className="relative">
+              <input
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder={
+                  stage === "await_company_name"
+                    ? "Type your company name..."
+                    : stage === "await_sector_choice"
+                      ? "Type sector number or name..."
+                      : stage === "await_size_choice"
+                        ? "Type size number or name..."
+                        : "Describe your answer here..."
+                }
+                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-4 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isTyping || stage === "completed"}
+                className={`absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-2 transition ${
+                  input.trim() && !isTyping && stage !== "completed"
+                    ? "bg-slate-900 text-white hover:bg-slate-800"
+                    : "cursor-not-allowed bg-slate-100 text-slate-400"
+                }`}
+                aria-label="Send"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-xs text-slate-500">Press Enter to send.</p>
+              {stage === "completed" ? (
+                <button
+                  type="button"
+                  onClick={handleGenerateReportClick}
+                  disabled={isReportFetching}
+                  className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                >
+                  {isReportFetching ? "Preparing report..." : "Generate my report"}
+                </button>
+              ) : null}
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

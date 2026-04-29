@@ -1,0 +1,31 @@
+from app.db.models.assessment import Assessment
+from app.db.models.assessment_answer import AssessmentAnswer
+from app.db.models.assessment_idempotency import AssessmentIdempotency
+from app.db.models.assessment_insight import AssessmentInsight
+from app.db.models.assessment_score import AssessmentScore
+from app.db.models.axis import Axis
+from app.db.models.capability import Capability
+from app.db.models.capability_maturity_rubric import CapabilityMaturityRubric
+from app.db.models.capability_recommendation import CapabilityRecommendation
+from app.db.models.company_size import CompanySize
+from app.db.models.company import Company
+from app.db.models.maturity_level import MaturityLevel
+from app.db.models.recommendation_output import RecommendationOutput
+from app.db.models.sector import Sector
+
+__all__ = [
+    "Assessment",
+    "AssessmentAnswer",
+    "AssessmentIdempotency",
+    "AssessmentInsight",
+    "AssessmentScore",
+    "Axis",
+    "Capability",
+    "CapabilityMaturityRubric",
+    "CapabilityRecommendation",
+    "CompanySize",
+    "Company",
+    "MaturityLevel",
+    "RecommendationOutput",
+    "Sector",
+]

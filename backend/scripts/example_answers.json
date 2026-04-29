@@ -1,0 +1,17 @@
+{
+  "Manage": [
+    "We collect feedback via post-purchase surveys, in-app prompts, and support follow-ups weekly. We have a feedback cadence and owners.",
+    "Support ticketing process: Zendesk, clear ownership by team leads, SLAs, escalation, and tagging to track issues and recurring themes.",
+    "Customer journeys are documented (onboarding, purchase, delivery, returns). We monitor drop-offs and collect feedback at key touchpoints."
+  ],
+  "Analyze": [
+    "We measure KPIs like NPS and CSAT monthly, review them in a weekly ops meeting, and share dashboards with stakeholders.",
+    "We segment customers by plan, region, and lifecycle stage to analyze behavior and feedback differences.",
+    "We do root cause analysis combining qualitative feedback and quantitative data; top issues are prioritized and tracked with owners."
+  ],
+  "Maintain": [
+    "We run a continuous improvement loop: prioritize initiatives, track progress, measure impact, and close the loop with customers.",
+    "Training: onboarding for support and success teams, playbooks, QA, and refresh sessions to keep consistent customer experience.",
+    "Governance: clear roles, rituals (weekly review), accountability, and decision-making for CX outcomes across teams."
+  ]
+}
