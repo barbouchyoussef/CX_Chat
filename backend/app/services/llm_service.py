@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field, ValidationError
 from app.core.config import get_settings
 from app.core.text_normalization import normalize_text
 from app.services.prompts import (
+    BATCH_RECOMMENDATION_SYSTEM_PROMPT,
+    BATCH_RECOMMENDATION_USER_TEMPLATE,
     COMPANY_CLASSIFICATION_SYSTEM_PROMPT,
     COVERAGE_SYSTEM_PROMPT,
     COVERAGE_USER_TEMPLATE,
@@ -43,9 +45,12 @@ class LLMService:
         transition_topic: str | None = None,
         memory_summary: str | None = None,
         question_guidelines: list[str] | None = None,
+        conversation_stage: str = "intro",
+        ask_evidence: bool = False,
+        helper_mode: bool = False,
     ) -> str:
         topic = missing[0] if missing else "this axis"
-        fallback = f"Can you share one concrete recent example of how you handle {topic}?"
+        fallback = f"How do you currently handle {topic} in day-to-day work?"
 
         if not self.settings.mistral_api_key:
             return fallback
@@ -58,6 +63,9 @@ class LLMService:
             latest_user_answer=latest_user_answer,
             memory_summary=memory_summary,
             question_guidelines=question_guidelines,
+            conversation_stage=conversation_stage,
+            ask_evidence=ask_evidence,
+            helper_mode=helper_mode,
         )
         try:
             text = self._mistral_chat_messages(messages)
@@ -111,7 +119,7 @@ class LLMService:
             "That gives me a useful starting point.",
             "Thanks, that helps me understand your context.",
             "Good, I can work with that.",
-            "I understand your direction.",
+            "That is clear, thank you.",
         ]
         prompts = [
             f"Could you walk me through one recent case on {topic}: trigger, owner, action, and outcome?",
@@ -133,6 +141,11 @@ class LLMService:
             prompts = [
                 f"Could you give one real recent case on {topic} with owner, action, and measurable result?",
                 f"I need one concrete example on {topic}: decision taken, responsible team, and observed outcome.",
+            ]
+        elif hint == "needs explanation":
+            prompts = [
+                f"To clarify, I am asking how {topic} works in practice in your team. You can start with: 'Usually, when X happens, team Y does Z.'",
+                f"Quick explanation: this helps us place your maturity level for {topic}. You can answer with one simple recent example.",
             ]
 
         seed = abs(hash((axis, latest_user_answer or "", hint or "", topic)))
@@ -301,6 +314,54 @@ class LLMService:
             return fallback
         return self._clean_single_text(text) or fallback
 
+    def generate_recommendations_batch(
+        self,
+        assessment_id: int,
+        items: list[dict[str, Any]],
+        language: str = "en",
+        max_actions_per_capability: int = 2,
+        tone: str = "practical",
+        max_words_per_capability: int = 120,
+    ) -> dict[int, dict[str, Any]]:
+        if not items:
+            return {}
+        if not self.settings.mistral_api_key:
+            return {}
+
+        user = BATCH_RECOMMENDATION_USER_TEMPLATE.format(
+            assessment_id=assessment_id,
+            language=language,
+            max_actions=max_actions_per_capability,
+            tone=tone,
+            max_words=max_words_per_capability,
+            items_json=json.dumps(items, ensure_ascii=False),
+        )
+        messages = [
+            {"role": "system", "content": BATCH_RECOMMENDATION_SYSTEM_PROMPT},
+            {"role": "user", "content": user},
+        ]
+        try:
+            content = self._mistral_chat_messages(messages)
+        except Exception:
+            return {}
+
+        parsed = self._parse_batch_recommendation_json(content)
+        if parsed is None:
+            return {}
+        result_map: dict[int, dict[str, Any]] = {}
+        for item in parsed.results:
+            result_map[int(item.capability_id)] = {
+                "status": item.status,
+                "title": item.title,
+                "why_this": item.why_this,
+                "evidence_used": item.evidence_used,
+                "primary_action": item.primary_action,
+                "secondary_action": item.secondary_action,
+                "expected_impact": item.expected_impact,
+                "clarification_question": item.clarification_question,
+            }
+        return result_map
+
     def _build_question_messages(
         self,
         axis: str,
@@ -310,6 +371,9 @@ class LLMService:
         latest_user_answer: str | None,
         memory_summary: str | None,
         question_guidelines: list[str] | None = None,
+        conversation_stage: str = "intro",
+        ask_evidence: bool = False,
+        helper_mode: bool = False,
     ) -> list[dict]:
         missing_list = "\n".join(f"- {m}" for m in missing[:12]) or "- (none)"
 
@@ -326,14 +390,37 @@ class LLMService:
             axis=axis,
             latest_user_answer=(latest_user_answer or "n/a"),
             missing_list=missing_list,
+            conversation_stage=conversation_stage,
+            ask_evidence=("yes" if ask_evidence else "no"),
             guidelines_block=guidelines_block,
             memory_block=memory_block,
+            helper_block=(
+                "User may be confused. Start with one plain-language explanation and one response starter.\n\n"
+                if helper_mode
+                else ""
+            ),
         )
 
         messages: list[dict[str, str]] = [{"role": "system", "content": QUESTION_SYSTEM_PROMPT}]
         messages.extend(self._history_to_messages(history))
         messages.append({"role": "user", "content": user})
         return messages
+
+    def is_confusion_signal(self, answer: str) -> bool:
+        text = self._clean_single_text(answer).lower()
+        if not text:
+            return False
+        confusion_markers = [
+            "i don't understand",
+            "dont understand",
+            "not clear",
+            "what do you mean",
+            "can you explain",
+            "je ne comprends pas",
+            "c'est pas clair",
+            "explain",
+        ]
+        return any(marker in text for marker in confusion_markers)
 
     def _build_company_classification_messages(
         self, company_name: str, sector_options: list[dict], size_options: list[dict]
@@ -507,6 +594,15 @@ class LLMService:
         except ValidationError:
             return None
 
+    def _parse_batch_recommendation_json(self, text: str) -> "BatchRecommendationResponse | None":
+        blob = self._extract_json(text)
+        if not isinstance(blob, dict):
+            return None
+        try:
+            return BatchRecommendationResponse.model_validate(blob)
+        except ValidationError:
+            return None
+
 
 class CoveredCriterionItem(BaseModel):
     criterion_id: int
@@ -518,3 +614,19 @@ class CoveredCriterionItem(BaseModel):
 
 class CoverageResponse(BaseModel):
     covered_criteria: list[CoveredCriterionItem] = Field(default_factory=list)
+
+
+class BatchRecommendationItem(BaseModel):
+    capability_id: int
+    status: str = Field(pattern="^(ok|needs_clarification)$")
+    title: str | None = None
+    why_this: str | None = None
+    evidence_used: list[str] = Field(default_factory=list)
+    primary_action: str | None = None
+    secondary_action: str | None = None
+    expected_impact: str | None = None
+    clarification_question: str | None = None
+
+
+class BatchRecommendationResponse(BaseModel):
+    results: list[BatchRecommendationItem] = Field(default_factory=list)

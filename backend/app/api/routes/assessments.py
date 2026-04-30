@@ -17,6 +17,8 @@ from app.schemas.conversation import MessagesResponse
 from app.schemas.capability_status import CapabilitiesStatusResponse
 from app.schemas.final_report import FinalReportResponse
 from app.schemas.recommendations import (
+    BatchRecommendationGenerateRequest,
+    BatchRecommendationGenerateResponse,
     AssessmentRecommendationsResponse,
     AssessmentTraceResponse,
     RecommendationOutputsResponse,
@@ -144,6 +146,24 @@ def recommendations(
     db: Session = Depends(get_db),
 ) -> AssessmentRecommendationsResponse:
     result = AssessmentService(db).get_recommendations(assessment_id=assessment_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return result
+
+
+@router.post("/{assessment_id}/recommendations/batch-generate", response_model=BatchRecommendationGenerateResponse)
+def recommendations_batch_generate(
+    assessment_id: int,
+    req: BatchRecommendationGenerateRequest,
+    db: Session = Depends(get_db),
+) -> BatchRecommendationGenerateResponse:
+    result = AssessmentService(db).generate_recommendations_batch(
+        assessment_id=assessment_id,
+        language=req.language,
+        max_actions_per_capability=req.max_actions_per_capability,
+        tone=req.tone,
+        max_words_per_capability=req.max_words_per_capability,
+    )
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result

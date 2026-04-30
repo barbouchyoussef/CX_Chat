@@ -32,6 +32,8 @@ from app.schemas.final_report import (
     FinalReportThemeItem,
 )
 from app.schemas.recommendations import (
+    BatchRecommendationGenerateResponse,
+    BatchRecommendationResult,
     AssessmentRecommendationItem,
     AssessmentRecommendationsResponse,
     AssessmentTraceItem,
@@ -48,8 +50,8 @@ class AssessmentService:
     DEFAULT_CONFIDENCE_IF_NOT_COVERED = 0.0
     MIN_CONFIDENCE_TO_SCORE = 0.7
     MAX_CAPABILITIES_PER_ANSWER = 1
-    MAX_QUESTIONS_PER_AXIS = 5
-    MAX_EXTRA_QUESTIONS_PER_AXIS = 2
+    MAX_QUESTIONS_PER_AXIS = 4
+    MAX_EXTRA_QUESTIONS_PER_AXIS = 1
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -134,12 +136,21 @@ class AssessmentService:
             )
             assessment.pending_followup_hint = None
             assessment.pending_question = question
+            assessment.conversation_stage = "diagnostic"
             self.db.commit()
             return NextQuestionResponse(status=assessment.status, axis=axis, question=question)
         question_guidelines = [str(c.get("question_guidelines") or "").strip() for c in axis_capabilities]
         question_guidelines = [q for q in question_guidelines if q]
         latest_user_answer = next((turn.content for turn in reversed(history) if turn.role == "user"), None)
         sector_label = getattr(assessment.company.sector, "name", "Unknown")
+        ask_evidence = int(assessment.current_axis_question_count or 0) >= 2 or int(assessment.current_axis_low_quality_count or 0) > 0
+        helper_mode = assessment.pending_followup_hint == "needs explanation"
+        if int(assessment.current_axis_question_count or 0) <= 1:
+            assessment.conversation_stage = "intro"
+        elif int(assessment.current_axis_question_count or 0) <= 3:
+            assessment.conversation_stage = "diagnostic"
+        else:
+            assessment.conversation_stage = "deep_dive"
         question = self.llm.generate_question(
             axis=axis,
             missing=missing,
@@ -149,8 +160,12 @@ class AssessmentService:
             transition_topic=primary_missing_topic,
             memory_summary=None,
             question_guidelines=question_guidelines,
+            conversation_stage=assessment.conversation_stage,
+            ask_evidence=ask_evidence,
+            helper_mode=helper_mode,
         )
         assessment.pending_question = question
+        assessment.pending_followup_hint = None
         self.db.commit()
         return NextQuestionResponse(status=assessment.status, axis=axis, question=question)
 
@@ -199,6 +214,32 @@ class AssessmentService:
             axis_capabilities = self.capabilities.list_for_axis(assessment_id, axis)
             capability_ids = [int(c["id"]) for c in axis_capabilities if "id" in c]
             rubrics_by_capability = self.capabilities.get_rubrics_for_capabilities(capability_ids)
+            if self.llm.is_confusion_signal(answer):
+                self._persist_answer(
+                    assessment_id=assessment_id,
+                    answer=answer,
+                    covered_ids=[],
+                    axis_capabilities=axis_capabilities,
+                    question_text=(assessment.pending_question or "").strip() or None,
+                )
+                assessment.pending_question = None
+                assessment.pending_followup_hint = "needs explanation"
+                assessment.clarification_count = int(assessment.clarification_count or 0) + 1
+                assessment.state_version = int(assessment.state_version) + 1
+                response = AnswerResponse(
+                    status=assessment.status,
+                    axis=assessment.current_axis.name if assessment.current_axis is not None else None,
+                    covered=[],
+                    confidence=0.0,
+                )
+                if idempotency_key:
+                    self.idempotency.create(
+                        assessment_id=assessment_id,
+                        idempotency_key=idempotency_key,
+                        response_payload=response.model_dump(),
+                    )
+                self.db.commit()
+                return response
             is_quality_ok, quality_hint = self.llm.assess_answer_quality(answer)
             if not is_quality_ok:
                 self._persist_answer(
@@ -269,6 +310,7 @@ class AssessmentService:
             )
             assessment.pending_question = None
             assessment.pending_followup_hint = None
+            assessment.clarification_count = 0
             assessment.current_axis_question_count = int(assessment.current_axis_question_count) + 1
             self._advance_if_axis_complete(assessment_id, assessment)
             if assessment.status == ASSESSMENT_STATUS_COMPLETED:
@@ -388,6 +430,172 @@ class AssessmentService:
             row["recommendation_text"] = normalize_text(recommendation_text)
             items.append(AssessmentRecommendationItem(**row))
         return AssessmentRecommendationsResponse(assessment_id=assessment_id, items=items)
+
+    def generate_recommendations_batch(
+        self,
+        assessment_id: int,
+        language: str = "en",
+        max_actions_per_capability: int = 2,
+        tone: str = "practical",
+        max_words_per_capability: int = 120,
+    ) -> BatchRecommendationGenerateResponse | None:
+        assessment = self.assessments.get_by_id(assessment_id)
+        if assessment is None:
+            return None
+        rows = self.capabilities.get_recommendations_for_scores(assessment_id=assessment_id)
+        maturity_rows = self.db.query(MaturityLevel).all()
+        maturity_label_by_id = {int(m.id): str(m.label) for m in maturity_rows}
+
+        llm_items: list[dict] = []
+        for row in rows:
+            capability_id = int(row["capability_id"])
+            confidence = row.get("confidence")
+            evidence_list = []
+            if row.get("justification"):
+                evidence_list.append(str(row.get("justification")))
+            if row.get("evidence_to_cite"):
+                evidence_list.append(str(row.get("evidence_to_cite")))
+            evidence_quality = "weak"
+            if len(evidence_list) >= 2 and all(len(e.strip()) >= 40 for e in evidence_list):
+                evidence_quality = "strong"
+            elif len(evidence_list) >= 1 and any(len(e.strip()) >= 30 for e in evidence_list):
+                evidence_quality = "medium"
+            llm_items.append(
+                {
+                    "capability_id": capability_id,
+                    "axis": str(row.get("axis") or ""),
+                    "capability_name": str(row.get("capability_name") or ""),
+                    "maturity_level": maturity_label_by_id.get(int(row["maturity_level_id"])) if row.get("maturity_level_id") else "Unknown",
+                    "confidence": float(confidence) if confidence is not None else None,
+                    "evidence": evidence_list[:2],
+                    "insight_summary": str(row.get("justification") or ""),
+                    "admin_guideline": str(row.get("recommendation_guideline") or ""),
+                    "priority_hint": str(row.get("priority_hint") or ""),
+                    "evidence_quality": evidence_quality,
+                }
+            )
+
+        pre_gated: dict[int, BatchRecommendationResult] = {}
+        llm_candidates: list[dict] = []
+        for item in llm_items:
+            capability_id = int(item["capability_id"])
+            confidence = item.get("confidence")
+            evidence = item.get("evidence") or []
+            evidence_quality = str(item.get("evidence_quality") or "weak")
+            if confidence is None or float(confidence) < 0.80 or not evidence or evidence_quality == "weak":
+                pre_gated[capability_id] = BatchRecommendationResult(
+                    capability_id=capability_id,
+                    status="needs_clarification",
+                    recommendation_text=None,
+                    clarification_question="Could you share one recent concrete example with owner, action, and measurable outcome?",
+                    evidence_used=evidence[:2],
+                )
+                continue
+            llm_candidates.append(item)
+
+        generated = self.llm.generate_recommendations_batch(
+            assessment_id=assessment_id,
+            items=llm_candidates,
+            language=language,
+            max_actions_per_capability=max_actions_per_capability,
+            tone=tone,
+            max_words_per_capability=max_words_per_capability,
+        )
+
+        results: list[BatchRecommendationResult] = []
+        output_rows: list[dict] = []
+        for row in llm_items:
+            capability_id = int(row["capability_id"])
+            if capability_id in pre_gated:
+                results.append(pre_gated[capability_id])
+                continue
+            ai = generated.get(capability_id)
+            if ai:
+                if ai.get("status") == "ok":
+                    recommendation_text = normalize_text(
+                        " ".join(
+                            p
+                            for p in [
+                                ai.get("title"),
+                                ai.get("why_this"),
+                                ai.get("primary_action"),
+                                ai.get("secondary_action"),
+                                ai.get("expected_impact"),
+                            ]
+                            if p
+                        )
+                    )
+                    output_rows.append(
+                        {
+                            "capability_id": capability_id,
+                            "maturity_level_id": next((r.get("maturity_level_id") for r in rows if int(r["capability_id"]) == capability_id), None),
+                            "generated_text": recommendation_text,
+                            "priority": row.get("priority_hint"),
+                        }
+                    )
+                    results.append(
+                        BatchRecommendationResult(
+                            capability_id=capability_id,
+                            status="ok",
+                            recommendation_text=recommendation_text,
+                            clarification_question=None,
+                            evidence_used=ai.get("evidence_used") or [],
+                        )
+                    )
+                else:
+                    results.append(
+                        BatchRecommendationResult(
+                            capability_id=capability_id,
+                            status="needs_clarification",
+                            recommendation_text=None,
+                            clarification_question=ai.get("clarification_question") or "Can you share one concrete recent example?",
+                            evidence_used=ai.get("evidence_used") or [],
+                        )
+                    )
+            else:
+                fallback = self.llm.generate_recommendation(
+                    axis=str(row.get("axis") or ""),
+                    capability=str(row.get("capability_name") or ""),
+                    maturity_label=str(row.get("maturity_level") or "Unknown"),
+                    confidence=row.get("confidence"),
+                    justification=row.get("insight_summary"),
+                    recommendation_guideline=row.get("admin_guideline"),
+                    priority_hint=row.get("priority_hint"),
+                    consultant_note=None,
+                    evidence_to_cite=(row.get("evidence") or [None])[0],
+                    initiative_suggestions=None,
+                    business_impact=None,
+                    tone_hint=tone,
+                )
+                fallback = normalize_text(fallback)
+                output_rows.append(
+                    {
+                        "capability_id": capability_id,
+                        "maturity_level_id": next((r.get("maturity_level_id") for r in rows if int(r["capability_id"]) == capability_id), None),
+                        "generated_text": fallback,
+                        "priority": row.get("priority_hint"),
+                    }
+                )
+                results.append(
+                    BatchRecommendationResult(
+                        capability_id=capability_id,
+                        status="ok",
+                        recommendation_text=fallback,
+                        clarification_question=None,
+                        evidence_used=[],
+                    )
+                )
+
+        self.assessments.replace_recommendation_outputs(assessment_id=assessment_id, items=output_rows)
+        ok_count = sum(1 for r in results if r.status == "ok")
+        clarification_count = sum(1 for r in results if r.status == "needs_clarification")
+        return BatchRecommendationGenerateResponse(
+            assessment_id=assessment_id,
+            status="ok",
+            results=results,
+            ok_count=ok_count,
+            clarification_count=clarification_count,
+        )
 
     def get_trace(self, assessment_id: int, limit: int = 500, offset: int = 0) -> AssessmentTraceResponse | None:
         assessment = self.assessments.get_by_id(assessment_id)
@@ -569,10 +777,12 @@ class AssessmentService:
                 assessment.current_axis_id = None
                 assessment.current_axis_question_count = 0
                 assessment.current_axis_low_quality_count = 0
+                assessment.conversation_stage = "completed"
             else:
                 assessment.current_axis_id = next_axis.id
                 assessment.current_axis_question_count = 0
                 assessment.current_axis_low_quality_count = 0
+                assessment.conversation_stage = "intro"
 
     def _get_first_axis(self) -> Axis | None:
         return (

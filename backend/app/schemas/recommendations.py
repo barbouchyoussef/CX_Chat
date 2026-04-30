@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AssessmentRecommendationItem(BaseModel):
@@ -57,3 +57,26 @@ class AssessmentTraceItem(BaseModel):
 class AssessmentTraceResponse(BaseModel):
     assessment_id: int
     items: list[AssessmentTraceItem]
+
+
+class BatchRecommendationGenerateRequest(BaseModel):
+    language: str = "en"
+    max_actions_per_capability: int = 2
+    tone: str = "practical"
+    max_words_per_capability: int = 120
+
+
+class BatchRecommendationResult(BaseModel):
+    capability_id: int
+    status: str
+    recommendation_text: str | None = None
+    clarification_question: str | None = None
+    evidence_used: list[str] = Field(default_factory=list)
+
+
+class BatchRecommendationGenerateResponse(BaseModel):
+    assessment_id: int
+    status: str
+    results: list[BatchRecommendationResult]
+    ok_count: int
+    clarification_count: int
