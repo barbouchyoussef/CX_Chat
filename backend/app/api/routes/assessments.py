@@ -36,6 +36,7 @@ def start_assessment(req: StartAssessmentRequest, db: Session = Depends(get_db))
             company_name=req.company_name,
             sector_label=req.sector,
             company_size_label=req.size,
+            prompt_profile=req.prompt_profile,
         )
         return StartAssessmentResponse(assessment_id=assessment.id)
     except (ValueError, RuntimeError) as e:

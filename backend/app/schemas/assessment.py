@@ -6,6 +6,7 @@ class StartAssessmentRequest(BaseModel):
     # Optional: if omitted, the backend will try to infer them via the LLM using values in DB.
     sector: str | None = Field(default=None, min_length=1, max_length=120)
     size: str | None = Field(default=None, min_length=1, max_length=50)
+    prompt_profile: str | None = Field(default=None, min_length=1, max_length=40)
 
 
 class StartAssessmentResponse(BaseModel):

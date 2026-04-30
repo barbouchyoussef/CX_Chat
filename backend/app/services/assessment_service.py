@@ -52,6 +52,7 @@ class AssessmentService:
     MAX_CAPABILITIES_PER_ANSWER = 1
     MAX_QUESTIONS_PER_AXIS = 4
     MAX_EXTRA_QUESTIONS_PER_AXIS = 1
+    PROMPT_PROFILES = {"consultant_guided", "llm_reasoning_light"}
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -65,8 +66,17 @@ class AssessmentService:
         self.llm = LLMService()
         self.benchmarks = BenchmarkService()
 
-    def start_assessment(self, company_name: str, sector_label: str | None, company_size_label: str | None):
+    def start_assessment(
+        self,
+        company_name: str,
+        sector_label: str | None,
+        company_size_label: str | None,
+        prompt_profile: str | None = None,
+    ):
         try:
+            selected_profile = (prompt_profile or "consultant_guided").strip()
+            if selected_profile not in self.PROMPT_PROFILES:
+                raise ValueError(f"Unsupported prompt_profile: {selected_profile}")
             sector, size = self._resolve_company_profile(
                 company_name=company_name,
                 sector_code=sector_label,
@@ -79,6 +89,7 @@ class AssessmentService:
                 company_id=company.id,
                 status=ASSESSMENT_STATUS_IN_PROGRESS,
                 current_axis_id=first_axis.id if first_axis is not None else None,
+                prompt_profile=selected_profile,
             )
             self.assessments.initialize_scores(assessment.id)
             self.db.commit()
@@ -139,8 +150,11 @@ class AssessmentService:
             assessment.conversation_stage = "diagnostic"
             self.db.commit()
             return NextQuestionResponse(status=assessment.status, axis=axis, question=question)
+        prompt_profile = str(getattr(assessment, "prompt_profile", "consultant_guided") or "consultant_guided")
         question_guidelines = [str(c.get("question_guidelines") or "").strip() for c in axis_capabilities]
         question_guidelines = [q for q in question_guidelines if q]
+        if prompt_profile == "llm_reasoning_light":
+            question_guidelines = []
         latest_user_answer = next((turn.content for turn in reversed(history) if turn.role == "user"), None)
         sector_label = getattr(assessment.company.sector, "name", "Unknown")
         ask_evidence = int(assessment.current_axis_question_count or 0) >= 2 or int(assessment.current_axis_low_quality_count or 0) > 0
@@ -163,6 +177,7 @@ class AssessmentService:
             conversation_stage=assessment.conversation_stage,
             ask_evidence=ask_evidence,
             helper_mode=helper_mode,
+            prompt_profile=prompt_profile,
         )
         assessment.pending_question = question
         assessment.pending_followup_hint = None
@@ -693,6 +708,13 @@ class AssessmentService:
             )
 
         strengths_candidates = [c for c in capabilities if c.maturity_band == "Advanced"]
+        if not strengths_candidates:
+            established = [c for c in capabilities if c.maturity_band == "Established"]
+            established.sort(key=lambda item: float(item.confidence or 0.0), reverse=True)
+            strengths_candidates = established[:3]
+        if not strengths_candidates:
+            by_confidence = sorted(capabilities, key=lambda item: float(item.confidence or 0.0), reverse=True)
+            strengths_candidates = by_confidence[:3]
         pain_candidates = [c for c in capabilities if c.maturity_band == "Basic"]
 
         strengths = [

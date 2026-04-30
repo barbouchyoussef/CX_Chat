@@ -24,8 +24,19 @@ class AssessmentRepository:
             .one_or_none()
         )
 
-    def create(self, company_id: int, status: str, current_axis_id: int | None) -> Assessment:
-        assessment = Assessment(company_id=company_id, status=status, current_axis_id=current_axis_id)
+    def create(
+        self,
+        company_id: int,
+        status: str,
+        current_axis_id: int | None,
+        prompt_profile: str = "consultant_guided",
+    ) -> Assessment:
+        assessment = Assessment(
+            company_id=company_id,
+            status=status,
+            current_axis_id=current_axis_id,
+            prompt_profile=prompt_profile,
+        )
         self.db.add(assessment)
         self.db.flush()
         return assessment

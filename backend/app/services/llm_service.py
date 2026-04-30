@@ -15,7 +15,8 @@ from app.services.prompts import (
     COMPANY_CLASSIFICATION_SYSTEM_PROMPT,
     COVERAGE_SYSTEM_PROMPT,
     COVERAGE_USER_TEMPLATE,
-    QUESTION_SYSTEM_PROMPT,
+    QUESTION_SYSTEM_PROMPT_GUIDED,
+    QUESTION_SYSTEM_PROMPT_LIGHT,
     QUESTION_USER_TEMPLATE,
     RECOMMENDATION_SYSTEM_PROMPT,
     RECOMMENDATION_USER_TEMPLATE,
@@ -48,6 +49,7 @@ class LLMService:
         conversation_stage: str = "intro",
         ask_evidence: bool = False,
         helper_mode: bool = False,
+        prompt_profile: str = "consultant_guided",
     ) -> str:
         topic = missing[0] if missing else "this axis"
         fallback = f"How do you currently handle {topic} in day-to-day work?"
@@ -66,6 +68,7 @@ class LLMService:
             conversation_stage=conversation_stage,
             ask_evidence=ask_evidence,
             helper_mode=helper_mode,
+            prompt_profile=prompt_profile,
         )
         try:
             text = self._mistral_chat_messages(messages)
@@ -114,6 +117,16 @@ class LLMService:
         history: list[ChatTurn] | None = None,
     ) -> str:
         topic = (missing_topic or "this area").strip()
+        dynamic = self._generate_dynamic_clarification_question(
+            axis=axis,
+            latest_user_answer=latest_user_answer,
+            hint=hint,
+            topic=topic,
+            history=history or [],
+        )
+        if dynamic:
+            return dynamic
+
         reactions = [
             "I see where you are coming from.",
             "That gives me a useful starting point.",
@@ -149,12 +162,60 @@ class LLMService:
             ]
 
         seed = abs(hash((axis, latest_user_answer or "", hint or "", topic)))
-        reaction = reactions[seed % len(reactions)]
+        reaction = self._pick_non_repetitive_reaction(reactions=reactions, history=history or [], seed=seed)
         question = prompts[seed % len(prompts)]
         candidate = f"{reaction} {question}"
         if history and self._is_duplicate_question(candidate, history):
             candidate = f"{reaction} {prompts[(seed + 1) % len(prompts)]}"
         return candidate
+
+    def _generate_dynamic_clarification_question(
+        self,
+        axis: str,
+        latest_user_answer: str,
+        hint: str | None,
+        topic: str,
+        history: list[ChatTurn],
+    ) -> str | None:
+        if not self.settings.mistral_api_key:
+            return None
+        recent_assistant = [turn.content for turn in history if turn.role.lower() == "assistant"][-5:]
+        system = (
+            "You are a conversational CX assessment assistant.\n"
+            "Write one short follow-up question that sounds natural and human.\n"
+            "If the user is confused, briefly explain what you need, then ask one simple question.\n"
+            "Avoid repeating previous opening phrases.\n"
+            "Return only one line of text."
+        )
+        user = (
+            f"Axis: {axis}\n"
+            f"Hint: {hint or 'none'}\n"
+            f"Missing topic: {topic}\n"
+            f"Latest user answer: {latest_user_answer}\n"
+            "Recent assistant openings to avoid:\n"
+            + "\n".join(f"- {msg}" for msg in recent_assistant)
+            + "\n\nWrite the next follow-up now."
+        )
+        try:
+            text = self._mistral_chat_messages(
+                [{"role": "system", "content": system}, {"role": "user", "content": user}]
+            )
+        except Exception:
+            return None
+        candidate = self._clean_single_text(text)
+        if not candidate:
+            return None
+        if self._is_duplicate_question(candidate, history):
+            return None
+        return candidate
+
+    def _pick_non_repetitive_reaction(self, reactions: list[str], history: list[ChatTurn], seed: int) -> str:
+        recent_assistant = [self._clean_single_text(turn.content).lower() for turn in history if turn.role.lower() == "assistant"][-5:]
+        ordered = reactions[seed % len(reactions) :] + reactions[: seed % len(reactions)]
+        for reaction in ordered:
+            if not any(msg.startswith(reaction.lower()) for msg in recent_assistant):
+                return reaction
+        return ordered[0]
 
     def update_axis_memory(
         self, axis: str, current_summary: str | None, new_answer: str, covered_labels: list[str]
@@ -374,6 +435,7 @@ class LLMService:
         conversation_stage: str = "intro",
         ask_evidence: bool = False,
         helper_mode: bool = False,
+        prompt_profile: str = "consultant_guided",
     ) -> list[dict]:
         missing_list = "\n".join(f"- {m}" for m in missing[:12]) or "- (none)"
 
@@ -401,7 +463,10 @@ class LLMService:
             ),
         )
 
-        messages: list[dict[str, str]] = [{"role": "system", "content": QUESTION_SYSTEM_PROMPT}]
+        system_prompt = (
+            QUESTION_SYSTEM_PROMPT_LIGHT if prompt_profile == "llm_reasoning_light" else QUESTION_SYSTEM_PROMPT_GUIDED
+        )
+        messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
         messages.extend(self._history_to_messages(history))
         messages.append({"role": "user", "content": user})
         return messages
