@@ -89,10 +89,6 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   const [submittedAnswersCount, setSubmittedAnswersCount] = useState(0);
   const endRef = useRef<HTMLDivElement>(null);
 
-  const progressByAxis = useMemo(
-    () => new Map((assessment?.progress ?? []).map((item) => [item.axis, item])),
-    [assessment]
-  );
   const progressStats = useMemo(() => {
     const rows = assessment?.progress ?? [];
     const totalCovered = rows.reduce((sum, row) => sum + Math.max(0, row.covered ?? 0), 0);
