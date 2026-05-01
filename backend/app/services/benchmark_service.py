@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 import httpx
 
@@ -111,14 +112,14 @@ class BenchmarkService:
         return None
 
     def _compact_summary(self, title: str, summary: str) -> str | None:
-        raw = normalize_text(summary)
+        raw = self._clean_summary_text(summary)
         if not raw:
             return None
         if len(raw) <= 320:
             return raw
         llm_text = self._summarize_with_llm(title=title, text=raw)
         if llm_text:
-            return llm_text
+            return self._clean_summary_text(llm_text)
         return raw[:317].rstrip() + "..."
 
     def _summarize_with_llm(self, title: str, text: str) -> str | None:
@@ -148,7 +149,7 @@ class BenchmarkService:
                 response.raise_for_status()
                 data = response.json()
                 content = (((data or {}).get("choices") or [{}])[0].get("message") or {}).get("content")
-                compact = normalize_text(str(content or ""))
+                compact = self._clean_summary_text(str(content or ""))
                 if not compact:
                     return None
                 if len(compact) > 380:
@@ -156,3 +157,20 @@ class BenchmarkService:
                 return compact
         except Exception:
             return None
+
+    def _clean_summary_text(self, text: str) -> str:
+        cleaned = normalize_text(text)
+        replacements = {
+            "â€™": "'",
+            "â€œ": '"',
+            "â€": '"',
+            "â€“": "-",
+            "â€”": "-",
+            "Ã©": "e",
+        }
+        for bad, good in replacements.items():
+            cleaned = cleaned.replace(bad, good)
+        cleaned = cleaned.replace("**", "")
+        cleaned = re.sub(r"^\s*Executive Summary:\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        return cleaned

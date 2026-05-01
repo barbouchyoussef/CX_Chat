@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Send, Sparkles, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Loader2, Send, Sparkles, X } from "lucide-react";
 import AssessmentResultsPage from "./assessment-results-page";
 import AssessmentGeneratingPage from "./assessment-generating-page";
 
@@ -122,6 +122,15 @@ export default function AssessmentChatStatic({ onBack }: Props) {
       barClass,
     };
   }, [assessment, submittedAnswersCount]);
+  const axisDone = useMemo(() => {
+    const currentIndex = Math.max(0, AXIS_ORDER.indexOf(assessment?.axis ?? AXIS_ORDER[0]));
+    return new Map(
+      AXIS_ORDER.map((axis, index) => {
+        const done = assessment?.status === "completed" ? true : index < currentIndex;
+        return [axis, done];
+      })
+    );
+  }, [assessment]);
 
   const appendAssistant = (text: string) => {
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), text, isUser: false }]);
@@ -386,16 +395,56 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8">
-      <div className="mx-auto w-full max-w-3xl">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.12),transparent_45%),linear-gradient(180deg,#ffffff,#f8fafc)] px-3 py-3 sm:px-4 sm:py-4">
+      <div className="mx-auto w-full max-w-[1400px]">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          className="flex h-[calc(100vh-1.5rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl sm:h-[calc(100vh-2rem)]"
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <div className="flex items-center gap-2">
+          <div className="hidden w-72 border-r border-slate-100 bg-slate-50/70 p-5 lg:block">
+            <div className="mb-6 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-violet-500" />
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">CX Journey</h2>
+                <p className="text-xs text-slate-500">Guided interview</p>
+              </div>
+            </div>
+            {assessment ? (
+              <div className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Progress</p>
+                <div className="h-2 w-full rounded-full bg-slate-200">
+                  <div className={`h-2 rounded-full transition-all duration-500 ${progressStats.barClass}`} style={{ width: `${progressStats.percent}%` }} />
+                </div>
+                <div className="space-y-3">
+                  {AXIS_ORDER.map((axis) => {
+                    const completed = Boolean(axisDone.get(axis));
+                    const current = assessment.axis === axis;
+                    const markerClass = completed ? "text-emerald-500" : current ? "text-violet-500" : "text-slate-300";
+                    const textClass = completed ? "text-emerald-700" : current ? "text-violet-700" : "text-slate-500";
+                    return (
+                      <div key={axis} className="flex items-center gap-3">
+                        {completed ? (
+                          <CheckCircle2 className={`h-4 w-4 ${markerClass}`} />
+                        ) : (
+                          <Circle className={`h-4 w-4 ${markerClass}`} />
+                        )}
+                        <span className={`text-sm font-medium ${textClass}`}>{axis}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-slate-500">Stay focused on practical examples. We handle the analysis.</p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">We will profile your company context then run a smart maturity interview.</p>
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 sm:px-5">
+              <div className="flex items-center gap-2">
               {onBack ? (
                 <button
                   type="button"
@@ -413,148 +462,135 @@ export default function AssessmentChatStatic({ onBack }: Props) {
                   {assessment ? `Assessment #${assessment.id} - ${assessment.status}` : "Profiling in chat"}
                 </p>
               </div>
-            </div>
-            <button
-              onClick={clearChat}
-              className="rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Clear chat"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {assessment ? (
-            <div className="border-b border-slate-100 px-5 py-3">
-              <div className="mb-3 flex items-center justify-between text-xs text-slate-600">
-                <span>
-                  Axis {Math.max(1, progressStats.currentAxisIndex + 1)} of {AXIS_ORDER.length}
-                </span>
-                <span>
-                  {progressStats.percent}% complete ({progressStats.totalCovered}/{progressStats.totalQuestions})
-                </span>
               </div>
-              <div className="mb-3 h-2 w-full rounded-full bg-slate-100">
-                <div
-                  className={`h-2 rounded-full transition-all duration-500 ${progressStats.barClass}`}
-                  style={{
-                    width: `${progressStats.percent}%`,
-                  }}
-                />
-              </div>
-              <p className="mb-3 text-[11px] text-slate-500">
-                Capability coverage: {progressStats.realPercent}%. Conversation progress is adaptively smoothed to keep momentum.
-              </p>
-              <div className="flex items-center gap-2">
-                {AXIS_ORDER.map((axis, index) => {
-                  const row = progressByAxis.get(axis);
-                  const completed = row ? row.covered >= row.total : false;
-                  const current = assessment.axis === axis;
-                  const badgeClass = completed
-                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                    : current
-                      ? "bg-violet-100 text-violet-700 border-violet-200"
-                      : "bg-slate-100 text-slate-500 border-slate-200";
-                  return (
-                    <React.Fragment key={axis}>
-                      <div className={`rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass}`}>
-                        {axis}
-                      </div>
-                      {index < AXIS_ORDER.length - 1 ? (
-                        <div className={`h-0.5 flex-1 ${completed ? "bg-emerald-300" : "bg-slate-200"}`} />
-                      ) : null}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="h-[520px] overflow-y-auto bg-white px-5 py-4">
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-                      msg.isUser
-                        ? "rounded-tr-none bg-slate-900 text-white"
-                        : "rounded-tl-none border border-slate-200 bg-slate-50 text-slate-800"
-                    }`}
-                  >
-                    {msg.text}
-                  </motion.div>
-                </div>
-              ))}
-
-              {isTyping ? (
-                <div className="flex justify-start">
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="max-w-[80%] rounded-2xl rounded-tl-none border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
-                  >
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Assistant is thinking...</span>
-                    </div>
-                  </motion.div>
-                </div>
-              ) : null}
-              <div ref={endRef} />
-            </div>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className={`border-t px-4 py-4 transition ${
-              isFocused ? "border-violet-300 bg-violet-50/30" : "border-slate-100 bg-white"
-            }`}
-          >
-            <div className="relative">
-              <input
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder={
-                  stage === "await_company_name"
-                    ? "Type your company name..."
-                    : stage === "await_sector_choice"
-                      ? "Type sector number or name..."
-                      : stage === "await_size_choice"
-                        ? "Type size number or name..."
-                        : "Describe your answer here..."
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-4 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
-              />
               <button
-                type="submit"
-                disabled={!input.trim() || isTyping || stage === "completed"}
-                className={`absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-2 transition ${
-                  input.trim() && !isTyping && stage !== "completed"
-                    ? "bg-slate-900 text-white hover:bg-slate-800"
-                    : "cursor-not-allowed bg-slate-100 text-slate-400"
-                }`}
-                aria-label="Send"
+                onClick={clearChat}
+                className="rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Clear chat"
               >
-                <Send className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-2 flex items-center justify-between">
-              <p className="text-xs text-slate-500">Press Enter to send.</p>
-              {stage === "completed" ? (
+
+            {assessment ? (
+              <div className="border-b border-slate-100 px-4 py-3 sm:px-5 lg:hidden">
+                <div className="mb-2 h-2 w-full rounded-full bg-slate-100">
+                  <div className={`h-2 rounded-full transition-all duration-500 ${progressStats.barClass}`} style={{ width: `${progressStats.percent}%` }} />
+                </div>
+                <div className="flex items-center gap-2">
+                  {AXIS_ORDER.map((axis) => {
+                    const completed = Boolean(axisDone.get(axis));
+                    const current = assessment.axis === axis;
+                    const cls = completed ? "text-emerald-500" : current ? "text-violet-500" : "text-slate-300";
+                    return completed ? (
+                      <CheckCircle2 key={axis} className={`h-4 w-4 ${cls}`} />
+                    ) : (
+                      <Circle key={axis} className={`h-4 w-4 ${cls}`} />
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {stage !== "completed" ? (
+              <>
+                <div className="flex-1 overflow-y-auto bg-white px-4 py-4 sm:px-5">
+                  <div className="space-y-4">
+                    {messages.map((msg) => (
+                      <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}>
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm sm:max-w-[78%] ${
+                            msg.isUser
+                              ? "rounded-tr-none bg-slate-900 text-white"
+                              : "rounded-tl-none border border-slate-200 bg-slate-50 text-slate-800"
+                          }`}
+                        >
+                          {msg.text}
+                        </motion.div>
+                      </div>
+                    ))}
+
+                    {isTyping ? (
+                      <div className="flex justify-start">
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="max-w-[88%] rounded-2xl rounded-tl-none border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 sm:max-w-[78%]"
+                        >
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Assistant is thinking...</span>
+                          </div>
+                        </motion.div>
+                      </div>
+                    ) : null}
+                    <div ref={endRef} />
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={handleSubmit}
+                  className={`border-t px-4 py-4 transition sm:px-5 ${
+                    isFocused ? "border-violet-300 bg-violet-50/30" : "border-slate-100 bg-white"
+                  }`}
+                >
+                  <div className="relative">
+                    <input
+                      value={input}
+                      onChange={(event) => setInput(event.target.value)}
+                      onFocus={() => setIsFocused(true)}
+                      onBlur={() => setIsFocused(false)}
+                      placeholder={
+                        stage === "await_company_name"
+                          ? "Type your company name..."
+                          : stage === "await_sector_choice"
+                            ? "Type sector number or name..."
+                            : stage === "await_size_choice"
+                              ? "Type size number or name..."
+                              : "Describe your answer here..."
+                      }
+                      className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-4 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!input.trim() || isTyping}
+                      className={`absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl p-2.5 transition ${
+                        input.trim() && !isTyping
+                          ? "bg-slate-900 text-white hover:bg-slate-800"
+                          : "cursor-not-allowed bg-slate-100 text-slate-400"
+                      }`}
+                      aria-label="Send"
+                    >
+                      <Send className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-xs text-slate-500">Press Enter to send.</p>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center p-6">
+                <div className="w-full max-w-xl rounded-3xl border border-violet-200 bg-violet-50 p-6 text-center">
+                  <p className="text-sm text-violet-800">Thank you — we now have enough evidence to build your CX maturity report.</p>
+                </div>
+              </div>
+            )}
+            {stage === "completed" ? (
+              <div className="border-t border-violet-100 bg-violet-50 px-4 py-4 sm:px-5">
                 <button
                   type="button"
                   onClick={handleGenerateReportClick}
                   disabled={isReportFetching}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                  className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isReportFetching ? "Preparing report..." : "Generate my report"}
+                  {isReportFetching ? "Preparing your executive report..." : "Generate My Executive Report"}
                 </button>
-              ) : null}
-            </div>
-          </form>
+              </div>
+            ) : null}
+          </div>
         </motion.div>
       </div>
     </div>
