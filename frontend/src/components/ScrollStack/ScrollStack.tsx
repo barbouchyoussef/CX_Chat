@@ -75,6 +75,8 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
   const cardsRef = useRef<HTMLElement[]>([]);
   const cardOffsetsRef = useRef<number[]>([]);
   const endSpacerRef = useRef<HTMLDivElement>(null);
+  const releaseMarkerRef = useRef<HTMLDivElement | null>(null);
+  const stackBoundsRef = useRef({ top: 0, bottom: 0, releaseTop: 0 });
   const lastTransformsRef = useRef(new Map<number, any>());
   const isUpdatingRef = useRef(false);
   const isMobileStackRef = useRef(false);
@@ -133,6 +135,15 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
 
     isUpdatingRef.current = true;
 
+    if (useWindowScroll) {
+      const threshold = window.innerHeight * 0.15;
+      const { top, bottom } = stackBoundsRef.current;
+      if (window.scrollY > bottom + threshold || window.scrollY + window.innerHeight < top - threshold) {
+        isUpdatingRef.current = false;
+        return;
+      }
+    }
+
     if (!isStackEnabled()) {
       cardsRef.current.forEach(card => {
         card.style.transform = 'translate3d(0, 0, 0)';
@@ -145,10 +156,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
     const { scrollTop, containerHeight } = getScrollData();
     const stackPositionPx = parsePercentage(stackPosition, containerHeight);
     const scaleEndPositionPx = parsePercentage(scaleEndPosition, containerHeight);
-
-    const endElement = (scrollerRef.current?.querySelector('.scroll-stack-release') as HTMLElement | null) ?? null;
-
-    const endElementTop = endElement ? getElementOffset(endElement) : 0;
+    const endElementTop = stackBoundsRef.current.releaseTop;
     const lastCardTop = cardOffsetsRef.current[cardsRef.current.length - 1] ?? 0;
     const naturalPinEnd = lastCardTop + containerHeight * 0.48;
 
@@ -214,7 +222,9 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
         const filter = newTransform.blur > 0 ? `blur(${newTransform.blur}px)` : '';
 
         card.style.transform = transform;
-        card.style.filter = filter;
+        if (blurAmount) {
+          card.style.filter = filter;
+        }
 
         lastTransformsRef.current.set(i, newTransform);
       }
@@ -298,6 +308,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
     const cards = Array.from(
       root.querySelectorAll('.scroll-stack-card')
     ) as HTMLElement[];
+    releaseMarkerRef.current = root.querySelector('.scroll-stack-release') as HTMLDivElement | null;
     cardsRef.current = cards;
     const transformsCache = lastTransformsRef.current;
 
@@ -307,6 +318,21 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
       cardOffsetsRef.current = cards.map(card =>
         useWindowScroll ? card.getBoundingClientRect().top + window.scrollY : card.offsetTop
       );
+
+      if (useWindowScroll) {
+        const rootTop = root.getBoundingClientRect().top + window.scrollY;
+        const rootBottom = rootTop + root.offsetHeight;
+        const releaseTop = releaseMarkerRef.current
+          ? releaseMarkerRef.current.getBoundingClientRect().top + window.scrollY
+          : rootBottom;
+        stackBoundsRef.current = { top: rootTop, bottom: rootBottom, releaseTop };
+      } else {
+        stackBoundsRef.current = {
+          top: 0,
+          bottom: root.offsetHeight,
+          releaseTop: releaseMarkerRef.current ? releaseMarkerRef.current.offsetTop : root.offsetHeight,
+        };
+      }
 
       const containerHeight = useWindowScroll ? window.innerHeight : scrollerRef.current?.clientHeight ?? 0;
       const spacerPx = isStackEnabled()
@@ -324,13 +350,14 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
       if (i < cards.length - 1) {
         card.style.marginBottom = `${isStackEnabled() ? itemDistance : 24}px`;
       }
-      card.style.willChange = 'transform, filter';
+      card.style.willChange = blurAmount ? 'transform, filter' : 'transform';
       card.style.transformOrigin = 'top center';
       card.style.backfaceVisibility = 'hidden';
       card.style.transform = 'translateZ(0)';
       card.style.webkitTransform = 'translateZ(0)';
       card.style.perspective = '1000px';
       card.style.webkitPerspective = '1000px';
+      card.style.contain = 'layout paint style';
     });
 
     setupLenis();
@@ -365,6 +392,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
       stackCompletedRef.current = false;
       cardsRef.current = [];
       cardOffsetsRef.current = [];
+      releaseMarkerRef.current = null;
       transformsCache.clear();
       isUpdatingRef.current = false;
     };
@@ -413,7 +441,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
       >
         {children}
         {/* Release marker for the final pin; must stay before extra spacer */}
-        <div className="scroll-stack-release w-full h-px" />
+        <div ref={releaseMarkerRef} className="scroll-stack-release w-full h-px" />
         <div ref={endSpacerRef} className="w-full" aria-hidden="true" />
       </div>
     </div>

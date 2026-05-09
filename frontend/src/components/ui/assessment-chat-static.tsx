@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Circle, Loader2, Send, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Circle, FileText, Loader2, Send, Sparkles, X } from "lucide-react";
+import { Avatar } from "./avatar-1";
 import AssessmentResultsPage from "./assessment-results-page";
 import AssessmentGeneratingPage from "./assessment-generating-page";
 
@@ -63,6 +64,7 @@ type OnboardingStage = "await_company_name" | "await_sector_choice" | "await_siz
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
+const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim().toUpperCase();
 
 export default function AssessmentChatStatic({ onBack }: Props) {
   const [input, setInput] = useState("");
@@ -91,6 +93,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
 
   const progressStats = useMemo(() => {
     const rows = assessment?.progress ?? [];
+    const currentAxis = normalizeAxis(assessment?.axis);
     const totalCovered = rows.reduce((sum, row) => sum + Math.max(0, row.covered ?? 0), 0);
     const totalQuestions = rows.reduce((sum, row) => sum + Math.max(0, row.total ?? 0), 0);
     const realPercent = totalQuestions > 0 ? Math.round((totalCovered / totalQuestions) * 100) : 0;
@@ -100,13 +103,13 @@ export default function AssessmentChatStatic({ onBack }: Props) {
       assessment?.status === "completed"
         ? 100
         : Math.min(95, Math.max(realPercent, Math.max(0, turnPercent)));
-    const currentAxisIndex = Math.max(0, AXIS_ORDER.indexOf(assessment?.axis ?? AXIS_ORDER[0]));
+    const currentAxisIndex = Math.max(0, AXIS_ORDER.indexOf(currentAxis || AXIS_ORDER[0]));
     const barClass =
-      assessment?.axis === "MANAGE"
+      currentAxis === "MANAGE"
         ? "bg-blue-500"
-        : assessment?.axis === "ANALYZE"
+        : currentAxis === "ANALYZE"
           ? "bg-amber-500"
-          : assessment?.axis === "IMPROVE"
+          : currentAxis === "IMPROVE"
             ? "bg-emerald-500"
             : "bg-violet-500";
     return {
@@ -119,7 +122,8 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     };
   }, [assessment, submittedAnswersCount]);
   const axisDone = useMemo(() => {
-    const currentIndex = Math.max(0, AXIS_ORDER.indexOf(assessment?.axis ?? AXIS_ORDER[0]));
+    const currentAxis = normalizeAxis(assessment?.axis);
+    const currentIndex = Math.max(0, AXIS_ORDER.indexOf(currentAxis || AXIS_ORDER[0]));
     return new Map(
       AXIS_ORDER.map((axis, index) => {
         const done = assessment?.status === "completed" ? true : index < currentIndex;
@@ -286,7 +290,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
       setSubmittedAnswersCount((prev) => prev + 1);
       if (snapshot.status === "completed") {
         setStage("completed");
-        appendAssistant("Thank you — we now have enough evidence to build your CX maturity report.");
+        appendAssistant("Thank you â€” we now have enough evidence to build your CX maturity report.");
         return;
       }
 
@@ -377,7 +381,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
         </div>
       );
     }
-    return <AssessmentResultsPage report={finalReport} onBack={() => setShowRecommendations(false)} />;
+    return <AssessmentResultsPage report={finalReport} companyName={companyName} onBack={() => setShowRecommendations(false)} />;
   }
 
   if (showGeneratingPage) {
@@ -416,7 +420,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
                 <div className="space-y-3">
                   {AXIS_ORDER.map((axis) => {
                     const completed = Boolean(axisDone.get(axis));
-                    const current = assessment.axis === axis;
+                    const current = normalizeAxis(assessment.axis) === axis;
                     const markerClass = completed ? "text-emerald-500" : current ? "text-violet-500" : "text-slate-300";
                     const textClass = completed ? "text-emerald-700" : current ? "text-violet-700" : "text-slate-500";
                     return (
@@ -476,7 +480,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
                 <div className="flex items-center gap-2">
                   {AXIS_ORDER.map((axis) => {
                     const completed = Boolean(axisDone.get(axis));
-                    const current = assessment.axis === axis;
+                    const current = normalizeAxis(assessment.axis) === axis;
                     const cls = completed ? "text-emerald-500" : current ? "text-violet-500" : "text-slate-300";
                     return completed ? (
                       <CheckCircle2 key={axis} className={`h-4 w-4 ${cls}`} />
@@ -494,6 +498,11 @@ export default function AssessmentChatStatic({ onBack }: Props) {
                   <div className="space-y-4">
                     {messages.map((msg) => (
                       <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}>
+                        {!msg.isUser ? (
+                          <div className="mr-2 mt-1 shrink-0">
+                            <Avatar chatbot size={30} alt="CX Assistant avatar" />
+                          </div>
+                        ) : null}
                         <motion.div
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -510,6 +519,9 @@ export default function AssessmentChatStatic({ onBack }: Props) {
 
                     {isTyping ? (
                       <div className="flex justify-start">
+                        <div className="mr-2 mt-1 shrink-0">
+                          <Avatar chatbot size={30} alt="CX Assistant avatar" />
+                        </div>
                         <motion.div
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -569,21 +581,38 @@ export default function AssessmentChatStatic({ onBack }: Props) {
               </>
             ) : (
               <div className="flex flex-1 items-center justify-center p-6">
-                <div className="w-full max-w-xl rounded-3xl border border-violet-200 bg-violet-50 p-6 text-center">
-                  <p className="text-sm text-violet-800">Thank you — we now have enough evidence to build your CX maturity report.</p>
+                <div className="w-full max-w-2xl rounded-3xl border border-violet-200/70 bg-gradient-to-br from-violet-50 to-indigo-50 p-7 text-center shadow-sm">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-violet-600 shadow-sm">
+                    <FileText className="h-7 w-7" />
+                  </div>
+                  <p className="text-base font-semibold text-slate-900">Thank you — we now have enough evidence to build your CX maturity report.</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Your report will include strengths, pain points, maturity by axis, and targeted recommendations.
+                  </p>
                 </div>
               </div>
             )}
             {stage === "completed" ? (
-              <div className="border-t border-violet-100 bg-violet-50 px-4 py-4 sm:px-5">
-                <button
-                  type="button"
-                  onClick={handleGenerateReportClick}
-                  disabled={isReportFetching}
-                  className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isReportFetching ? "Preparing your executive report..." : "Generate My Executive Report"}
-                </button>
+              <div className="border-t border-violet-100 bg-gradient-to-r from-violet-50 to-indigo-50 px-4 py-5 sm:px-5">
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to chat
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGenerateReportClick}
+                    disabled={isReportFetching}
+                    className="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isReportFetching ? "Preparing report..." : "Generate Executive Report"}
+                    {!isReportFetching ? <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" /> : null}
+                  </button>
+                </div>
               </div>
             ) : null}
           </div>
@@ -592,3 +621,5 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     </div>
   );
 }
+
+

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.dependencies.db import get_db
 from app.domain.errors import AssessmentStateConflictError
 from app.schemas.assessment import (
@@ -14,7 +15,7 @@ from app.schemas.assessment import (
 from app.schemas.assessment_memory import AssessmentMemoryResponse
 from app.schemas.admin import AssessmentsListResponse
 from app.schemas.conversation import MessagesResponse
-from app.schemas.capability_status import CapabilitiesStatusResponse
+from app.schemas.capability_status import CapabilitiesStatusResponse, CapabilityHighlightsResponse
 from app.schemas.final_report import FinalReportResponse
 from app.schemas.recommendations import (
     BatchRecommendationGenerateRequest,
@@ -23,16 +24,40 @@ from app.schemas.recommendations import (
     AssessmentTraceResponse,
     RecommendationOutputsResponse,
 )
-from app.services.assessment_service import AssessmentService
+from app.services.assessment_conversation_service import AssessmentConversationService, build_assessment_conversation_service
+from app.services.assessment_reporting_service import AssessmentReportingService, build_assessment_reporting_service
+from app.services.assessment_service import AssessmentService, build_assessment_service
 
 router = APIRouter(prefix="/assessments")
 
 
+def get_reporting_service(db: AsyncSession = Depends(get_db)) -> AssessmentReportingService:
+    return build_assessment_reporting_service(db)
+
+
+def get_assessment_service(db: AsyncSession = Depends(get_db)) -> AssessmentService:
+    return build_assessment_service(db)
+
+
+def get_conversation_service(db: AsyncSession = Depends(get_db)) -> AssessmentConversationService:
+    return build_assessment_conversation_service(db)
+
+
+def _http_500_with_dev_detail(exc: Exception) -> HTTPException:
+    settings = get_settings()
+    detail = "Internal server error"
+    if settings.app_env != "production":
+        detail = f"{type(exc).__name__}: {exc}"
+    return HTTPException(status_code=500, detail=detail)
+
+
 @router.post("", response_model=StartAssessmentResponse)
-def start_assessment(req: StartAssessmentRequest, db: Session = Depends(get_db)) -> StartAssessmentResponse:
-    service = AssessmentService(db)
+async def start_assessment(
+    req: StartAssessmentRequest,
+    service: AssessmentService = Depends(get_assessment_service),
+) -> StartAssessmentResponse:
     try:
-        assessment = service.start_assessment(
+        assessment = await service.start_assessment(
             company_name=req.company_name,
             sector_label=req.sector,
             company_size_label=req.size,
@@ -45,33 +70,41 @@ def start_assessment(req: StartAssessmentRequest, db: Session = Depends(get_db))
 
 
 @router.get("/{assessment_id}", response_model=AssessmentResponse)
-def get_assessment(assessment_id: int, db: Session = Depends(get_db)) -> AssessmentResponse:
-    service = AssessmentService(db)
-    data = service.get_assessment(assessment_id)
+async def get_assessment(
+    assessment_id: int,
+    service: AssessmentService = Depends(get_assessment_service),
+) -> AssessmentResponse:
+    data = await service.get_assessment(assessment_id)
     if data is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return data
 
 
 @router.get("/{assessment_id}/next-question", response_model=NextQuestionResponse)
-def next_question(assessment_id: int, db: Session = Depends(get_db)) -> NextQuestionResponse:
-    service = AssessmentService(db)
-    result = service.next_question(assessment_id)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Assessment not found")
-    return result
+async def next_question(
+    assessment_id: int,
+    service: AssessmentConversationService = Depends(get_conversation_service),
+) -> NextQuestionResponse:
+    try:
+        result = await service.next_question(assessment_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_500_with_dev_detail(exc)
 
 
 @router.post("/{assessment_id}/answers", response_model=AnswerResponse)
-def submit_answer(
+async def submit_answer(
     assessment_id: int,
     req: AnswerRequest,
-    db: Session = Depends(get_db),
+    service: AssessmentConversationService = Depends(get_conversation_service),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> AnswerResponse:
-    service = AssessmentService(db)
     try:
-        result = service.submit_answer(
+        result = await service.submit_answer(
             assessment_id,
             req.answer,
             idempotency_key=idempotency_key,
@@ -80,85 +113,117 @@ def submit_answer(
         )
     except AssessmentStateConflictError as e:
         raise HTTPException(status_code=409, detail=str(e))
+    except Exception as exc:
+        raise _http_500_with_dev_detail(exc)
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
 
 
 @router.get("/{assessment_id}/memory", response_model=AssessmentMemoryResponse)
-def get_assessment_memory(assessment_id: int, db: Session = Depends(get_db)) -> AssessmentMemoryResponse:
-    service = AssessmentService(db)
-    result = service.get_memory(assessment_id)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Assessment not found")
-    return result
+async def get_assessment_memory(
+    assessment_id: int,
+    service: AssessmentService = Depends(get_assessment_service),
+) -> AssessmentMemoryResponse:
+    try:
+        result = await service.get_memory(assessment_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_500_with_dev_detail(exc)
 
 
 @router.get("", response_model=AssessmentsListResponse)
-def list_assessments(
+async def list_assessments(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
-    db: Session = Depends(get_db),
+    service: AssessmentService = Depends(get_assessment_service),
 ) -> AssessmentsListResponse:
-    return AssessmentService(db).list_assessments(limit=limit, offset=offset)
+    return await service.list_assessments(limit=limit, offset=offset)
 
 
 @router.get("/{assessment_id}/messages", response_model=MessagesResponse)
-def list_messages(
+async def list_messages(
     assessment_id: int,
     limit: int = Query(default=200, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
-    db: Session = Depends(get_db),
+    service: AssessmentService = Depends(get_assessment_service),
 ) -> MessagesResponse:
-    result = AssessmentService(db).get_messages(assessment_id, limit=limit, offset=offset)
+    result = await service.get_messages(assessment_id, limit=limit, offset=offset)
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
 
 
 @router.get("/{assessment_id}/capabilities", response_model=CapabilitiesStatusResponse)
-def capabilities_status(
+async def capabilities_status(
     assessment_id: int,
     axis: str | None = None,
-    db: Session = Depends(get_db),
+    service: AssessmentService = Depends(get_assessment_service),
 ) -> CapabilitiesStatusResponse:
-    result = AssessmentService(db).get_capabilities_status(assessment_id, axis=axis)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Assessment not found")
-    return result
+    try:
+        result = await service.get_capabilities_status(assessment_id, axis=axis)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_500_with_dev_detail(exc)
+
+
+@router.get("/{assessment_id}/capabilities/highlights", response_model=CapabilityHighlightsResponse)
+async def capability_highlights(
+    assessment_id: int,
+    axis: str | None = None,
+    limit: int = Query(default=6, ge=1, le=20),
+    service: AssessmentService = Depends(get_assessment_service),
+) -> CapabilityHighlightsResponse:
+    try:
+        result = await service.get_capability_highlights(assessment_id=assessment_id, axis=axis, limit=limit)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_500_with_dev_detail(exc)
 
 
 @router.get("/{assessment_id}/criteria", response_model=CapabilitiesStatusResponse)
-def criteria_status_legacy(
+async def criteria_status_legacy(
     assessment_id: int,
     axis: str | None = None,
-    db: Session = Depends(get_db),
+    service: AssessmentService = Depends(get_assessment_service),
 ) -> CapabilitiesStatusResponse:
     # Backward-compatible alias for older clients.
-    result = AssessmentService(db).get_capabilities_status(assessment_id, axis=axis)
+    result = await service.get_capabilities_status(assessment_id, axis=axis)
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
 
 
 @router.get("/{assessment_id}/recommendations", response_model=AssessmentRecommendationsResponse)
-def recommendations(
+async def recommendations(
     assessment_id: int,
-    db: Session = Depends(get_db),
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
 ) -> AssessmentRecommendationsResponse:
-    result = AssessmentService(db).get_recommendations(assessment_id=assessment_id)
+    result = await reporting.get_recommendations(assessment_id=assessment_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
 
 
 @router.post("/{assessment_id}/recommendations/batch-generate", response_model=BatchRecommendationGenerateResponse)
-def recommendations_batch_generate(
+async def recommendations_batch_generate(
     assessment_id: int,
     req: BatchRecommendationGenerateRequest,
-    db: Session = Depends(get_db),
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
 ) -> BatchRecommendationGenerateResponse:
-    result = AssessmentService(db).generate_recommendations_batch(
+    result = await reporting.generate_recommendations_batch(
         assessment_id=assessment_id,
         language=req.language,
         max_actions_per_capability=req.max_actions_per_capability,
@@ -171,35 +236,35 @@ def recommendations_batch_generate(
 
 
 @router.get("/{assessment_id}/recommendation-outputs", response_model=RecommendationOutputsResponse)
-def recommendation_outputs(
+async def recommendation_outputs(
     assessment_id: int,
-    db: Session = Depends(get_db),
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
 ) -> RecommendationOutputsResponse:
-    result = AssessmentService(db).get_recommendation_outputs(assessment_id=assessment_id)
+    result = await reporting.get_recommendation_outputs(assessment_id=assessment_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
 
 
 @router.get("/{assessment_id}/final-report", response_model=FinalReportResponse)
-def final_report(
+async def final_report(
     assessment_id: int,
-    db: Session = Depends(get_db),
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
 ) -> FinalReportResponse:
-    result = AssessmentService(db).get_final_report(assessment_id=assessment_id)
+    result = await reporting.get_final_report(assessment_id=assessment_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
 
 
 @router.get("/{assessment_id}/trace", response_model=AssessmentTraceResponse)
-def trace(
+async def trace(
     assessment_id: int,
     limit: int = Query(default=500, ge=1, le=2000),
     offset: int = Query(default=0, ge=0),
-    db: Session = Depends(get_db),
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
 ) -> AssessmentTraceResponse:
-    result = AssessmentService(db).get_trace(assessment_id=assessment_id, limit=limit, offset=offset)
+    result = await reporting.get_trace(assessment_id=assessment_id, limit=limit, offset=offset)
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result

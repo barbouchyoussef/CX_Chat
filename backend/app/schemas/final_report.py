@@ -10,6 +10,10 @@ class FinalReportSummary(BaseModel):
     priority_axis_score_percent: float
     strengths_count: int
     pain_points_count: int
+    assessed_capabilities_count: int = 0
+    unassessed_capabilities_count: int = 0
+    executive_summary_text: str | None = None
+    priority_message_text: str | None = None
 
 
 class FinalReportAxisItem(BaseModel):
@@ -31,6 +35,7 @@ class FinalReportCapabilityItem(BaseModel):
     axis: str
     capability: str
     maturity_band: str
+    assessment_status: str = "not_assessed"
     confidence: float | None = None
     rationale: str | None = None
     recommendation: str | None = None

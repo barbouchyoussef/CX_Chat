@@ -16,6 +16,7 @@ class AssessmentInsight(Base):
     maturity_level_id: Mapped[int | None] = mapped_column(ForeignKey("maturity_levels.id"), nullable=True, index=True)
     confidence: Mapped[float | None] = mapped_column(Numeric(4, 3), nullable=True)
     justification: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidence_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     assessment = relationship("Assessment")

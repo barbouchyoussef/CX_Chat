@@ -1,4 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from app.db.models.assessment import Assessment
 from app.db.models.assessment_insight import AssessmentInsight
@@ -10,21 +12,40 @@ from app.db.models.maturity_level import MaturityLevel
 
 
 class AssessmentRepository:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    def get_by_id(self, assessment_id: int) -> Assessment | None:
-        return self.db.query(Assessment).filter(Assessment.id == assessment_id).one_or_none()
-
-    def get_by_id_for_update(self, assessment_id: int) -> Assessment | None:
+    def _with_context(self):
         return (
-            self.db.query(Assessment)
-            .filter(Assessment.id == assessment_id)
-            .with_for_update()
-            .one_or_none()
+            joinedload(Assessment.company).joinedload(Company.sector),
+            joinedload(Assessment.company).joinedload(Company.company_size),
+            joinedload(Assessment.current_axis),
         )
 
-    def create(
+    async def get_by_id(self, assessment_id: int) -> Assessment | None:
+        result = await self.db.execute(
+            select(Assessment)
+            .options(*self._with_context())
+            .where(Assessment.id == assessment_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_id_for_update(self, assessment_id: int) -> Assessment | None:
+        result = await self.db.execute(
+            select(Assessment)
+            .options(*self._with_context())
+            .where(Assessment.id == assessment_id)
+            .with_for_update(of=Assessment)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_maturity_level_by_number(self, level_number: int) -> MaturityLevel | None:
+        result = await self.db.execute(
+            select(MaturityLevel).where(MaturityLevel.level_number == level_number)
+        )
+        return result.scalar_one_or_none()
+
+    async def create(
         self,
         company_id: int,
         status: str,
@@ -38,24 +59,18 @@ class AssessmentRepository:
             prompt_profile=prompt_profile,
         )
         self.db.add(assessment)
-        self.db.flush()
+        await self.db.flush()
         return assessment
 
-    def initialize_scores(self, assessment_id: int) -> None:
-        capabilities = self.db.query(Capability).all()
-        baseline = (
-            self.db.query(MaturityLevel)
-            .order_by(MaturityLevel.level_number.asc())
-            .limit(1)
-            .one_or_none()
-        )
-        if baseline is None:
-            raise ValueError("maturity_levels is empty. Seed maturity levels before starting assessments.")
+    async def initialize_scores(self, assessment_id: int) -> None:
+        result = await self.db.execute(select(Capability))
+        capabilities = result.scalars().all()
         links = [
             AssessmentScore(
                 assessment_id=assessment_id,
                 capability_id=c.id,
-                maturity_level_id=baseline.id,
+                maturity_level_id=None,
+                assessment_status="not_assessed",
                 confidence=None,
                 justification=None,
             )
@@ -63,17 +78,18 @@ class AssessmentRepository:
         ]
         self.db.add_all(links)
 
-    def list_assessments(self, limit: int = 50, offset: int = 0) -> list[Assessment]:
-        return (
-            self.db.query(Assessment)
+    async def list_assessments(self, limit: int = 50, offset: int = 0) -> list[Assessment]:
+        result = await self.db.execute(
+            select(Assessment)
+            .options(*self._with_context())
             .join(Company, Company.id == Assessment.company_id)
             .order_by(Assessment.id.desc())
             .offset(offset)
             .limit(limit)
-            .all()
         )
+        return list(result.scalars().all())
 
-    def add_insight(
+    async def add_insight(
         self,
         assessment_id: int,
         capability_id: int | None,
@@ -81,6 +97,7 @@ class AssessmentRepository:
         maturity_level_id: int | None,
         confidence: float | None,
         justification: str | None,
+        evidence_text: str | None,
     ) -> None:
         self.db.add(
             AssessmentInsight(
@@ -90,11 +107,14 @@ class AssessmentRepository:
                 maturity_level_id=maturity_level_id,
                 confidence=confidence,
                 justification=justification,
+                evidence_text=evidence_text,
             )
         )
 
-    def replace_recommendation_outputs(self, assessment_id: int, items: list[dict]) -> None:
-        self.db.query(RecommendationOutput).filter(RecommendationOutput.assessment_id == assessment_id).delete()
+    async def replace_recommendation_outputs(self, assessment_id: int, items: list[dict]) -> None:
+        await self.db.execute(
+            delete(RecommendationOutput).where(RecommendationOutput.assessment_id == assessment_id)
+        )
         if not items:
             return
         rows = [
@@ -109,9 +129,18 @@ class AssessmentRepository:
         ]
         self.db.add_all(rows)
 
-    def list_recommendation_outputs(self, assessment_id: int) -> list[RecommendationOutput]:
-        return (
-            self.db.query(RecommendationOutput)
-            .filter(RecommendationOutput.assessment_id == assessment_id)
-            .all()
+    async def list_recommendation_outputs(self, assessment_id: int) -> list[RecommendationOutput]:
+        result = await self.db.execute(
+            select(RecommendationOutput).where(RecommendationOutput.assessment_id == assessment_id)
         )
+        return list(result.scalars().all())
+
+    async def update_report_synthesis(
+        self,
+        assessment: Assessment,
+        executive_summary_text: str,
+        priority_message_text: str,
+    ) -> None:
+        assessment.executive_summary_text = executive_summary_text
+        assessment.priority_message_text = priority_message_text
+        await self.db.flush()

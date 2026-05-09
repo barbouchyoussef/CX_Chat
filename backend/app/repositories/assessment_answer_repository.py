@@ -1,6 +1,7 @@
-from sqlalchemy import desc
-from sqlalchemy.orm import Session
+from sqlalchemy import desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domain.constants import normalize_axis_name
 from app.db.models.assessment_answer import AssessmentAnswer
 from app.db.models.capability import Capability
 from app.db.models.axis import Axis
@@ -9,39 +10,39 @@ from app.db.models.capability_recommendation import CapabilityRecommendation
 
 
 class AssessmentAnswerRepository:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    def create(
+    async def create(
         self, assessment_id: int, question: str, answer: str, capability_id: int | None = None
     ) -> AssessmentAnswer:
         row = AssessmentAnswer(assessment_id=assessment_id, capability_id=capability_id, question=question, answer=answer)
         self.db.add(row)
-        self.db.flush()
+        await self.db.flush()
         return row
 
-    def list_recent(self, assessment_id: int, limit: int = 20) -> list[AssessmentAnswer]:
-        return (
-            self.db.query(AssessmentAnswer)
-            .filter(AssessmentAnswer.assessment_id == assessment_id)
+    async def list_recent(self, assessment_id: int, limit: int = 20) -> list[AssessmentAnswer]:
+        result = await self.db.execute(
+            select(AssessmentAnswer)
+            .where(AssessmentAnswer.assessment_id == assessment_id)
             .order_by(desc(AssessmentAnswer.id))
             .limit(limit)
-            .all()
         )
+        return list(result.scalars().all())
 
-    def list_for_assessment(self, assessment_id: int, limit: int = 200, offset: int = 0) -> list[AssessmentAnswer]:
-        return (
-            self.db.query(AssessmentAnswer)
-            .filter(AssessmentAnswer.assessment_id == assessment_id)
+    async def list_for_assessment(self, assessment_id: int, limit: int = 200, offset: int = 0) -> list[AssessmentAnswer]:
+        result = await self.db.execute(
+            select(AssessmentAnswer)
+            .where(AssessmentAnswer.assessment_id == assessment_id)
             .order_by(AssessmentAnswer.id.asc())
             .offset(offset)
             .limit(limit)
-            .all()
         )
+        return list(result.scalars().all())
 
-    def list_trace(self, assessment_id: int, limit: int = 500, offset: int = 0) -> list[dict]:
-        rows = (
-            self.db.query(
+    async def list_trace(self, assessment_id: int, limit: int = 500, offset: int = 0) -> list[dict]:
+        result = await self.db.execute(
+            select(
                 AssessmentAnswer.capability_id,
                 Capability.code,
                 Axis.name,
@@ -66,17 +67,17 @@ class AssessmentAnswerRepository:
                 (CapabilityRecommendation.capability_id == AssessmentAnswer.capability_id)
                 & (CapabilityRecommendation.maturity_level_id == AssessmentScore.maturity_level_id),
             )
-            .filter(AssessmentAnswer.assessment_id == assessment_id)
+            .where(AssessmentAnswer.assessment_id == assessment_id)
             .order_by(AssessmentAnswer.id.asc())
             .offset(offset)
             .limit(limit)
-            .all()
         )
+        rows = result.all()
         return [
             {
                 "capability_id": int(capability_id) if capability_id is not None else None,
                 "capability_code": capability_code,
-                "axis": axis_name,
+                "axis": normalize_axis_name(str(axis_name)) if axis_name is not None else None,
                 "question": question,
                 "answer": answer,
                 "created_at": created_at,

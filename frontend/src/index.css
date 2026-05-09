@@ -166,3 +166,30 @@ section {
     transform: translateY(-8px);
   }
 }
+
+@theme inline {
+  --color-gray-alpha-400: var(--ds-gray-alpha-400);
+  --background-image-skeleton-gradient: linear-gradient(270deg, var(--accents-1), var(--accents-2), var(--accents-2), var(--accents-1));
+  --animate-skeleton-loading: skeleton-loading 8s infinite ease-in-out;
+}
+
+:root {
+  --ds-gray-alpha-400: hsla(0, 0%, 0%, 0.08);
+  --accents-1: #fafafa;
+  --accents-2: #eaeaea;
+}
+
+.dark {
+  --ds-gray-alpha-400: hsla(0, 0%, 100%, 0.14);
+  --accents-2: #333333;
+  --accents-1: #111111;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

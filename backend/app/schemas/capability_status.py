@@ -10,6 +10,7 @@ class CapabilityStatusItem(BaseModel):
     label: str = Field(min_length=1, max_length=255)
     maturity_level_id: int | None = None
     assessed: bool
+    assessment_status: str = "not_assessed"
     covered: bool | None = None
     confidence: float
     evidence_text: str | None = None
@@ -20,4 +21,11 @@ class CapabilityStatusItem(BaseModel):
 class CapabilitiesStatusResponse(BaseModel):
     assessment_id: int
     axis: str | None = None
+    items: list[CapabilityStatusItem]
+
+
+class CapabilityHighlightsResponse(BaseModel):
+    assessment_id: int
+    axis: str | None = None
+    total_highlights: int
     items: list[CapabilityStatusItem]

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import "./Navbar.css";
 
-export default function Navbar() {
+type NavbarProps = {
+  onStartConversation?: () => void;
+};
+
+export default function Navbar({ onStartConversation }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const logoSrc = `${import.meta.env.BASE_URL}ey_logo.svg`;
 
@@ -33,9 +37,11 @@ export default function Navbar() {
           <a href="#summary" className="nav__link">
             Synthese
           </a>
+          <button type="button" className="nav__cta" onClick={onStartConversation}>
+            Start the conversation
+          </button>
         </div>
       </div>
     </nav>
   );
 }
-

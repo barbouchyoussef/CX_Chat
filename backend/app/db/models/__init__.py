@@ -1,5 +1,6 @@
 from app.db.models.assessment import Assessment
 from app.db.models.assessment_answer import AssessmentAnswer
+from app.db.models.assessment_axis_memory import AssessmentAxisMemory
 from app.db.models.assessment_idempotency import AssessmentIdempotency
 from app.db.models.assessment_insight import AssessmentInsight
 from app.db.models.assessment_score import AssessmentScore
@@ -16,6 +17,7 @@ from app.db.models.sector import Sector
 __all__ = [
     "Assessment",
     "AssessmentAnswer",
+    "AssessmentAxisMemory",
     "AssessmentIdempotency",
     "AssessmentInsight",
     "AssessmentScore",

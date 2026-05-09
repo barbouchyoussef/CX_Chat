@@ -10,6 +10,7 @@ class AssessmentRecommendationItem(BaseModel):
     axis: str
     maturity_level_id: int | None = None
     confidence: float | None = None
+    assessment_status: str = "not_assessed"
     justification: str | None = None
     recommendation_guideline: str | None = None
     priority_hint: str | None = None
