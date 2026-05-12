@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
 from app.schemas.client import ClientTurnRequest, ClientTurnResponse, WelcomeResponse
-from app.services.assessment_service import AssessmentService, build_assessment_service
+from app.services.assessment import AssessmentService, build_assessment_service
 
 router = APIRouter(prefix="/client")
 

@@ -24,9 +24,14 @@ from app.schemas.recommendations import (
     AssessmentTraceResponse,
     RecommendationOutputsResponse,
 )
-from app.services.assessment_conversation_service import AssessmentConversationService, build_assessment_conversation_service
-from app.services.assessment_reporting_service import AssessmentReportingService, build_assessment_reporting_service
-from app.services.assessment_service import AssessmentService, build_assessment_service
+from app.services.assessment import (
+    AssessmentConversationService,
+    AssessmentReportingService,
+    AssessmentService,
+    build_assessment_conversation_service,
+    build_assessment_reporting_service,
+    build_assessment_service,
+)
 
 router = APIRouter(prefix="/assessments")
 

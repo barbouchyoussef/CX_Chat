@@ -161,12 +161,12 @@ class BenchmarkService:
     def _clean_summary_text(self, text: str) -> str:
         cleaned = normalize_text(text)
         replacements = {
-            "â€™": "'",
-            "â€œ": '"',
-            "â€": '"',
-            "â€“": "-",
-            "â€”": "-",
-            "Ã©": "e",
+            "Ã¢â‚¬â„¢": "'",
+            "Ã¢â‚¬Å“": '"',
+            "Ã¢â‚¬Â": '"',
+            "Ã¢â‚¬â€œ": "-",
+            "Ã¢â‚¬â€": "-",
+            "ÃƒÂ©": "e",
         }
         for bad, good in replacements.items():
             cleaned = cleaned.replace(bad, good)

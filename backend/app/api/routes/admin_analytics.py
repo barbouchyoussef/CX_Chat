@@ -18,7 +18,7 @@ from app.schemas.admin_analytics import (
     SectorTrendsResponse,
     TopSignalsResponse,
 )
-from app.services.admin_analytics_service import AdminAnalyticsService
+from app.services.analytics import AdminAnalyticsService
 
 router = APIRouter(prefix="/admin/analytics")
 
