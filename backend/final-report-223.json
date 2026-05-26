@@ -1,0 +1,455 @@
+﻿{
+    "assessment_id":  223,
+    "hero":  {
+                 "report_title":  "CX Maturity Report",
+                 "report_date_label":  "May 2026",
+                 "company_name":  "Ooredoo",
+                 "sector_name":  "Telecom",
+                 "region":  "Africa",
+                 "overall_level":  1,
+                 "overall_level_label":  "1 / 3",
+                 "overall_maturity_band":  "Basic",
+                 "hero_message":  "Ooredoo has established foundations in CX with credible building blocks: a named CX lead provides ownership, structured feedback collection via CRM ensures data is captured, and tracking of core metrics (NPS, CSAT) demonstrates a commitment to measurement. However, maturity remains unevenâwhile insights are gathered, limited evidence shows these systematically inform decisions or drive prioritization, with reactive rather than proactive issue resolution. The strongest capability lies in analysis (e.g., tool-based feedback storage), but without cross-functional governance or structured action-taking, these insights risk remaining untapped. Addressing the Manage axisâparticularly embedding feedback into decision-making and formalizing accountability for improvementsâwould bridge the gap between data collection and impact. Prioritize embedding customer insights into decision-making by formalizing how feedback directly shapes policies, roadmaps, and cross-functional accountabilityâturning reactive monitoring into systemic action.",
+                 "strongest_axis":  "Analyze",
+                 "strongest_axis_level":  2,
+                 "strongest_axis_level_label":  "2 / 3",
+                 "priority_axis":  "Manage",
+                 "priority_axis_level":  2,
+                 "priority_axis_level_label":  "2 / 3"
+             },
+    "summary":  {
+                    "overall_score_percent":  51.85,
+                    "overall_maturity_band":  "Basic",
+                    "strongest_axis":  "Analyze",
+                    "strongest_axis_score_percent":  55.56,
+                    "priority_axis":  "Manage",
+                    "priority_axis_score_percent":  50.0,
+                    "strengths_count":  3,
+                    "pain_points_count":  3,
+                    "assessed_capabilities_count":  7,
+                    "unassessed_capabilities_count":  2,
+                    "executive_summary_text":  "Ooredoo has established foundations in CX with credible building blocks: a named CX lead provides ownership, structured feedback collection via CRM ensures data is captured, and tracking of core metrics (NPS, CSAT) demonstrates a commitment to measurement. However, maturity remains unevenâwhile insights are gathered, limited evidence shows these systematically inform decisions or drive prioritization, with reactive rather than proactive issue resolution. The strongest capability lies in analysis (e.g., tool-based feedback storage), but without cross-functional governance or structured action-taking, these insights risk remaining untapped. Addressing the Manage axisâparticularly embedding feedback into decision-making and formalizing accountability for improvementsâwould bridge the gap between data collection and impact.",
+                    "priority_message_text":  "Prioritize embedding customer insights into decision-making by formalizing how feedback directly shapes policies, roadmaps, and cross-functional accountabilityâturning reactive monitoring into systemic action."
+                },
+    "axes":  [
+                 {
+                     "axis":  "Manage",
+                     "score_percent":  50.0,
+                     "maturity_band":  "Established",
+                     "axis_level":  2,
+                     "axis_level_label":  "2 / 3"
+                 },
+                 {
+                     "axis":  "Analyze",
+                     "score_percent":  55.56,
+                     "maturity_band":  "Established",
+                     "axis_level":  2,
+                     "axis_level_label":  "2 / 3"
+                 },
+                 {
+                     "axis":  "Improve",
+                     "score_percent":  50.0,
+                     "maturity_band":  "Established",
+                     "axis_level":  2,
+                     "axis_level_label":  "2 / 3"
+                 }
+             ],
+    "strengths":  [
+                      {
+                          "axis":  "Manage",
+                          "capability":  "Ownership and governance",
+                          "maturity_band":  "Established",
+                          "rationale":  "The presence of a named **CX lead** signals a central owner exists, which aligns with Level 2 (\u0027Established\u0027) where a CX owner or lead is in place, even if governance routines and cross-functional coordination are not...",
+                          "recommendation":  "The presence of a named CX lead confirms central ownership is in place, but the available evidence suggests governance routines and cross-functional coordination remain underdevelopedâlimiting the reliability of execution. To scale from local ownership to enterprise discipline, formally assign journey or process ownership to the CX lead and define clear escalation paths for unresolved cross-functional issues, ensuring these become visible at the appropriate leadership level. This will convert partial ownership into a more dependable operating model by embedding accountability where it currently lacks structure. The result will be more predictable cross-functional delivery and stronger alignment between customer outcomes and operational execution.",
+                          "priority":  "build_consistency"
+                      },
+                      {
+                          "axis":  "Analyze",
+                          "capability":  "Feedback collection",
+                          "maturity_band":  "Established",
+                          "rationale":  "The answer provides a concrete signal of a defined tool (CRM) used for storing feedback, which aligns with Level 2\u0027s description of \u0027basic tools such as CRM cases\u0027 and indicates a structured approach beyond ad hoc or...",
+                          "recommendation":  "Your current use of the CRM to store feedback demonstrates a structured foundation for capturing customer input, but the available evidence suggests critical gaps in channel coverage, segmentation, and actionable visibility that limit strategic responsiveness. To sharpen insight quality, prioritize integrating feedback from additional touchpoints into the CRM and implement basic tagging by customer journey stageâthis will reduce blind spots while maintaining the existing toolâs role as the central repository. By clarifying ownership for reviewing tagged feedback and establishing a simple cadence for surfacing cross-channel patterns, youâll move from passive storage to proactive issue detection. This evolution will directly improve prioritization precision and enable faster responses to emerging customer friction points.",
+                          "priority":  "build_consistency"
+                      },
+                      {
+                          "axis":  "Improve",
+                          "capability":  "Measurement and continuous improvement",
+                          "maturity_band":  "Established",
+                          "rationale":  "The answer provides concrete evidence of established CX metrics (NPS, CSAT) being tracked, which aligns with Level 2 of the Measurement and continuous improvement rubric (\u0027Some CX or operational KPIs are tracked and o...",
+                          "recommendation":  "Your current tracking of NPS and CSAT demonstrates foundational measurement discipline, but the evidence suggests these metrics are not yet systematically tied to ownership, decisions, or business impactâlimiting their ability to drive consistent improvement. The immediate priority is to assign clear accountability for each metric, define what success looks like beyond data collection, and establish a rhythm for reviewing results against operational or customer outcomes. This means shifting from reporting metrics to using them as the basis for actionâwhether refining experiences, reallocating resources, or validating investments. Doing so will sharpen focus on what truly moves the needle for customers while making improvement efforts more predictable and value-driven.",
+                          "priority":  "build_consistency"
+                      }
+                  ],
+    "pain_points":  [
+                        {
+                            "axis":  "Manage",
+                            "capability":  "Decision-making",
+                            "maturity_band":  "Basic",
+                            "rationale":  "The answer describes a reactive monitoring practice without concrete evidence that customer feedback systematically shapes decisions, priorities, or actions (e.g., no examples of policy changes, roadmap updates, or de...",
+                            "recommendation":  "Your current approach to customer feedback remains reactiveâcapturing signals without clear evidence that these insights systematically inform decisions, priorities, or corrective actions. To close this gap, embed a disciplined review of the most material customer issues into existing decision forums, ensuring each is assigned a named owner and a defined follow-up action before issues escalate. Start by surfacing the highest-impact feedback themes alongside operational or strategic discussions, forcing explicit trade-offs rather than treating them as passive inputs. This shift will sharpen prioritization, reduce avoidable rework, and enable leadership to address customer risks before they harden into broader dissatisfaction.",
+                            "priority":  "urgent_foundation"
+                        },
+                        {
+                            "axis":  "Improve",
+                            "capability":  "Acting on pain points",
+                            "maturity_band":  "Basic",
+                            "rationale":  "The response describes a reactive, ad hoc approach to addressing pain pointsâfocusing on *investigating* issues as they arise rather than a structured backlog, named owners, or systematic tracking/closure. This aligns...",
+                            "recommendation":  "Your current approach to pain-point resolution is ad hoc and reactiveâissues are investigated as they arise without structured ownership, prioritization, or validation of fixes, which risks recurring problems and inconsistent execution. To move beyond this, formalize a closed-loop process by assigning clear owners to priority issues, documenting root causes, and requiring proof of resolution before closing each case. Start with a simple backlog of known pain points and enforce deadlines for investigation and corrective action, ensuring accountability for follow-through. This discipline will reduce repeat complaints, cut avoidable service effort, and demonstrate to customers that their feedback drives tangible improvements.",
+                            "priority":  "urgent_foundation"
+                        },
+                        {
+                            "axis":  "Analyze",
+                            "capability":  "Use of insights",
+                            "maturity_band":  "Basic",
+                            "rationale":  "The answer provides a basic but concrete signal about prioritization logic (business priority) without evidence of theme review, root-cause analysis, customer impact criteria, or systematic insight synthesis, aligning...",
+                            "recommendation":  "The current approach to prioritizing customer insights relies on business priority alone, which the evidence shows operates reactively and without systematic review of themes, root causes, or customer impactâlimiting the ability to address underlying issues at scale. To move from anecdotal reactions to managed outcomes, leadership should immediately institute a disciplined process to categorize feedback into actionable themes, isolate root causes, and assign clear ownership for resolution, ensuring decisions are tied to measurable customer impact rather than ad hoc judgment. This requires minimal new infrastructure but demands consistent follow-through to review progress against the most critical patterns. The result will be sharper focus on high-value improvements, fewer recurring customer pain points, and greater return on the insights already being collected.",
+                            "priority":  "urgent_foundation"
+                        }
+                    ],
+    "capabilities":  [
+                         {
+                             "capability_id":  3,
+                             "maturity_level_number":  1,
+                             "axis":  "Manage",
+                             "capability":  "Decision-making",
+                             "maturity_band":  "Basic",
+                             "assessment_status":  "assessed",
+                             "confidence":  0.95,
+                             "rationale":  "The answer describes a reactive monitoring practice without concrete evidence that customer feedback systematically shapes decisions, priorities, or actions (e.g., no examples of policy changes, roadmap updates, or de...",
+                             "recommendation":  "Your current approach to customer feedback remains reactiveâcapturing signals without clear evidence that these insights systematically inform decisions, priorities, or corrective actions. To close this gap, embed a disciplined review of the most material customer issues into existing decision forums, ensuring each is assigned a named owner and a defined follow-up action before issues escalate. Start by surfacing the highest-impact feedback themes alongside operational or strategic discussions, forcing explicit trade-offs rather than treating them as passive inputs. This shift will sharpen prioritization, reduce avoidable rework, and enable leadership to address customer risks before they harden into broader dissatisfaction.",
+                             "priority":  "urgent_foundation"
+                         },
+                         {
+                             "capability_id":  2,
+                             "maturity_level_number":  2,
+                             "axis":  "Manage",
+                             "capability":  "Ownership and governance",
+                             "maturity_band":  "Established",
+                             "assessment_status":  "assessed",
+                             "confidence":  0.95,
+                             "rationale":  "The presence of a named **CX lead** signals a central owner exists, which aligns with Level 2 (\u0027Established\u0027) where a CX owner or lead is in place, even if governance routines and cross-functional coordination are not...",
+                             "recommendation":  "The presence of a named CX lead confirms central ownership is in place, but the available evidence suggests governance routines and cross-functional coordination remain underdevelopedâlimiting the reliability of execution. To scale from local ownership to enterprise discipline, formally assign journey or process ownership to the CX lead and define clear escalation paths for unresolved cross-functional issues, ensuring these become visible at the appropriate leadership level. This will convert partial ownership into a more dependable operating model by embedding accountability where it currently lacks structure. The result will be more predictable cross-functional delivery and stronger alignment between customer outcomes and operational execution.",
+                             "priority":  "build_consistency"
+                         },
+                         {
+                             "capability_id":  7,
+                             "maturity_level_number":  2,
+                             "axis":  "Analyze",
+                             "capability":  "Feedback collection",
+                             "maturity_band":  "Established",
+                             "assessment_status":  "assessed",
+                             "confidence":  0.95,
+                             "rationale":  "The answer provides a concrete signal of a defined tool (CRM) used for storing feedback, which aligns with Level 2\u0027s description of \u0027basic tools such as CRM cases\u0027 and indicates a structured approach beyond ad hoc or...",
+                             "recommendation":  "Your current use of the CRM to store feedback demonstrates a structured foundation for capturing customer input, but the available evidence suggests critical gaps in channel coverage, segmentation, and actionable visibility that limit strategic responsiveness. To sharpen insight quality, prioritize integrating feedback from additional touchpoints into the CRM and implement basic tagging by customer journey stageâthis will reduce blind spots while maintaining the existing toolâs role as the central repository. By clarifying ownership for reviewing tagged feedback and establishing a simple cadence for surfacing cross-channel patterns, youâll move from passive storage to proactive issue detection. This evolution will directly improve prioritization precision and enable faster responses to emerging customer friction points.",
+                             "priority":  "build_consistency"
+                         },
+                         {
+                             "capability_id":  9,
+                             "maturity_level_number":  1,
+                             "axis":  "Improve",
+                             "capability":  "Acting on pain points",
+                             "maturity_band":  "Basic",
+                             "assessment_status":  "assessed",
+                             "confidence":  0.95,
+                             "rationale":  "The response describes a reactive, ad hoc approach to addressing pain pointsâfocusing on *investigating* issues as they arise rather than a structured backlog, named owners, or systematic tracking/closure. This aligns...",
+                             "recommendation":  "Your current approach to pain-point resolution is ad hoc and reactiveâissues are investigated as they arise without structured ownership, prioritization, or validation of fixes, which risks recurring problems and inconsistent execution. To move beyond this, formalize a closed-loop process by assigning clear owners to priority issues, documenting root causes, and requiring proof of resolution before closing each case. Start with a simple backlog of known pain points and enforce deadlines for investigation and corrective action, ensuring accountability for follow-through. This discipline will reduce repeat complaints, cut avoidable service effort, and demonstrate to customers that their feedback drives tangible improvements.",
+                             "priority":  "urgent_foundation"
+                         },
+                         {
+                             "capability_id":  8,
+                             "maturity_level_number":  2,
+                             "axis":  "Improve",
+                             "capability":  "Measurement and continuous improvement",
+                             "maturity_band":  "Established",
+                             "assessment_status":  "assessed",
+                             "confidence":  0.95,
+                             "rationale":  "The answer provides concrete evidence of established CX metrics (NPS, CSAT) being tracked, which aligns with Level 2 of the Measurement and continuous improvement rubric (\u0027Some CX or operational KPIs are tracked and o...",
+                             "recommendation":  "Your current tracking of NPS and CSAT demonstrates foundational measurement discipline, but the evidence suggests these metrics are not yet systematically tied to ownership, decisions, or business impactâlimiting their ability to drive consistent improvement. The immediate priority is to assign clear accountability for each metric, define what success looks like beyond data collection, and establish a rhythm for reviewing results against operational or customer outcomes. This means shifting from reporting metrics to using them as the basis for actionâwhether refining experiences, reallocating resources, or validating investments. Doing so will sharpen focus on what truly moves the needle for customers while making improvement efforts more predictable and value-driven.",
+                             "priority":  "build_consistency"
+                         },
+                         {
+                             "capability_id":  5,
+                             "maturity_level_number":  2,
+                             "axis":  "Analyze",
+                             "capability":  "Channel consistency",
+                             "maturity_band":  "Established",
+                             "assessment_status":  "assessed",
+                             "confidence":  0.92,
+                             "rationale":  "The answer signals partial coordination (tracking history) and channel-specific front desks, indicating some cross-channel continuity but not full shared context or active consistency monitoring, aligning with Level 2...",
+                             "recommendation":  "Your current approachâtracking customer history across channels while maintaining channel-specific front desksâdemonstrates foundational coordination but leaves gaps in true cross-channel consistency, creating uneven journeys where context isnât fully shared or actively managed. The next step is to evolve from isolated tracking to deliberate alignment by standardizing how history and policies are applied across front desks, then introducing lightweight oversight of handoffs between channels to catch discontinuities in real time. This doesnât require overhauling existing structures but does demand clearer governance of shared customer context where channels intersect. The result will be fewer fragmented interactions, lower operational drag from redundant resolutions, and a more reliable experience for customers moving between touchpoints.",
+                             "priority":  "build_consistency"
+                         },
+                         {
+                             "capability_id":  6,
+                             "maturity_level_number":  1,
+                             "axis":  "Analyze",
+                             "capability":  "Use of insights",
+                             "maturity_band":  "Basic",
+                             "assessment_status":  "assessed",
+                             "confidence":  0.85,
+                             "rationale":  "The answer provides a basic but concrete signal about prioritization logic (business priority) without evidence of theme review, root-cause analysis, customer impact criteria, or systematic insight synthesis, aligning...",
+                             "recommendation":  "The current approach to prioritizing customer insights relies on business priority alone, which the evidence shows operates reactively and without systematic review of themes, root causes, or customer impactâlimiting the ability to address underlying issues at scale. To move from anecdotal reactions to managed outcomes, leadership should immediately institute a disciplined process to categorize feedback into actionable themes, isolate root causes, and assign clear ownership for resolution, ensuring decisions are tied to measurable customer impact rather than ad hoc judgment. This requires minimal new infrastructure but demands consistent follow-through to review progress against the most critical patterns. The result will be sharper focus on high-value improvements, fewer recurring customer pain points, and greater return on the insights already being collected.",
+                             "priority":  "urgent_foundation"
+                         }
+                     ],
+    "benchmarks":  [
+
+                   ],
+    "competitive_landscape":  [
+
+                              ],
+    "leaders_snapshot":  {
+                             "supported":  true,
+                             "status":  "completed",
+                             "sector":  "Telecom",
+                             "respondent_company_name":  "Ooredoo",
+                             "message":  null,
+                             "metrics":  {
+                                             "candidates_considered":  6,
+                                             "candidates_evaluated":  6,
+                                             "web_search_calls":  12,
+                                             "rerank_calls":  6,
+                                             "mistral_calls":  0,
+                                             "documents_retrieved":  48,
+                                             "documents_validated":  0,
+                                             "documents_rejected_indirect":  0,
+                                             "capability_coverage_count":  2
+                                         },
+                             "leaders":  [
+                                             {
+                                                 "key":  "swisscom",
+                                                 "company_name":  "Swisscom",
+                                                 "note":  "Swisscom shows benchmark evidence through Swisscom KMU-Hotline: Vom Service zum Werttreiber â cmm360.",
+                                                 "leader_summary":  "Swisscom shows benchmark evidence through Swisscom KMU-Hotline: Vom Service zum Werttreiber â cmm360.",
+                                                 "logo_url":  "https://logo.clearbit.com/swisscom.ch",
+                                                 "evidence_links":  [
+                                                                        {
+                                                                            "label":  "Swisscom KMU-Hotline: Vom Service zum Werttreiber â cmm360: wenn service mehr als nur service ist contact center customer centricity customer journey customer service digitale transformation wenn service mehr als nur service ist meike tarabori mittwoch , 11 . 03 . 2026 die kmu",
+                                                                            "url":  "https://www.cmm360.ch/artikel/wenn-service-mehr-als-nur-service-ist/",
+                                                                            "source_title":  "Swisscom KMU-Hotline: Vom Service zum Werttreiber â cmm360",
+                                                                            "mapped_capability":  "Decision-making",
+                                                                            "why_relevant":  "This evidence supports Decision-making through wenn service mehr als nur service ist contact center customer centricity customer journey customer service digitale transformation wenn service mehr als nur service ist meike tarabori mittwoch , 11 . 03 . 2026 die kmu - hotline von s"
+                                                                        },
+                                                                        {
+                                                                            "label":  "Swisscom verstÃ¤rkt die Kundenorientierung durch Innovation | Genesys: begeisterung fÃ¼r innovationen und customer experience durch den einsatz von genesys predictive routing und einer intelligenten messaging - architektur â einschlieÃlich whatsapp und apple business chat â konnte",
+                                                                            "url":  "https://www.genesys.com/de-de/customer-stories/swisscom",
+                                                                            "source_title":  "Swisscom verstÃ¤rkt die Kundenorientierung durch Innovation | Genesys",
+                                                                            "mapped_capability":  "Decision-making",
+                                                                            "why_relevant":  "This evidence supports Decision-making through begeisterung fÃ¼r innovationen und customer experience durch den einsatz von genesys predictive routing und einer intelligenten messaging - architektur â einschlieÃlich whatsapp und apple business chat â konnte swisscom erfolgreich di"
+                                                                        },
+                                                                        {
+                                                                            "label":  "CASE STUDY SWISSCOM Switzerlandâs largest domestic telecommunication and TV provider achieves major growth with Teneo Conversational IVR: case study swisscom switzerland âs largest domestic telecommunication and tv provider achieves major growth with teneo conversational ivr case",
+                                                                            "url":  "https://cdn.featuredcustomers.com/CustomerCaseStudy.document/CS-Swisscom_PDF_2025.pdf",
+                                                                            "source_title":  "CASE STUDY SWISSCOM Switzerlandâs largest domestic telecommunication and TV provider achieves major growth with Teneo Conversational IVR",
+                                                                            "mapped_capability":  null,
+                                                                            "why_relevant":  null
+                                                                        }
+                                                                    ]
+                                             },
+                                             {
+                                                 "key":  "vodafone",
+                                                 "company_name":  "Vodafone",
+                                                 "note":  "Vodafone shows benchmark evidence through UKPN \u0026 Vodafone StormÂ® Case Study | Vodafone.",
+                                                 "leader_summary":  "Vodafone shows benchmark evidence through UKPN \u0026 Vodafone StormÂ® Case Study | Vodafone.",
+                                                 "logo_url":  "https://logo.clearbit.com/vodafone.com",
+                                                 "evidence_links":  [
+                                                                        {
+                                                                            "label":  "UKPN \u0026 Vodafone StormÂ® Case Study | Vodafone: vodafone storm Â® helps uk power networks reduce repeat callers by 50 % during outages overview uk power networks is the nation âs largest distribution network operator . supply disruptions cause a sharp rise in customer contacts , put",
+                                                                            "url":  "https://www.vodafone.co.uk/business/case-studies/ukpn-and-vodafone-storm",
+                                                                            "source_title":  "UKPN \u0026 Vodafone StormÂ® Case Study | Vodafone",
+                                                                            "mapped_capability":  "Acting on pain points",
+                                                                            "why_relevant":  "This evidence supports Acting on pain points through vodafone storm Â® helps uk power networks reduce repeat callers by 50 % during outages overview uk power networks is the nation âs largest distribution network operator . supply disruptions cause a sharp rise in customer contact"
+                                                                        },
+                                                                        {
+                                                                            "label":  "How weâre working to make VodafoneThree the #1 telco for customer experience: how we âre working to make vodafone three the # 1 telco for customer experience jon shaw , commercial operations director at vodafone three , lifts the lid on some of the changes that will help the orga",
+                                                                            "url":  "https://www.vodafonethree.com/news/jon-shaw-customer-experience",
+                                                                            "source_title":  "How weâre working to make VodafoneThree the #1 telco for customer experience",
+                                                                            "mapped_capability":  "Decision-making",
+                                                                            "why_relevant":  "This evidence supports Decision-making through how we âre working to make vodafone three the # 1 telco for customer experience jon shaw , commercial operations director at vodafone three , lifts the lid on some of the changes that will help the organisation support customer exper"
+                                                                        },
+                                                                        {
+                                                                            "label":  "Vodafone Integrated report 2023: 4. smart digital experience exceptional customer experience in today âs highly competitive and increasingly digitalised telecom industry , exceptional customer experiences are as much about touching people in the heart with your brand as they are",
+                                                                            "url":  "https://integratedreport2023-en.vodafoneziggo.nl/integrated-report-2023/strategic-pillars/4-smart-digital-experience",
+                                                                            "source_title":  "Vodafone Integrated report 2023",
+                                                                            "mapped_capability":  "Decision-making",
+                                                                            "why_relevant":  "This evidence supports Decision-making through 4. smart digital experience exceptional customer experience in today âs highly competitive and increasingly digitalised telecom industry , exceptional customer experiences are as much about touching people in the heart with your bran"
+                                                                        }
+                                                                    ]
+                                             },
+                                             {
+                                                 "key":  "t-mobile",
+                                                 "company_name":  "T-Mobile",
+                                                 "note":  "T-Mobile shows benchmark evidence through T-Mobile reinventÃ³ el Servicio al Cliente con el Equipo de Expertos",
+                                                 "leader_summary":  "T-Mobile shows benchmark evidence through T-Mobile reinventÃ³ el Servicio al Cliente con el Equipo de Expertos",
+                                                 "logo_url":  "https://logo.clearbit.com/t-mobile.com",
+                                                 "evidence_links":  [
+                                                                        {
+                                                                            "label":  "T-Mobile reinventÃ³ el Servicio al Cliente con el Equipo de Expertos | T-Mobile Para Empresas: cÃ³mo el equipo de expertos de t-mobile reinventÃ³ el servicio al cliente callie field , vicepresidenta ejecutiva de servicio al cliente , t-mobile cuando t-mobile iniciÃ³ la revoluciÃ³n del",
+                                                                            "url":  "https://es.t-mobile.com/business/resources/articles/reinventing-customer-service-with-team-of-experts",
+                                                                            "source_title":  "T-Mobile reinventÃ³ el Servicio al Cliente con el Equipo de Expertos | T-Mobile Para Empresas",
+                                                                            "mapped_capability":  null,
+                                                                            "why_relevant":  null
+                                                                        },
+                                                                        {
+                                                                            "label":  "T-Mobile ê³ ê° ì±ê³µ ì¬ë¡: Salesforceë¡ ìì\u0085/ìë¹ì¤ íë¡ì¸ì¤ íµí© ë° ê°ìí | Salesforce KR: t - mobile ì trailblazer ì\u0085ëë¤ . ìì½ t - mobile ì ê³ ê°ì ë ì ì´í´íê³  ì ì¸ì¼ì¦ í¬ì¤ë¥¼ ëì\u0085 íìµëë¤ . ê³ ê° ë°ì´í° ì ì²´ê³í ë° ì¤ìê° ê³µì ë¥¼ ê¸°ë°ì¼ë¡ ìì\u0085 ë° ìë¹ì¤ ë´ë¹ìë¤ ì ì\u0085ë¬´ íë¡ì¸ì¤ë¥¼ ê°ìíë ë¬¼ë¡  , ì§ë¬´ ê²½íì í¥ììí¬ ì ìììµëë¤ . t - mobile ì ì¸ì¼ì¦ í¬ì¤ì í¨ê» ê³ ê° ì±ê³µì ìí ëì§í¸ íì  ì¬ì ì í¨",
+                                                                            "url":  "https://www.salesforce.com/kr/customer-stories/t-mobile-streamlines-sales-service/",
+                                                                            "source_title":  "T-Mobile ê³ ê° ì±ê³µ ì¬ë¡: Salesforceë¡ ìì\u0085/ìë¹ì¤ íë¡ì¸ì¤ íµí© ë° ê°ìí | Salesforce KR",
+                                                                            "mapped_capability":  null,
+                                                                            "why_relevant":  null
+                                                                        },
+                                                                        {
+                                                                            "label":  "T-Mobile Reinvented Customer Service with Expert Team | T-Mobile for Business: how t-mobile âs team of experts reinvented customer support callie field , evp - customer care , t-mobile when t-mobile launched the un - carrier revolution in 2013 , we set out to remake the entire wi",
+                                                                            "url":  "https://www.t-mobile.com/business/resources/articles/reinventing-customer-service-with-team-of-experts/",
+                                                                            "source_title":  "T-Mobile Reinvented Customer Service with Expert Team | T-Mobile for Business",
+                                                                            "mapped_capability":  "Decision-making",
+                                                                            "why_relevant":  "This evidence supports Decision-making through how t-mobile âs team of experts reinvented customer support callie field , evp - customer care , t-mobile when t-mobile launched the un - carrier revolution in 2013 , we set out to remake the entire wireless industry through the lens"
+                                                                        }
+                                                                    ]
+                                             }
+                                         ]
+                         },
+    "quick_wins_timeline":  {
+                                "section_title":  "Your Quick Wins, In Order",
+                                "items":  [
+                                              {
+                                                  "step":  1,
+                                                  "timeline_label":  "Week 1",
+                                                  "title":  "Launch weekly customer decision forum",
+                                                  "owner":  "CX Lead",
+                                                  "today_text":  "Feedback is monitored but doesnât systematically drive decisions, priorities, or actions like policy changes or roadmap updates.",
+                                                  "after_text":  "Improves prioritization quality, reduces avoidable rework, and helps leadership act earlier on customer risks."
+                                              },
+                                              {
+                                                  "step":  2,
+                                                  "timeline_label":  "Month 1",
+                                                  "title":  "Add root-cause check for recurring complaints",
+                                                  "owner":  "CX Lead",
+                                                  "today_text":  "Pain points are addressed reactively and ad hoc, with no structured backlog, named owners, or validation that fixes stick.",
+                                                  "after_text":  "Reduces repeat complaints, accelerates problem resolution, and lowers avoidable service effort."
+                                              },
+                                              {
+                                                  "step":  3,
+                                                  "timeline_label":  "Month 2",
+                                                  "title":  "Review key CX measures on fixed cadence",
+                                                  "owner":  "Insights Lead",
+                                                  "today_text":  "Prioritization relies on business priority alone, without reviewing themes, customer impact, or synthesizing insights systematically.",
+                                                  "after_text":  "Reduces recurring issues, improves focus of improvement effort, and increases the practical value of customer information."
+                                              },
+                                              {
+                                                  "step":  4,
+                                                  "timeline_label":  "Month 3-4",
+                                                  "title":  "Formalize cross-functional CX action tracking",
+                                                  "owner":  "CX Lead",
+                                                  "today_text":  "A CX Lead exists but governance routines and cross-functional coordination for issue resolution are not yet established.",
+                                                  "after_text":  "Improves execution reliability, strengthens accountability, and makes cross-functional customer delivery more predictable."
+                                              }
+                                          ]
+                            },
+    "working_missing":  [
+                            {
+                                "axis":  "manage",
+                                "label":  "Manage",
+                                "score_percent":  50.0,
+                                "maturity_band":  "Established",
+                                "axis_level":  2,
+                                "axis_level_label":  "2 / 3",
+                                "subtitle":  "Ownership is visible, but listening discipline and coordination are still partial.",
+                                "intro":  "Manage shows meaningful progress. The team can respond and take ownership, but the model is not yet fully systematic across journeys and feedback loops.",
+                                "stat_note":  "This is the axis where the next maturity gain is most likely to come from.",
+                                "working":  [
+                                                {
+                                                    "capability":  "Ownership and governance",
+                                                    "maturity_band":  "Established",
+                                                    "summary":  "Named ownership exists, but governance routines and cross-functional coordination are still uneven.",
+                                                    "evidence_snippet":  "The presence of a named **CX lead** signals a central owner exists, which aligns with Level 2 (\u0027Established\u0027) where a CX owner or lead is in place, even if governance routines and cross-functional coordination are not..."
+                                                }
+                                            ],
+                                "missing":  [
+                                                {
+                                                    "capability":  "Decision-making",
+                                                    "maturity_band":  "Basic",
+                                                    "summary":  "Customer evidence rarely shapes decisions in a structured way, so priorities remain mostly internal or reactive.",
+                                                    "evidence_snippet":  "The answer describes a reactive monitoring practice without concrete evidence that customer feedback systematically shapes decisions, priorities, or actions (e.g., no examples of policy changes, roadmap updates, or de..."
+                                                }
+                                            ]
+                            },
+                            {
+                                "axis":  "analyze",
+                                "label":  "Analyze",
+                                "score_percent":  55.56,
+                                "maturity_band":  "Established",
+                                "axis_level":  2,
+                                "axis_level_label":  "2 / 3",
+                                "subtitle":  "Customer evidence is becoming more structured, though insights are not yet fully consistent or decision-ready.",
+                                "intro":  "Analyze is improving. Teams are starting to use more structured evidence, but the quality and regularity of measurement still limit confident prioritization.",
+                                "stat_note":  "This is the most mature axis in the current report and the best foundation to build on.",
+                                "working":  [
+                                                {
+                                                    "capability":  "Feedback collection",
+                                                    "maturity_band":  "Established",
+                                                    "summary":  "Feedback is captured through shared tools and routines, but coverage and review discipline are still incomplete.",
+                                                    "evidence_snippet":  "The answer provides a concrete signal of a defined tool (CRM) used for storing feedback, which aligns with Level 2\u0027s description of \u0027basic tools such as CRM cases\u0027 and indicates a structured approach beyond ad hoc or..."
+                                                },
+                                                {
+                                                    "capability":  "Channel consistency",
+                                                    "maturity_band":  "Established",
+                                                    "summary":  "Some channel standards and handoff practices exist, but consistency is still uneven across the experience.",
+                                                    "evidence_snippet":  "The answer signals partial coordination (tracking history) and channel-specific front desks, indicating some cross-channel continuity but not full shared context or active consistency monitoring, aligning with Level 2..."
+                                                }
+                                            ],
+                                "missing":  [
+                                                {
+                                                    "capability":  "Use of insights",
+                                                    "maturity_band":  "Basic",
+                                                    "summary":  "Feedback is reviewed informally, but it is not yet turned into structured insight or clear prioritization.",
+                                                    "evidence_snippet":  "The answer provides a basic but concrete signal about prioritization logic (business priority) without evidence of theme review, root-cause analysis, customer impact criteria, or systematic insight synthesis, aligning..."
+                                                }
+                                            ]
+                            },
+                            {
+                                "axis":  "improve",
+                                "label":  "Improve",
+                                "score_percent":  50.0,
+                                "maturity_band":  "Established",
+                                "axis_level":  2,
+                                "axis_level_label":  "2 / 3",
+                                "subtitle":  "Improvement efforts are visible, but follow-through still depends on uneven coordination and manual push.",
+                                "intro":  "Improve shows momentum. Teams are acting on problems, but the operating cadence is not yet strong enough to make execution fully consistent.",
+                                "stat_note":  "This axis has meaningful signals, but it still needs stronger consistency and proof.",
+                                "working":  [
+                                                {
+                                                    "capability":  "Measurement and continuous improvement",
+                                                    "maturity_band":  "Established",
+                                                    "summary":  "Some metrics and reviews exist, but continuous improvement is not yet strongly linked to targets, learning, or business outcomes.",
+                                                    "evidence_snippet":  "The answer provides concrete evidence of established CX metrics (NPS, CSAT) being tracked, which aligns with Level 2 of the Measurement and continuous improvement rubric (\u0027Some CX or operational KPIs are tracked and o..."
+                                                }
+                                            ],
+                                "missing":  [
+                                                {
+                                                    "capability":  "Acting on pain points",
+                                                    "maturity_band":  "Basic",
+                                                    "summary":  "Customer pain points are still addressed reactively, with weak prioritization, ownership, and closure tracking.",
+                                                    "evidence_snippet":  "The response describes a reactive, ad hoc approach to addressing pain pointsâfocusing on *investigating* issues as they arise rather than a structured backlog, named owners, or systematic tracking/closure. This aligns..."
+                                                }
+                                            ]
+                            }
+                        ],
+    "website_audit":  {
+                          "status":  "pending",
+                          "website_url":  "https://www.ooredoo.tn",
+                          "generated_at":  null,
+                          "overall_score":  null,
+                          "error_message":  null,
+                          "artifacts_base_url":  "/audit-artifacts/223",
+                          "report_url":  "/audit-artifacts/223/report.html",
+                          "audit_json_url":  "/audit-artifacts/223/audit.json",
+                          "desktop_screenshot_url":  "/audit-artifacts/223/screenshots/desktop.png",
+                          "desktop_full_screenshot_url":  "/audit-artifacts/223/screenshots/desktop-full.png",
+                          "mobile_screenshot_url":  "/audit-artifacts/223/screenshots/mobile.png",
+                          "mobile_full_screenshot_url":  "/audit-artifacts/223/screenshots/mobile-full.png",
+                          "raw_payload":  null,
+                          "findings":  [
+
+                                       ]
+                      }
+}

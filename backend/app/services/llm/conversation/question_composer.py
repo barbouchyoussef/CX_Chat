@@ -3,12 +3,12 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Awaitable, Callable
+from html import escape
 from typing import Any
 
 from app.core.config import Settings
 from app.core.prompts_templates import (
     AXIS_CONSULTANT_GUIDANCE,
-    SEMANTIC_PLAIN_LANGUAGE_INSTRUCTION,
     stage_discovery_guidance,
 )
 from app.services.llm.prompts import (
@@ -105,7 +105,7 @@ class QuestionComposerService:
         history: list[Any] | None = None,
         concerned_question: str | None = None,
     ) -> str:
-        fallback = "Could you describe how this works today in simple business terms?"
+        fallback = "Could you say in one sentence how this works today?"
 
         if not self.settings.mistral_api_key:
             logger.error("Cannot generate clarification question because MISTRAL_API_KEY is not set.")
@@ -190,8 +190,7 @@ class QuestionComposerService:
         return messages
 
     def _question_system_prompt(self, prompt_profile: str) -> str:
-        base_prompt = QUESTION_SYSTEM_PROMPT_GUIDED
-        return f"{base_prompt}\n<semantic_language_instruction>{SEMANTIC_PLAIN_LANGUAGE_INSTRUCTION}</semantic_language_instruction>"
+        return QUESTION_SYSTEM_PROMPT_GUIDED
 
     def _build_clarification_messages(
         self,
@@ -236,22 +235,50 @@ class QuestionComposerService:
         if not memory:
             return ""
 
-        lines = [line.strip(" -") for line in memory.split("\n") if line.strip()]
-        anchor_lines = self._select_focus_memory_lines(lines, focus_topic)
+        entries = self._parse_memory_entries(memory)
+        if entries:
+            anchor_lines = self._select_focus_memory_entry_lines(entries, focus_topic)
+            known_types = self._select_focus_memory_types(entries, focus_topic)
+        else:
+            lines = [line.strip(" -") for line in memory.split("\n") if line.strip()]
+            anchor_lines = self._select_focus_memory_lines(lines, focus_topic)
+            known_types = []
         if latest_user_answer:
             latest_clean = self._clean_text(latest_user_answer).lower()
             anchor_lines = [
                 line
                 for line in anchor_lines
                 if self._clean_text(line).lower() not in latest_clean
-            ] or self._select_focus_memory_lines(lines, focus_topic, max_lines=1)
+            ] or (
+                self._select_focus_memory_entry_lines(entries, focus_topic, max_lines=1)
+                if entries
+                else self._select_focus_memory_lines(
+                    [line.strip(" -") for line in memory.split("\n") if line.strip()],
+                    focus_topic,
+                    max_lines=1,
+                )
+            )
 
         joined = "\n".join(f"- {line}" for line in anchor_lines[:2])
+        known_types_block = ""
+        if known_types:
+            joined_types = ", ".join(known_types[:4])
+            focused_hint = self._build_known_dimensions_hint(known_types, focus_topic)
+            known_types_block = (
+                "<known_dimensions>\n"
+                f"{joined_types}\n"
+                "</known_dimensions>\n"
+                "<known_dimensions_instruction>"
+                "Avoid re-asking these dimensions unless the current capability truly requires confirming them."
+                "</known_dimensions_instruction>\n"
+                f"{focused_hint}"
+            )
         return (
             "<known_facts>\n"
             f"{joined}\n"
             "</known_facts>\n"
             "<known_facts_instruction>Use these facts only to ask a more specific follow-up.</known_facts_instruction>\n"
+            f"{known_types_block}"
         )
 
     def _select_focus_memory_lines(
@@ -283,22 +310,127 @@ class QuestionComposerService:
 
         return lines[:max_lines]
 
-    def _build_question_guidelines_block(self, guidelines: list[str]) -> str:
-        if not guidelines:
+    def _parse_memory_entries(self, memory: str) -> list[dict[str, str]]:
+        entries: list[dict[str, str]] = []
+        for raw_line in memory.split("\n"):
+            line = raw_line.strip()
+            if not line:
+                continue
+            match = re.match(
+                r"^-\s*capability:\s*(.*?)\s*\|\s*([a-z]+)\s*:\s*(.+)$",
+                line,
+                flags=re.IGNORECASE,
+            )
+            if not match:
+                continue
+            entries.append(
+                {
+                    "capability": match.group(1).strip(),
+                    "type": match.group(2).strip().lower(),
+                    "fact": match.group(3).strip(),
+                }
+            )
+        return entries
+
+    def _select_focus_memory_entry_lines(
+        self,
+        entries: list[dict[str, str]],
+        focus_topic: str | None,
+        max_lines: int = 2,
+    ) -> list[str]:
+        if not entries:
+            return []
+
+        normalized_focus = self._normalize_memory_label(focus_topic)
+        exact_matches = [
+            f"{entry['type']}: {entry['fact']}"
+            for entry in entries
+            if self._normalize_memory_label(entry.get("capability")) == normalized_focus
+        ]
+        if exact_matches:
+            return exact_matches[:max_lines]
+
+        fallback_lines = [
+            f"{entry['type']}: {entry['fact']}"
+            for entry in entries
+        ]
+        return self._select_focus_memory_lines(fallback_lines, focus_topic, max_lines=max_lines)
+
+    def _select_focus_memory_types(
+        self,
+        entries: list[dict[str, str]],
+        focus_topic: str | None,
+    ) -> list[str]:
+        if not entries:
+            return []
+
+        normalized_focus = self._normalize_memory_label(focus_topic)
+        focused_entries = [
+            entry
+            for entry in entries
+            if self._normalize_memory_label(entry.get("capability")) == normalized_focus
+        ] or entries
+
+        ordered_types: list[str] = []
+        for entry in focused_entries:
+            value = entry.get("type", "").strip().lower()
+            if value and value not in ordered_types:
+                ordered_types.append(value)
+        return ordered_types
+
+    def _normalize_memory_label(self, value: str | None) -> str:
+        normalized = self._clean_text(value or "").lower()
+        normalized = normalized.replace("&", "and")
+        normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+        return re.sub(r"\s+", " ", normalized).strip()
+
+    def _build_known_dimensions_hint(self, known_types: list[str], focus_topic: str | None) -> str:
+        normalized_focus = self._normalize_memory_label(focus_topic)
+        known = {item.strip().lower() for item in known_types if item and item.strip()}
+        if not normalized_focus or not known:
             return ""
-        primary_guideline = guidelines[0]
-        related_guidelines = "\n".join(
-            f"<related_capability_question_guideline>{item}</related_capability_question_guideline>"
-            for item in guidelines[1:12]
+
+        if normalized_focus == "feedback collection" and {"channel", "tool", "cadence"}.intersection(known):
+            return (
+                "<known_dimensions_focus_hint>"
+                "For Feedback collection, avoid re-asking which channels, tools, or review rhythm already exist. "
+                "Prefer the next missing detail such as logging consistency, tagging, routing, deduplication, or standard capture practice."
+                "</known_dimensions_focus_hint>\n"
+            )
+        if normalized_focus == "use of insights" and {"cadence"}.intersection(known):
+            return (
+                "<known_dimensions_focus_hint>"
+                "For Use of insights, avoid re-asking only about review cadence. "
+                "Prefer how themes are compared, root causes are identified, or issues are prioritized."
+                "</known_dimensions_focus_hint>\n"
+            )
+        if normalized_focus == "acting on pain points" and {"owner", "tool", "process"}.intersection(known):
+            return (
+                "<known_dimensions_focus_hint>"
+                "For Acting on pain points, avoid repeating generic ownership or backlog setup if already known. "
+                "Prefer follow-through, closure discipline, prioritization, or validation of fixes."
+                "</known_dimensions_focus_hint>\n"
+            )
+        return ""
+
+    def _build_question_guidelines_block(self, guidelines: list[str] | None) -> str:
+        cleaned = [item.strip() for item in (guidelines or []) if item and item.strip()]
+        if not cleaned:
+            return ""
+        primary_guideline = escape(cleaned[0])
+        supplemental = "\n".join(
+            f"<supplemental_question_guideline>{escape(item)}</supplemental_question_guideline>"
+            for item in cleaned[1:4]
         )
         return (
             "<admin_question_guidelines>\n"
             "<guideline_instruction>"
-            "The primary_missing_capability_question_guideline comes from the database Question_Guidelines "
-            "for the first missing capability. Use it as the main business focus for the next question."
+            "The current_capability_question_guideline comes from the database Question_Guidelines "
+            "for the capability currently selected as the question focus. Use it as the main business focus for the next question. "
+            "Supplemental question guidelines contain narrow boundary hints about what to ask next and what to avoid repeating."
             "</guideline_instruction>\n"
-            f"<primary_missing_capability_question_guideline>{primary_guideline}</primary_missing_capability_question_guideline>\n"
-            f"{related_guidelines}\n"
+            f"<current_capability_question_guideline>{primary_guideline}</current_capability_question_guideline>\n"
+            f"{supplemental}\n"
             "</admin_question_guidelines>\n"
         )
 
@@ -382,13 +514,13 @@ class QuestionComposerService:
         maturity_rubrics: list[dict] | None = None,
     ) -> str:
         displayed_topic = self._display_topic_label(topic or axis)
-        rubric_focus = self._fallback_rubric_focus(maturity_rubrics or [])
-        if rubric_focus:
-            return f"How does {displayed_topic} work today, especially around {rubric_focus}?"
         focus_phrase = self._fallback_focus_phrase(question_guidelines)
         if focus_phrase:
-            return f"How does {displayed_topic} work today, especially around {focus_phrase}?"
-        return f"How does this work today around {displayed_topic}?"
+            return f"For {displayed_topic}, how does {focus_phrase} work today?"
+        rubric_focus = self._fallback_rubric_focus(maturity_rubrics or [])
+        if rubric_focus:
+            return f"For {displayed_topic}, how does {rubric_focus} work today?"
+        return f"How does {displayed_topic} work today?"
 
     def _fallback_rubric_focus(self, maturity_rubrics: list[dict]) -> str:
         if not maturity_rubrics:
@@ -440,9 +572,38 @@ class QuestionComposerService:
         if not guideline:
             return ""
         first_sentence = re.split(r"(?<=[.!?])\s+", guideline, maxsplit=1)[0].strip(" .!?")
-        first_sentence = re.sub(r"^(look for|focus on|prioritize)\s+", "", first_sentence, flags=re.IGNORECASE)
+        first_sentence = re.sub(
+            r"^(assess|evaluate)\s+how\s+",
+            "",
+            first_sentence,
+            flags=re.IGNORECASE,
+        )
+        first_sentence = re.sub(
+            r"^(look for|focus on|prioritize)\s+",
+            "",
+            first_sentence,
+            flags=re.IGNORECASE,
+        )
+        first_sentence = re.sub(
+            r"^(whether|how clearly|how consistently|how systematically)\s+",
+            "",
+            first_sentence,
+            flags=re.IGNORECASE,
+        )
         first_sentence = re.sub(
             r"^(one\s+)?(real\s+)?(case|example)\s+(where|when)\s+",
+            "",
+            first_sentence,
+            flags=re.IGNORECASE,
+        )
+        first_sentence = re.sub(
+            r"\.\s*focus on.*$",
+            "",
+            first_sentence,
+            flags=re.IGNORECASE,
+        )
+        first_sentence = re.sub(
+            r",?\s*especially\s+whether.*$",
             "",
             first_sentence,
             flags=re.IGNORECASE,
@@ -457,7 +618,7 @@ class QuestionComposerService:
         candidate = self._clean_text(text)
         if not candidate:
             return candidate
-        max_question_chars = int(getattr(self.settings, "chat_max_question_chars", 520))
+        max_question_chars = int(getattr(self.settings, "chat_max_question_chars", 360))
         if "?" in candidate:
             candidate = candidate[: candidate.find("?") + 1].strip()
         else:
@@ -492,7 +653,7 @@ class QuestionComposerService:
             return fallback_question
 
         combined = f"{intro}. {fallback_question}"
-        max_question_chars = int(getattr(self.settings, "chat_max_question_chars", 520))
+        max_question_chars = int(getattr(self.settings, "chat_max_question_chars", 360))
         if len(combined) <= max_question_chars:
             return combined
         return fallback_question

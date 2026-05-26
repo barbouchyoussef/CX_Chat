@@ -174,6 +174,7 @@ async def list_capability_maturity_rubrics(
             capability_id=r.capability_id,
             maturity_level_id=r.maturity_level_id,
             description=r.description,
+            card_summary=r.card_summary,
         )
         for r in rows
     ]
@@ -188,6 +189,7 @@ async def create_capability_maturity_rubric(
         capability_id=payload.capability_id,
         maturity_level_id=payload.maturity_level_id,
         description=payload.description.strip(),
+        card_summary=_clean_optional_text(payload.card_summary),
     )
     db.add(row)
     try:
@@ -200,6 +202,7 @@ async def create_capability_maturity_rubric(
         capability_id=row.capability_id,
         maturity_level_id=row.maturity_level_id,
         description=row.description,
+        card_summary=row.card_summary,
     )
 
 
@@ -219,6 +222,8 @@ async def update_capability_maturity_rubric(
         row.maturity_level_id = payload.maturity_level_id
     if payload.description is not None:
         row.description = payload.description.strip()
+    if payload.card_summary is not None:
+        row.card_summary = _clean_optional_text(payload.card_summary)
     try:
         await db.commit()
     except IntegrityError:
@@ -229,6 +234,7 @@ async def update_capability_maturity_rubric(
         capability_id=row.capability_id,
         maturity_level_id=row.maturity_level_id,
         description=row.description,
+        card_summary=row.card_summary,
     )
 
 

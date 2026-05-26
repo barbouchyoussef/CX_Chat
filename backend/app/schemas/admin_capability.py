@@ -48,6 +48,7 @@ class CapabilityMaturityRubricBase(BaseModel):
     capability_id: int = Field(ge=1)
     maturity_level_id: int = Field(ge=1)
     description: str = Field(min_length=1)
+    card_summary: str | None = None
 
 
 class CapabilityMaturityRubricCreate(CapabilityMaturityRubricBase):
@@ -58,6 +59,7 @@ class CapabilityMaturityRubricUpdate(BaseModel):
     capability_id: int | None = Field(default=None, ge=1)
     maturity_level_id: int | None = Field(default=None, ge=1)
     description: str | None = Field(default=None, min_length=1)
+    card_summary: str | None = None
 
 
 class CapabilityMaturityRubricRead(CapabilityMaturityRubricBase):

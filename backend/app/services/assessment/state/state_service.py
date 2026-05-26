@@ -14,6 +14,10 @@ from app.domain.errors import AssessmentStateConflictError
 from app.repositories.capability_repository import CapabilityRepository
 from app.schemas.assessment import NextQuestionResponse
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class AssessmentStateService:
     """Owns assessment state transitions and optimistic concurrency checks."""
@@ -83,6 +87,7 @@ class AssessmentStateService:
         axis = self.current_axis_name(assessment)
         axis_criteria = await self.capabilities.list_for_axis(assessment_id, axis)
         axis_completed_by_score = bool(axis_criteria and all(c["covered"] for c in axis_criteria))
+        uncovered_labels = [str(c.get("label") or "") for c in axis_criteria if not c.get("covered")]
         target_questions = min(
             self.target_questions_for_axis(axis_criteria),
             self.MAX_QUESTIONS_PER_AXIS
@@ -95,6 +100,22 @@ class AssessmentStateService:
         if not axis_completed_by_score and not axis_completed_by_budget:
             return
 
+        completion_reason = "score_coverage" if axis_completed_by_score else "question_budget"
+        logger.info(
+            "Assessment axis completed",
+            extra={
+                "assessment_id": assessment_id,
+                "axis": axis,
+                "completion_reason": completion_reason,
+                "axis_question_count": int(assessment.current_axis_question_count or 0),
+                "target_questions": target_questions,
+                "low_quality_count": int(assessment.current_axis_low_quality_count or 0),
+                "covered_count": len(axis_criteria) - len(uncovered_labels),
+                "total_capabilities": len(axis_criteria),
+                "uncovered_capabilities": uncovered_labels,
+            },
+        )
+
         ordered_axes_result = await self.db.execute(select(Axis).order_by(Axis.sort_order.asc()))
         ordered_axes = list(ordered_axes_result.scalars().all())
         names = [(normalize_axis_name(a.name) or a.name) for a in ordered_axes]
@@ -106,6 +127,7 @@ class AssessmentStateService:
 
         assessment.pending_followup_hint = None
         assessment.pending_question = None
+        assessment.pending_focus_capability_id = None
         assessment.clarification_count = 0
         if next_axis is None:
             assessment.status = ASSESSMENT_STATUS_COMPLETED
@@ -114,12 +136,29 @@ class AssessmentStateService:
             assessment.current_axis_question_count = 0
             assessment.current_axis_low_quality_count = 0
             assessment.conversation_stage = "completed"
+            logger.info(
+                "Assessment completed",
+                extra={
+                    "assessment_id": assessment_id,
+                    "final_axis": axis,
+                    "completion_reason": completion_reason,
+                },
+            )
         else:
             assessment.current_axis_id = next_axis.id
             assessment.current_axis = next_axis
             assessment.current_axis_question_count = 0
             assessment.current_axis_low_quality_count = 0
             assessment.conversation_stage = "intro"
+            logger.info(
+                "Advancing assessment axis",
+                extra={
+                    "assessment_id": assessment_id,
+                    "previous_axis": axis,
+                    "next_axis": normalize_axis_name(next_axis.name) or next_axis.name,
+                    "completion_reason": completion_reason,
+                },
+            )
 
     def target_questions_for_axis(self, axis_capabilities: list[dict]) -> int:
         capability_count = len(axis_capabilities or [])

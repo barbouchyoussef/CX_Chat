@@ -1,0 +1,241 @@
+{
+  "url": "https://example.com",
+  "generatedAt": "2026-05-07T13:33:43",
+  "overallScore": 6.1,
+  "desktopViewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "mobileViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "desktopSignals": {
+    "url": "https://example.com/",
+    "title": "Example Domain",
+    "lang": "en",
+    "metaDescription": "",
+    "bodyText": "Example Domain This domain is for use in documentation examples without needing permission. Avoid use in operations. Learn more",
+    "wordCount": 19,
+    "h1": [
+      {
+        "text": "Example Domain",
+        "rect": {
+          "x": 288,
+          "y": 135,
+          "width": 864,
+          "height": 32
+        }
+      }
+    ],
+    "headings": [
+      {
+        "tag": "h1",
+        "text": "Example Domain",
+        "rect": {
+          "x": 288,
+          "y": 135,
+          "width": 864,
+          "height": 32
+        }
+      }
+    ],
+    "links": [
+      {
+        "text": "Learn more",
+        "href": "https://iana.org/domains/example",
+        "rect": {
+          "x": 288,
+          "y": 220.078125,
+          "width": 80.125,
+          "height": 21
+        }
+      }
+    ],
+    "controls": [
+      {
+        "tag": "a",
+        "text": "Learn more",
+        "href": "https://iana.org/domains/example",
+        "role": "",
+        "rect": {
+          "x": 288,
+          "y": 220.078125,
+          "width": 80.125,
+          "height": 21
+        }
+      }
+    ],
+    "inputs": [],
+    "images": [],
+    "navText": [],
+    "hasHeader": false,
+    "hasMain": false,
+    "hasFooter": false,
+    "hasNav": false,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "documentSize": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflowPx": 0,
+    "oversized": [],
+    "fontSizes": [
+      16,
+      24,
+      16,
+      16,
+      16
+    ],
+    "trustSignalCount": 0,
+    "perf": {
+      "domContentLoaded": 7997,
+      "loadEventEnd": 7998
+    }
+  },
+  "mobileSignals": {
+    "url": "https://example.com/",
+    "title": "Example Domain",
+    "lang": "en",
+    "metaDescription": "",
+    "bodyText": "Example Domain This domain is for use in documentation examples without needing permission. Avoid use in operations. Learn more",
+    "wordCount": 19,
+    "h1": [
+      {
+        "text": "Example Domain",
+        "rect": {
+          "x": 78,
+          "y": 126.59375,
+          "width": 234,
+          "height": 32
+        }
+      }
+    ],
+    "headings": [
+      {
+        "tag": "h1",
+        "text": "Example Domain",
+        "rect": {
+          "x": 78,
+          "y": 126.59375,
+          "width": 234,
+          "height": 32
+        }
+      }
+    ],
+    "links": [
+      {
+        "text": "Learn more",
+        "href": "https://iana.org/domains/example",
+        "rect": {
+          "x": 78,
+          "y": 274.671875,
+          "width": 80.125,
+          "height": 21
+        }
+      }
+    ],
+    "controls": [
+      {
+        "tag": "a",
+        "text": "Learn more",
+        "href": "https://iana.org/domains/example",
+        "role": "",
+        "rect": {
+          "x": 78,
+          "y": 274.671875,
+          "width": 80.125,
+          "height": 21
+        }
+      }
+    ],
+    "inputs": [],
+    "images": [],
+    "navText": [],
+    "hasHeader": false,
+    "hasMain": false,
+    "hasFooter": false,
+    "hasNav": false,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "documentSize": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflowPx": 0,
+    "oversized": [],
+    "fontSizes": [
+      16,
+      24,
+      16,
+      16,
+      16
+    ],
+    "trustSignalCount": 0,
+    "perf": {
+      "domContentLoaded": 50,
+      "loadEventEnd": 51
+    }
+  },
+  "findings": [
+    {
+      "title": "Above-the-fold value proposition",
+      "severity": "major",
+      "score": 4.8,
+      "issue": "The homepage does not make the offer, audience, or value proposition clear enough in the first screen.",
+      "why_it_matters": "Visitors need to understand what the company does and why it matters before they decide to explore.",
+      "recommendation": "Use one specific H1, a short supporting paragraph, and a visible next action that names the outcome.",
+      "evidence_image": "value-proposition.png"
+    },
+    {
+      "title": "Primary action clarity",
+      "severity": "moderate",
+      "score": 6.2,
+      "issue": "The homepage does not expose a strong, clearly labeled primary CTA early enough.",
+      "why_it_matters": "A weak or hidden CTA makes qualified visitors work harder to start a commercial journey.",
+      "recommendation": "Place one primary CTA above the fold and label it with a verb plus outcome, such as 'Contact us', 'Book a call', or 'View work'.",
+      "evidence_image": "primary-cta.png"
+    },
+    {
+      "title": "Navigation discoverability",
+      "severity": "major",
+      "score": 4.8,
+      "issue": "Navigation is missing, too sparse, or not structured as a recognizable navigation landmark.",
+      "why_it_matters": "Clear navigation lets users validate scope, services, proof, and contact paths without guessing.",
+      "recommendation": "Use a semantic nav/header with a small set of persistent links for the main user decisions.",
+      "evidence_image": "navigation.png"
+    },
+    {
+      "title": "Accessibility fundamentals",
+      "severity": "minor",
+      "score": 7.6,
+      "issue": "Accessibility basics need review: H1 count=1, missing image alt=0, unlabeled inputs=0.",
+      "why_it_matters": "Basic semantic structure and labels improve usability for assistive technology, search, and scanning.",
+      "recommendation": "Keep one H1, add a main landmark, write meaningful alt text for content images, and label every form control.",
+      "evidence_image": "accessibility.png"
+    },
+    {
+      "title": "Trust and proof",
+      "severity": "moderate",
+      "score": 6.2,
+      "issue": "The homepage does not surface enough proof signals such as clients, case studies, testimonials, or credibility markers.",
+      "why_it_matters": "Visitors need evidence that the offer is credible before they spend time evaluating it.",
+      "recommendation": "Bring proof closer to the first or second viewport: client logos, quantified outcomes, case studies, testimonials, or certifications.",
+      "evidence_image": "trust.png"
+    },
+    {
+      "title": "Basic loading performance",
+      "severity": "minor",
+      "score": 7.0,
+      "issue": "The browser load event completed at roughly 7998ms in this test run.",
+      "why_it_matters": "Slow first impressions reduce patience and make the experience feel less polished.",
+      "recommendation": "Compress large media, defer non-critical scripts, and prioritize above-the-fold assets.",
+      "evidence_image": "performance.png"
+    }
+  ]
+}

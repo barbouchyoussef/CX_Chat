@@ -10,6 +10,7 @@ import AssessmentChatStatic from "./components/ui/assessment-chat-static";
 import AdminDashboard from "./components/ui/admin-dashboard";
 import AdminAssessmentDetail from "./components/ui/admin-assessment-detail";
 import AdminAssessmentReport from "./components/ui/admin-assessment-report";
+import CustomizedTimeline from "./components/CustomizedTimeline";
 
 export default function App() {
   const [showChat, setShowChat] = useState(false);
@@ -24,6 +25,23 @@ export default function App() {
   }, []);
 
   const showAdmin = pathname.startsWith("/admin");
+  const showTimelinePreview = pathname === "/timeline-preview";
+
+  if (showTimelinePreview) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          padding: "40px 16px",
+          background: "#f8fafc",
+        }}
+      >
+        <CustomizedTimeline />
+      </main>
+    );
+  }
 
   if (showAdmin) {
     if (adminView === "details" && selectedAssessmentId) {

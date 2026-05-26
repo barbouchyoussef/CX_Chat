@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Awaitable, Callable
 
 from pydantic import BaseModel, Field, ValidationError
@@ -143,6 +144,8 @@ class CoverageDetectorService:
     ) -> dict | None:
         if not self._is_negative_evidence_answer(answer):
             return None
+        if not self._is_generic_negative_evidence_answer(answer):
+            return None
 
         criterion = self._select_primary_criterion_for_negative_evidence(criteria)
         if criterion is None:
@@ -170,6 +173,19 @@ class CoverageDetectorService:
             "rationale_by_id": {criterion_id: rationale},
             "is_specific_and_actionable_by_id": {criterion_id: True},
         }
+
+    def _is_generic_negative_evidence_answer(self, answer: str) -> bool:
+        normalized = self._normalize_business_text(answer)
+        if not normalized:
+            return True
+
+        tokens = re.findall(r"[a-z0-9]+", normalized)
+        important_terms = self._important_terms(normalized)
+        if len(tokens) <= 8 and len(important_terms) <= 2:
+            return True
+        if len(tokens) <= 5:
+            return True
+        return False
 
     def _compact_answer_excerpt(self, answer: str) -> str:
         value = " ".join(str(answer or "").strip().split())
@@ -217,13 +233,21 @@ class CoverageDetectorService:
         criteria: list[dict],
         rubrics_by_capability: dict[int, list[dict]],
     ) -> list[dict[str, str]]:
-        criteria_lines = "\n".join(
-            (
-                f"- id={criterion['id']}: {criterion['label']}"
-                f" | expected_evidence: {criterion.get('expected_evidence') or 'not provided'}"
+        criteria_blocks: list[str] = []
+        for index, criterion in enumerate(criteria[:50]):
+            focus_flag = "primary_focus" if index == 0 else "secondary_candidate"
+            criteria_blocks.append(
+                "\n".join(
+                    [
+                        f"- id={criterion['id']} ({focus_flag})",
+                        f"  label: {criterion.get('label') or 'not provided'}",
+                        f"  description: {criterion.get('description') or 'not provided'}",
+                        f"  expected_evidence_examples: {criterion.get('expected_evidence') or 'not provided'}",
+                        f"  question_guidance: {criterion.get('question_guidelines') or 'not provided'}",
+                    ]
+                )
             )
-            for criterion in criteria[:50]
-        )
+        criteria_lines = "\n".join(criteria_blocks)
         rubric_lines: list[str] = []
         for criterion in criteria[:50]:
             criterion_id = int(criterion["id"])
@@ -282,6 +306,51 @@ class CoverageDetectorService:
         except ValidationError as exc:
             logger.error("Coverage JSON schema validation failed: %s", exc, exc_info=True)
             return None
+
+    def _normalize_business_text(self, value: str) -> str:
+        normalized = re.sub(r"[^\w\s/-]", " ", str(value or "").lower())
+        return re.sub(r"\s+", " ", normalized).strip()
+
+    def _important_terms(self, value: str) -> set[str]:
+        stopwords = {
+            "and",
+            "the",
+            "for",
+            "with",
+            "from",
+            "that",
+            "this",
+            "how",
+            "what",
+            "when",
+            "where",
+            "which",
+            "customer",
+            "customers",
+            "issue",
+            "issues",
+            "feedback",
+            "process",
+            "team",
+            "teams",
+            "have",
+            "has",
+            "had",
+            "not",
+            "dont",
+            "doesnt",
+            "didnt",
+            "know",
+            "none",
+            "really",
+            "formal",
+        }
+        tokens = re.findall(r"[a-z0-9]+", self._normalize_business_text(value))
+        return {
+            token
+            for token in tokens
+            if len(token) >= 3 and token not in stopwords
+        }
 
 
 def build_coverage_detector_service(

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings, get_settings
 from app.repositories.assessment_answer_repository import AssessmentAnswerRepository
 from app.repositories.assessment_repository import AssessmentRepository
+from app.repositories.assessment_website_audit_repository import AssessmentWebsiteAuditRepository
 from app.repositories.capability_repository import CapabilityRepository
 from app.schemas.final_report import FinalReportResponse
 from app.schemas.recommendations import (
@@ -63,11 +64,38 @@ class AssessmentReportingService:
     async def get_recommendation_outputs(self, assessment_id: int) -> RecommendationOutputsResponse | None:
         return await self.recommendations.get_recommendation_outputs(assessment_id=assessment_id)
 
-    async def get_final_report(self, assessment_id: int) -> FinalReportResponse | None:
-        return await self.report_builder.get_final_report(assessment_id=assessment_id)
+    async def get_final_report(
+        self,
+        assessment_id: int,
+        refresh_synthesis: bool = False,
+    ) -> FinalReportResponse | None:
+        return await self.report_builder.get_final_report(
+            assessment_id=assessment_id,
+            refresh_synthesis=refresh_synthesis,
+        )
+
+    async def debug_competitive_first_layer(
+        self,
+        assessment_id: int,
+        competitor_name: str | None = None,
+    ) -> dict[str, Any] | None:
+        return await self.report_builder.debug_competitive_first_layer(
+            assessment_id=assessment_id,
+            competitor_name=competitor_name,
+        )
+
+    async def debug_telecom_semantic_leaders(self, assessment_id: int) -> dict[str, Any] | None:
+        return await self.report_builder.debug_telecom_semantic_leaders(assessment_id=assessment_id)
+
+    async def debug_telecom_discovery_leaders(self, assessment_id: int) -> dict[str, Any] | None:
+        return await self.report_builder.debug_telecom_discovery_leaders(assessment_id=assessment_id)
 
     async def finalize_completed_assessment(self, assessment_id: int, assessment: Any) -> None:
         await self.recommendations.finalize_completed_assessment(
+            assessment_id=assessment_id,
+            assessment=assessment,
+        )
+        await self.report_builder.prepare_leaders_snapshot_generation(
             assessment_id=assessment_id,
             assessment=assessment,
         )
@@ -83,9 +111,10 @@ def build_assessment_reporting_service(
     settings = settings or get_settings()
     assessments = AssessmentRepository(db)
     answers = AssessmentAnswerRepository(db)
+    website_audits = AssessmentWebsiteAuditRepository(db)
     capabilities = CapabilityRepository(db)
     llm = llm_service or build_llm_service(settings=settings)
-    benchmarks = benchmark_service or BenchmarkService()
+    benchmarks = benchmark_service or BenchmarkService(db=db)
     uow = AsyncUnitOfWork(db)
     scoring = scoring_service or build_assessment_scoring_service(
         db,
@@ -110,6 +139,7 @@ def build_assessment_reporting_service(
     report_builder = ReportBuilderService(
         db=db,
         assessments=assessments,
+        website_audits=website_audits,
         capabilities=capabilities,
         llm_service=llm,
         benchmark_service=benchmarks,

@@ -16,6 +16,7 @@ class CapabilityMaturityRubric(Base):
         ForeignKey("maturity_levels.id", ondelete="CASCADE"), nullable=False, index=True
     )
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    card_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     capability = relationship("Capability")
     maturity_level = relationship("MaturityLevel")

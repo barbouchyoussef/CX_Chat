@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homepage UX/UI Audit</title>
+  <style>
+    :root {
+      --ink: #141821;
+      --muted: #687385;
+      --line: #e8e2d7;
+      --paper: #fbf7ef;
+      --card: #fffdfa;
+      --gold: #cda334;
+      --red: #cf513f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+    }
+    header {
+      padding: 54px min(7vw, 92px) 30px;
+      border-bottom: 1px solid var(--line);
+      background: #fffaf0;
+    }
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(2.3rem, 5vw, 5rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+    .sub {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-top: 18px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 34px;
+      max-width: 980px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 18px;
+      border-radius: 8px;
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.7rem;
+    }
+    main {
+      width: min(1180px, calc(100% - 34px));
+      margin: 0 auto;
+      padding: 34px 0 70px;
+    }
+    .screens {
+      display: grid;
+      grid-template-columns: 1.5fr 0.7fr;
+      gap: 18px;
+      margin: 20px 0 36px;
+      align-items: start;
+    }
+    .screen {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 18px 38px rgba(30, 25, 15, 0.08);
+    }
+    .screen img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .finding {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) minmax(360px, 0.9fr);
+      gap: 34px;
+      align-items: center;
+      padding: 34px 0;
+      border-top: 1px solid var(--line);
+    }
+    .shot {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 18px 38px rgba(30, 25, 15, 0.08);
+    }
+    .shot img {
+      display: block;
+      width: 100%;
+    }
+    .meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.78rem;
+    }
+    .meta span {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+    h2 {
+      font-size: 1.7rem;
+      margin-top: 42px;
+    }
+    h3 {
+      font-size: 1.45rem;
+      line-height: 1.12;
+      margin: 14px 0 14px;
+    }
+    p {
+      color: var(--muted);
+      margin: 10px 0;
+    }
+    p b {
+      color: var(--ink);
+    }
+    .score {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 12px;
+      border: 1px solid rgba(205, 163, 52, 0.45);
+      border-radius: 999px;
+      background: rgba(205, 163, 52, 0.10);
+      font-weight: 700;
+    }
+    .empty {
+      padding: 34px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    footer {
+      color: var(--muted);
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+      font-size: 0.9rem;
+    }
+    @media (max-width: 860px) {
+      .summary, .screens, .finding {
+        grid-template-columns: 1fr;
+      }
+      header {
+        padding-inline: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Homepage UX/UI Audit</h1>
+    <p class="sub">Audit for <b>https://example.com</b>. Generated 2026-05-07 13:33 from desktop and mobile browser captures.</p>
+    <section class="summary">
+      <div class="metric"><span>Overall Score</span><strong>6.1/10</strong></div>
+      <div class="metric"><span>Findings</span><strong>6</strong></div>
+      <div class="metric"><span>Desktop Size</span><strong>1440x900</strong></div>
+      <div class="metric"><span>Mobile Size</span><strong>390x844</strong></div>
+    </section>
+  </header>
+  <main>
+    <h2>Captured Screens</h2>
+    <section class="screens">
+      <div class="screen"><img src="screenshots/desktop.png" alt="Desktop homepage screenshot"></div>
+      <div class="screen"><img src="screenshots/mobile.png" alt="Mobile homepage screenshot"></div>
+    </section>
+    <h2>Findings</h2>
+    
+            <article class="finding severity-major">
+              <div class="shot"><img src="evidence/value-proposition.png" alt="Above-the-fold value proposition evidence"></div>
+              <div class="copy">
+                <div class="meta"><span>01</span><strong>Major</strong></div>
+                <h3>Above-the-fold value proposition</h3>
+                <p><b>Issue:</b> The homepage does not make the offer, audience, or value proposition clear enough in the first screen.</p>
+                <p><b>Why it matters:</b> Visitors need to understand what the company does and why it matters before they decide to explore.</p>
+                <p><b>Recommendation:</b> Use one specific H1, a short supporting paragraph, and a visible next action that names the outcome.</p>
+                <div class="score">Score 4.8/10</div>
+              </div>
+            </article>
+            
+            <article class="finding severity-moderate">
+              <div class="shot"><img src="evidence/primary-cta.png" alt="Primary action clarity evidence"></div>
+              <div class="copy">
+                <div class="meta"><span>02</span><strong>Moderate</strong></div>
+                <h3>Primary action clarity</h3>
+                <p><b>Issue:</b> The homepage does not expose a strong, clearly labeled primary CTA early enough.</p>
+                <p><b>Why it matters:</b> A weak or hidden CTA makes qualified visitors work harder to start a commercial journey.</p>
+                <p><b>Recommendation:</b> Place one primary CTA above the fold and label it with a verb plus outcome, such as &#x27;Contact us&#x27;, &#x27;Book a call&#x27;, or &#x27;View work&#x27;.</p>
+                <div class="score">Score 6.2/10</div>
+              </div>
+            </article>
+            
+            <article class="finding severity-major">
+              <div class="shot"><img src="evidence/navigation.png" alt="Navigation discoverability evidence"></div>
+              <div class="copy">
+                <div class="meta"><span>03</span><strong>Major</strong></div>
+                <h3>Navigation discoverability</h3>
+                <p><b>Issue:</b> Navigation is missing, too sparse, or not structured as a recognizable navigation landmark.</p>
+                <p><b>Why it matters:</b> Clear navigation lets users validate scope, services, proof, and contact paths without guessing.</p>
+                <p><b>Recommendation:</b> Use a semantic nav/header with a small set of persistent links for the main user decisions.</p>
+                <div class="score">Score 4.8/10</div>
+              </div>
+            </article>
+            
+            <article class="finding severity-minor">
+              <div class="shot"><img src="evidence/accessibility.png" alt="Accessibility fundamentals evidence"></div>
+              <div class="copy">
+                <div class="meta"><span>04</span><strong>Minor</strong></div>
+                <h3>Accessibility fundamentals</h3>
+                <p><b>Issue:</b> Accessibility basics need review: H1 count=1, missing image alt=0, unlabeled inputs=0.</p>
+                <p><b>Why it matters:</b> Basic semantic structure and labels improve usability for assistive technology, search, and scanning.</p>
+                <p><b>Recommendation:</b> Keep one H1, add a main landmark, write meaningful alt text for content images, and label every form control.</p>
+                <div class="score">Score 7.6/10</div>
+              </div>
+            </article>
+            
+            <article class="finding severity-moderate">
+              <div class="shot"><img src="evidence/trust.png" alt="Trust and proof evidence"></div>
+              <div class="copy">
+                <div class="meta"><span>05</span><strong>Moderate</strong></div>
+                <h3>Trust and proof</h3>
+                <p><b>Issue:</b> The homepage does not surface enough proof signals such as clients, case studies, testimonials, or credibility markers.</p>
+                <p><b>Why it matters:</b> Visitors need evidence that the offer is credible before they spend time evaluating it.</p>
+                <p><b>Recommendation:</b> Bring proof closer to the first or second viewport: client logos, quantified outcomes, case studies, testimonials, or certifications.</p>
+                <div class="score">Score 6.2/10</div>
+              </div>
+            </article>
+            
+            <article class="finding severity-minor">
+              <div class="shot"><img src="evidence/performance.png" alt="Basic loading performance evidence"></div>
+              <div class="copy">
+                <div class="meta"><span>06</span><strong>Minor</strong></div>
+                <h3>Basic loading performance</h3>
+                <p><b>Issue:</b> The browser load event completed at roughly 7998ms in this test run.</p>
+                <p><b>Why it matters:</b> Slow first impressions reduce patience and make the experience feel less polished.</p>
+                <p><b>Recommendation:</b> Compress large media, defer non-critical scripts, and prioritize above-the-fold assets.</p>
+                <div class="score">Score 7.0/10</div>
+              </div>
+            </article>
+            
+    <footer>
+      <p>Generated by the standalone one-page audit tool. Review automated findings manually before making design decisions.</p>
+    </footer>
+  </main>
+</body>
+</html>

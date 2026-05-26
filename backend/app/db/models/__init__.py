@@ -4,9 +4,13 @@ from app.db.models.assessment_axis_memory import AssessmentAxisMemory
 from app.db.models.assessment_idempotency import AssessmentIdempotency
 from app.db.models.assessment_insight import AssessmentInsight
 from app.db.models.assessment_score import AssessmentScore
+from app.db.models.assessment_website_audit import AssessmentWebsiteAudit
 from app.db.models.axis import Axis
+from app.db.models.axis_maturity_content import AxisMaturityContent
 from app.db.models.capability import Capability
+from app.db.models.capability_maturity_content import CapabilityMaturityContent
 from app.db.models.capability_maturity_rubric import CapabilityMaturityRubric
+from app.db.models.capability_quick_win_template import CapabilityQuickWinTemplate
 from app.db.models.capability_recommendation import CapabilityRecommendation
 from app.db.models.company_size import CompanySize
 from app.db.models.company import Company
@@ -21,9 +25,13 @@ __all__ = [
     "AssessmentIdempotency",
     "AssessmentInsight",
     "AssessmentScore",
+    "AssessmentWebsiteAudit",
     "Axis",
+    "AxisMaturityContent",
     "Capability",
+    "CapabilityMaturityContent",
     "CapabilityMaturityRubric",
+    "CapabilityQuickWinTemplate",
     "CapabilityRecommendation",
     "CompanySize",
     "Company",

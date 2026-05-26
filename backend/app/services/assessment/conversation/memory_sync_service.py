@@ -27,10 +27,38 @@ class MemorySyncService:
         self.llm = llm_service
         self._next_question = next_question
 
-    def schedule_next_question_prefetch(self, assessment: Any) -> asyncio.Task[NextQuestionResponse | None] | None:
+    def schedule_next_question_prefetch(
+        self,
+        assessment: Any,
+        assessment_id: int | None = None,
+        axis: str | None = None,
+        memory_update_task: asyncio.Task[str] | None = None,
+    ) -> asyncio.Task[NextQuestionResponse | None] | None:
         if assessment.status != ASSESSMENT_STATUS_IN_PROGRESS:
             return None
-        return asyncio.create_task(self._next_question(int(assessment.id)))
+        resolved_assessment_id = int(assessment_id or assessment.id)
+        if memory_update_task is not None and axis:
+            return asyncio.create_task(
+                self._prefetch_next_question_after_memory(
+                    assessment_id=resolved_assessment_id,
+                    axis=axis,
+                    memory_update_task=memory_update_task,
+                )
+            )
+        return asyncio.create_task(self._next_question(resolved_assessment_id))
+
+    async def _prefetch_next_question_after_memory(
+        self,
+        assessment_id: int,
+        axis: str,
+        memory_update_task: asyncio.Task[str],
+    ) -> NextQuestionResponse | None:
+        await self.persist_scheduled_axis_memory_update(
+            assessment_id=assessment_id,
+            axis=axis,
+            memory_update_task=memory_update_task,
+        )
+        return await self._next_question(assessment_id)
 
     async def schedule_axis_memory_update(
         self,
@@ -164,7 +192,7 @@ class MemorySyncService:
                     exc_info=(type(next_question_result), next_question_result, next_question_result.__traceback__),
                 )
 
-        if memory_update_task is not None:
+        if memory_update_task is not None and next_question_task is None:
             await self.persist_axis_memory_result(
                 assessment_id=assessment_id,
                 axis=axis,

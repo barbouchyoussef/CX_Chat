@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle2, Circle, FileText, Loader2, Send, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, CheckCircle2, Circle, FileText, Globe2, Loader2, Send, Sparkles, X } from "lucide-react";
 import { Avatar } from "./avatar-1";
 import AssessmentResultsPage from "./assessment-results-page";
 import AssessmentGeneratingPage from "./assessment-generating-page";
@@ -11,8 +11,32 @@ type ChatMessage = { id: string; text: string; isUser: boolean };
 type AxisProgress = { axis: string; covered: number; total: number };
 type AssessmentState = { id: number; status: string; axis: string | null; version: number; progress: AxisProgress[] };
 type Option = { code: string; label: string };
+type CompanyProfileForm = {
+  companyName: string;
+  sector: string;
+  companySize: string;
+  region: string;
+  websiteUrl: string;
+};
 type FinalReport = {
   assessment_id: number;
+  hero: {
+    report_title: string;
+    report_date_label?: string | null;
+    company_name?: string | null;
+    sector_name?: string | null;
+    region?: string | null;
+    overall_level?: number | null;
+    overall_level_label?: string | null;
+    overall_maturity_band: string;
+    hero_message?: string | null;
+    strongest_axis?: string | null;
+    strongest_axis_level?: number | null;
+    strongest_axis_level_label?: string | null;
+    priority_axis?: string | null;
+    priority_axis_level?: number | null;
+    priority_axis_level_label?: string | null;
+  };
   summary: {
     overall_score_percent: number;
     overall_maturity_band: string;
@@ -64,6 +88,15 @@ type OnboardingStage = "await_company_name" | "await_sector_choice" | "await_siz
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
+const REGION_OPTIONS = [
+  "Africa",
+  "Europe",
+  "Middle East",
+  "North America",
+  "Latin America",
+  "Asia-Pacific",
+  "Global / Multi-region",
+];
 const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim().toUpperCase();
 
 export default function AssessmentChatStatic({ onBack }: Props) {
@@ -71,7 +104,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: crypto.randomUUID(),
-      text: "Welcome. I am your CX assessment assistant. To begin, what is your company name?",
+      text: "Welcome. I am Orion, EY's CX maturity assessment assistant. Please complete the company profile so I can tailor the assessment context.",
       isUser: false,
     },
   ]);
@@ -80,6 +113,15 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   const [assessment, setAssessment] = useState<AssessmentState | null>(null);
   const [stage, setStage] = useState<OnboardingStage>("await_company_name");
   const [companyName, setCompanyName] = useState("");
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileForm>({
+    companyName: "",
+    sector: "",
+    companySize: "",
+    region: "",
+    websiteUrl: "",
+  });
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [isReferenceLoading, setIsReferenceLoading] = useState(false);
   const [selectedSector, setSelectedSector] = useState<Option | null>(null);
   const [sectorOptions, setSectorOptions] = useState<Option[]>([]);
   const [sizeOptions, setSizeOptions] = useState<Option[]>([]);
@@ -168,7 +210,13 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     return payload as { sectors: Option[]; company_sizes: Option[] };
   };
 
-  const startAssessment = async (payload: { company_name: string; sector?: string; size?: string }) => {
+  const startAssessment = async (payload: {
+    company_name: string;
+    sector?: string;
+    size?: string;
+    region?: string;
+    website_url?: string;
+  }) => {
     const response = await fetch(`${API_BASE_URL}/assessments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -180,7 +228,57 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     setAssessment(snapshot);
     setStage(snapshot.status === "completed" ? "completed" : "assessment_active");
     const question = await fetchNextQuestion(snapshot.id);
-    if (question) appendAssistant(question);
+    if (question) {
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          text: `Thank you. I now have your company context. Let's begin the assessment. ${question}`,
+          isUser: false,
+        },
+      ]);
+    }
+  };
+
+  const updateCompanyProfile = (field: keyof CompanyProfileForm, value: string) => {
+    setCompanyProfile((current) => ({ ...current, [field]: value }));
+    if (profileError) setProfileError(null);
+  };
+
+  const handleProfileSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const profile = {
+      companyName: companyProfile.companyName.trim(),
+      sector: companyProfile.sector.trim(),
+      companySize: companyProfile.companySize.trim(),
+      region: companyProfile.region.trim(),
+      websiteUrl: companyProfile.websiteUrl.trim(),
+    };
+
+    if (!profile.companyName || !profile.sector || !profile.companySize || !profile.region || !profile.websiteUrl) {
+      setProfileError("Please complete company name, sector, company size, region, and website URL before starting.");
+      return;
+    }
+
+    if (!/^https?:\/\/.+\..+/i.test(profile.websiteUrl)) {
+      setProfileError("Please enter a valid website URL starting with http:// or https://.");
+      return;
+    }
+
+    setIsTyping(true);
+    try {
+      setCompanyName(profile.companyName);
+      await startAssessment({
+        company_name: profile.companyName,
+        sector: profile.sector,
+        size: profile.companySize,
+        region: profile.region,
+        website_url: profile.websiteUrl,
+      });
+    } catch {
+      setProfileError("I could not start the assessment yet. Please check the selected profile and try again.");
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const fetchFinalReport = async (assessmentId: number): Promise<FinalReport | null> => {
@@ -319,6 +417,14 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     setInput("");
     setAssessment(null);
     setCompanyName("");
+    setCompanyProfile({
+      companyName: "",
+      sector: "",
+      companySize: "",
+      region: "",
+      websiteUrl: "",
+    });
+    setProfileError(null);
     setSelectedSector(null);
     setSectorOptions([]);
     setSizeOptions([]);
@@ -332,11 +438,31 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     setMessages([
       {
         id: crypto.randomUUID(),
-        text: "Welcome. I am your CX assessment assistant. To begin, what is your company name?",
+        text: "Welcome. I am Orion, EY's CX maturity assessment assistant. Please complete the company profile so I can tailor the assessment context.",
         isUser: false,
       },
     ]);
   };
+
+  useEffect(() => {
+    if (stage !== "await_company_name") return;
+    if (sectorOptions.length > 0 && sizeOptions.length > 0) return;
+
+    let cancelled = false;
+    setIsReferenceLoading(true);
+    fetchReferenceOptions()
+      .catch(() => {
+        if (!cancelled) {
+          setProfileError("I could not load the sector and company size options. Please refresh and try again.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsReferenceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [stage]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -391,6 +517,177 @@ export default function AssessmentChatStatic({ onBack }: Props) {
           setIsGeneratingMinDelayDone(true);
         }}
       />
+    );
+  }
+
+  if (!assessment && stage === "await_company_name") {
+    return (
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.14),transparent_42%),linear-gradient(180deg,#ffffff,#f8fafc)] px-4 py-8">
+        <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="rounded-3xl border border-violet-100 bg-white/85 p-7 shadow-xl backdrop-blur"
+          >
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-violet-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-700">
+              <Sparkles className="h-4 w-4" />
+              Orion CX Assessment
+            </div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              Welcome. I am Orion, your EY CX maturity assessment assistant.
+            </h1>
+            <p className="mt-5 text-base leading-7 text-slate-600">
+              Before we begin the interview, I need a short company profile. This helps me adapt the questions,
+              benchmark examples, and homepage UX/UI review to your business context.
+            </p>
+            <div className="mt-7 grid gap-3 text-sm text-slate-700">
+              <div className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <Building2 className="mt-0.5 h-5 w-5 text-violet-600" />
+                <span>Sector and company size are used as structured context, not guessed from the company name.</span>
+              </div>
+              <div className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <Globe2 className="mt-0.5 h-5 w-5 text-violet-600" />
+                <span>The website field powers the homepage UX/UI section included in the final report.</span>
+              </div>
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.06 }}
+            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8"
+          >
+            <div className="mb-6">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Company profile</p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">Set the assessment context</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Please complete the fields below. The assessment will start immediately after submission.
+              </p>
+            </div>
+
+            <form className="space-y-5" onSubmit={handleProfileSubmit}>
+              <div className="space-y-2">
+                <label htmlFor="companyName" className="text-sm font-semibold text-slate-800">
+                  Company name
+                </label>
+                <input
+                  id="companyName"
+                  value={companyProfile.companyName}
+                  onChange={(event) => updateCompanyProfile("companyName", event.target.value)}
+                  placeholder="Example: Four Seasons"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                />
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label htmlFor="sector" className="text-sm font-semibold text-slate-800">
+                    Sector
+                  </label>
+                  <select
+                    id="sector"
+                    value={companyProfile.sector}
+                    onChange={(event) => updateCompanyProfile("sector", event.target.value)}
+                    disabled={isReferenceLoading}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:bg-slate-50"
+                  >
+                    <option value="">{isReferenceLoading ? "Loading sectors..." : "Select sector"}</option>
+                    {sectorOptions.map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="companySize" className="text-sm font-semibold text-slate-800">
+                    Company size
+                  </label>
+                  <select
+                    id="companySize"
+                    value={companyProfile.companySize}
+                    onChange={(event) => updateCompanyProfile("companySize", event.target.value)}
+                    disabled={isReferenceLoading}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:bg-slate-50"
+                  >
+                    <option value="">{isReferenceLoading ? "Loading sizes..." : "Select size"}</option>
+                    {sizeOptions.map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label htmlFor="region" className="text-sm font-semibold text-slate-800">
+                    Region
+                  </label>
+                  <select
+                    id="region"
+                    value={companyProfile.region}
+                    onChange={(event) => updateCompanyProfile("region", event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  >
+                    <option value="">Select region</option>
+                    {REGION_OPTIONS.map((region) => (
+                      <option key={region} value={region}>
+                        {region}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="websiteUrl" className="text-sm font-semibold text-slate-800">
+                    Website URL
+                  </label>
+                  <input
+                    id="websiteUrl"
+                    value={companyProfile.websiteUrl}
+                    onChange={(event) => updateCompanyProfile("websiteUrl", event.target.value)}
+                    placeholder="https://www.company.com"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  />
+                  <p className="text-xs text-slate-500">Required for the homepage UX/UI review included in the final report.</p>
+                </div>
+              </div>
+
+              {profileError ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                  {profileError}
+                </div>
+              ) : null}
+
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                {onBack ? (
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </button>
+                ) : <span />}
+                <button
+                  type="submit"
+                  disabled={isTyping || isReferenceLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isTyping ? "Starting assessment..." : "Start assessment"}
+                  {!isTyping ? <ArrowRight className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
+                </button>
+              </div>
+            </form>
+          </motion.section>
+        </div>
+      </div>
     );
   }
 

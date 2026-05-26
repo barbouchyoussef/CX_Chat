@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from time import perf_counter
 from typing import TypedDict
 
@@ -147,6 +148,8 @@ class RecommendationService:
                 continue
             confidence = row.get("confidence")
             evidence_list = []
+            if row.get("evidence_text"):
+                evidence_list.append(str(row.get("evidence_text")))
             if row.get("justification"):
                 evidence_list.append(str(row.get("justification")))
             recommendation_context = self.build_recommendation_context(row)
@@ -527,7 +530,7 @@ class RecommendationService:
             "capability": str(row.get("capability_name") or ""),
             "maturity_label": maturity_label,
             "confidence": float(row["confidence"]) if row.get("confidence") is not None else None,
-            "justification": str(row.get("justification")) if row.get("justification") is not None else None,
+            "justification": self._evidence_only_justification(row),
             "recommendation_guideline": recommendation_context["recommendation_guideline"],
             "priority_hint": recommendation_context["priority_hint"],
             "business_impact": recommendation_context["business_impact"],
@@ -541,7 +544,7 @@ class RecommendationService:
             "capability": str(row.get("capability_name") or ""),
             "maturity_label": str(row.get("maturity_level") or "Unknown"),
             "confidence": float(row["confidence"]) if row.get("confidence") is not None else None,
-            "justification": str(row.get("insight_summary")) if row.get("insight_summary") is not None else None,
+            "justification": self._evidence_only_batch_justification(row),
             "recommendation_guideline": row.get("admin_guideline"),
             "priority_hint": row.get("priority_hint"),
             "business_impact": row.get("business_impact"),
@@ -587,13 +590,14 @@ class RecommendationService:
         tone_hint: str | None,
         supporting_notes: str | None,
     ) -> str:
+        safe_justification = self._sanitize_recommendation_evidence(justification)
         try:
             recommendation = await self.llm.generate_recommendation(
                 axis=axis,
                 capability=capability,
                 maturity_label=maturity_label,
                 confidence=confidence,
-                justification=justification,
+                justification=safe_justification,
                 recommendation_guideline=recommendation_guideline,
                 priority_hint=priority_hint,
                 business_impact=business_impact,
@@ -609,7 +613,49 @@ class RecommendationService:
             return self._fallback_recommendation_text(
                 recommendation_guideline=recommendation_guideline,
                 business_impact=business_impact,
+        )
+
+    def _evidence_only_justification(self, row: dict) -> str | None:
+        parts = [
+            self._sanitize_recommendation_evidence(row.get("evidence_text")),
+            self._sanitize_recommendation_evidence(row.get("insight_justification")),
+            self._sanitize_recommendation_evidence(row.get("justification")),
+        ]
+        return normalize_text(" ".join(part for part in parts if part)) or None
+
+    def _evidence_only_batch_justification(self, row: dict) -> str | None:
+        evidence_items = row.get("evidence") or []
+        evidence_text = " ".join(str(item) for item in evidence_items if item)
+        parts = [
+            self._sanitize_recommendation_evidence(evidence_text),
+            self._sanitize_recommendation_evidence(row.get("insight_summary")),
+        ]
+        return normalize_text(" ".join(part for part in parts if part)) or None
+
+    def _sanitize_recommendation_evidence(self, value: object) -> str | None:
+        text = normalize_text(str(value or ""))
+        if not text:
+            return None
+        if self._is_meta_conversation_evidence(text):
+            return (
+                "Evidence quality is limited because the respondent asked for clarification "
+                "or did not provide business evidence."
             )
+        return text
+
+    @staticmethod
+    def _is_meta_conversation_evidence(text: str) -> bool:
+        lowered = text.lower()
+        meta_patterns = (
+            r"\brepeated clarification request\b",
+            r"\basked for clarification\b",
+            r"\bin simple terms\b",
+            r"\bexplain\b",
+            r"\bdid not provide assessable business evidence\b",
+            r"\blow-quality\b",
+            r"\bnon-interpretable\b",
+        )
+        return any(re.search(pattern, lowered) for pattern in meta_patterns)
 
     def _fallback_recommendation_text(
         self,

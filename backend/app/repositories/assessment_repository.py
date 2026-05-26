@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -143,4 +145,19 @@ class AssessmentRepository:
     ) -> None:
         assessment.executive_summary_text = executive_summary_text
         assessment.priority_message_text = priority_message_text
+        await self.db.flush()
+
+    async def update_leaders_snapshot_cache(
+        self,
+        assessment: Assessment,
+        leaders_snapshot_payload: dict | None,
+        leaders_snapshot_status: str | None = None,
+        leaders_snapshot_generated_at: datetime | None = None,
+        leaders_snapshot_error: str | None = None,
+    ) -> None:
+        assessment.leaders_snapshot_payload = leaders_snapshot_payload
+        if leaders_snapshot_status is not None:
+            assessment.leaders_snapshot_status = leaders_snapshot_status
+        assessment.leaders_snapshot_generated_at = leaders_snapshot_generated_at
+        assessment.leaders_snapshot_error = leaders_snapshot_error
         await self.db.flush()

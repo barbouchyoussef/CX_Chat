@@ -1,15 +1,17 @@
 import os
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 
 def load_env_file() -> None:
+    env_path = Path(__file__).resolve().parents[2] / ".env"
     # Keep it tolerant on Windows where .env is often saved as cp1252/latin-1.
     for encoding in ("utf-8", "cp1252", "latin-1"):
         try:
-            load_dotenv(encoding=encoding)
+            load_dotenv(dotenv_path=env_path, encoding=encoding, override=True)
             return
         except UnicodeDecodeError:
             continue
@@ -56,6 +58,21 @@ class Settings:
     maturity_average_established_threshold: float
     maturity_score_basic_threshold: float
     maturity_score_established_threshold: float
+    website_audit_enabled: bool
+    website_audit_output_dir: str
+    website_audit_timeout_seconds: float
+    benchmark_langsearch_max_requests_per_second: int
+    benchmark_langsearch_max_requests_per_minute: int
+    benchmark_langsearch_max_requests_per_day: int
+    benchmark_mistral_max_requests_per_second: int
+    benchmark_mistral_max_requests_per_minute: int
+    benchmark_mistral_max_requests_per_day: int
+    benchmark_max_candidates_initial: int
+    benchmark_max_candidates_refresh: int
+    benchmark_max_langsearch_docs_per_candidate: int
+    benchmark_max_mistral_calls_per_assessment: int
+    benchmark_provider_cooldown_seconds: float
+    benchmark_max_concurrent_jobs: int
 
     @property
     def LLM_REQUEST_TIMEOUT_SECONDS(self) -> float:
@@ -143,6 +160,13 @@ def _get_float(name: str, default: float) -> float:
     return float(value) if value else default
 
 
+def _get_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 @lru_cache
 def get_settings() -> Settings:
     load_env_file()
@@ -157,7 +181,7 @@ def get_settings() -> Settings:
         app_env=os.getenv("APP_ENV", "development"),
         database_url=database_url,
         mistral_api_key=os.getenv("MISTRAL_API_KEY"),
-        mistral_model=os.getenv("MISTRAL_MODEL", "mistral-small-latest"),
+        mistral_model=os.getenv("MISTRAL_MODEL", "mistral-medium"),
         mistral_base_url=os.getenv("MISTRAL_BASE_URL", "https://api.mistral.ai/v1"),
         langsearch_api_key=os.getenv("LANGSEARCH_API_KEY"),
         langsearch_base_url=os.getenv("LANGSEARCH_BASE_URL", "https://api.langsearch.com/v1"),
@@ -191,4 +215,19 @@ def get_settings() -> Settings:
         maturity_average_established_threshold=_get_float("MATURITY_AVERAGE_ESTABLISHED_THRESHOLD", 2.34),
         maturity_score_basic_threshold=_get_float("MATURITY_SCORE_BASIC_THRESHOLD", 40.0),
         maturity_score_established_threshold=_get_float("MATURITY_SCORE_ESTABLISHED_THRESHOLD", 75.0),
+        website_audit_enabled=_get_bool("WEBSITE_AUDIT_ENABLED", False),
+        website_audit_output_dir=os.getenv("WEBSITE_AUDIT_OUTPUT_DIR", "UX_UI_AUDIT/output/assessments"),
+        website_audit_timeout_seconds=_get_float("WEBSITE_AUDIT_TIMEOUT_SECONDS", 120.0),
+        benchmark_langsearch_max_requests_per_second=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_SECOND", 1),
+        benchmark_langsearch_max_requests_per_minute=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_MINUTE", 20),
+        benchmark_langsearch_max_requests_per_day=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_DAY", 2000),
+        benchmark_mistral_max_requests_per_second=_get_int("BENCHMARK_MISTRAL_MAX_REQUESTS_PER_SECOND", 1),
+        benchmark_mistral_max_requests_per_minute=_get_int("BENCHMARK_MISTRAL_MAX_REQUESTS_PER_MINUTE", 12),
+        benchmark_mistral_max_requests_per_day=_get_int("BENCHMARK_MISTRAL_MAX_REQUESTS_PER_DAY", 1200),
+        benchmark_max_candidates_initial=_get_int("BENCHMARK_MAX_CANDIDATES_INITIAL", 4),
+        benchmark_max_candidates_refresh=_get_int("BENCHMARK_MAX_CANDIDATES_REFRESH", 6),
+        benchmark_max_langsearch_docs_per_candidate=_get_int("BENCHMARK_MAX_LANGSEARCH_DOCS_PER_CANDIDATE", 8),
+        benchmark_max_mistral_calls_per_assessment=_get_int("BENCHMARK_MAX_MISTRAL_CALLS_PER_ASSESSMENT", 4),
+        benchmark_provider_cooldown_seconds=_get_float("BENCHMARK_PROVIDER_COOLDOWN_SECONDS", 120.0),
+        benchmark_max_concurrent_jobs=_get_int("BENCHMARK_MAX_CONCURRENT_JOBS", 1),
     )

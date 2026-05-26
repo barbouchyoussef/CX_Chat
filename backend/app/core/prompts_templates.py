@@ -1,28 +1,25 @@
 SEMANTIC_PLAIN_LANGUAGE_INSTRUCTION = (
     "Use clear, natural, non-technical business language to describe CX concepts. "
     "Do not rely on static label translations. Interpret the provided axis and capability labels semantically; "
-    "for example, instead of saying 'governance', ask who takes decisions, who owns follow-up, or how teams coordinate."
+    "Ask short direct questions; for example, instead of saying 'governance', ask who owns follow-up."
 )
 
 AXIS_CONSULTANT_GUIDANCE = (
     "- Interpret the axis name and missing capability labels semantically.\n"
     "- Translate abstract CX concepts into practical business language a non-technical leader can answer.\n"
-    "- Focus on how the work happens today: who is involved, what action is taken, how often it happens, and what changes."
+    "- Ask about one practical signal at a time: owner, cadence, tool, action, or metric."
 )
 
 STAGE_DISCOVERY_GUIDANCE_BY_STAGE = {
     "intro": (
-        "- Start broad and practical around {focus}.\n"
-        "- Ask for current practice, not proof.\n"
-        "- Keep it answerable with one short example."
+        "- Start with one simple question around {focus}.\n"
+        "- Ask for current practice, not proof."
     ),
     "diagnostic": (
-        "- Move from broad statements to one concrete example around {focus}.\n"
-        "- Clarify one useful angle only: owner, cadence, action, or result."
+        "- Ask one useful maturity signal around {focus}: owner, cadence, tool, follow-up, or outcome."
     ),
     "deep_dive": (
-        "- Deep dive only where ambiguity remains around {focus}.\n"
-        "- Ask for one last practical detail that improves scoring confidence."
+        "- Ask one last simple detail around {focus} only if ambiguity remains."
     ),
 }
 

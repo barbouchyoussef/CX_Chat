@@ -10,7 +10,9 @@ from app.db.models.capability_recommendation import CapabilityRecommendation
 from app.db.models.assessment_insight import AssessmentInsight
 from app.db.models.assessment_score import AssessmentScore
 from app.db.models.axis import Axis
+from app.db.models.axis_maturity_content import AxisMaturityContent
 from app.db.models.capability import Capability
+from app.db.models.capability_maturity_content import CapabilityMaturityContent
 from app.db.models.maturity_level import MaturityLevel
 
 
@@ -117,6 +119,7 @@ class CapabilityRepository:
                 Capability.id,
                 Capability.code,
                 Capability.name,
+                Capability.description,
                 Capability.sort_order,
                 expected_evidence_col,
                 question_guidelines_col,
@@ -138,6 +141,7 @@ class CapabilityRepository:
                 "id": cid,
                 "code": str(code),
                 "label": label,
+                "description": description,
                 "sort_order": int(sort_order),
                 "expected_evidence": expected_evidence,
                 "question_guidelines": question_guidelines,
@@ -150,6 +154,7 @@ class CapabilityRepository:
                 cid,
                 code,
                 label,
+                description,
                 sort_order,
                 expected_evidence,
                 question_guidelines,
@@ -308,6 +313,7 @@ class CapabilityRepository:
                 CapabilityMaturityRubric.maturity_level_id,
                 MaturityLevel.level_number,
                 CapabilityMaturityRubric.description,
+                CapabilityMaturityRubric.card_summary,
             )
             .join(MaturityLevel, MaturityLevel.id == CapabilityMaturityRubric.maturity_level_id)
             .where(CapabilityMaturityRubric.capability_id.in_(capability_ids))
@@ -315,17 +321,95 @@ class CapabilityRepository:
         )
         rows = result.all()
         out: dict[int, list[dict]] = {}
-        for capability_id, maturity_level_id, maturity_level_number, description in rows:
+        for capability_id, maturity_level_id, maturity_level_number, description, card_summary in rows:
             out.setdefault(int(capability_id), []).append(
                 {
                     "maturity_level_id": int(maturity_level_id),
                     "maturity_level_number": int(maturity_level_number),
-                    "description": str(description),
+                    "description": normalize_text(str(description or "")).strip() or None,
+                    "card_summary": normalize_text(str(card_summary or "")).strip() or None,
                 }
             )
         return out
 
+    async def get_level3_recommendations_for_capabilities(self, capability_ids: list[int]) -> dict[int, dict]:
+        if not capability_ids:
+            return {}
+
+        result = await self.db.execute(
+            select(
+                CapabilityRecommendation.capability_id,
+                CapabilityRecommendation.recommendation_guideline,
+                CapabilityRecommendation.initiative_suggestions,
+            )
+            .join(MaturityLevel, MaturityLevel.id == CapabilityRecommendation.maturity_level_id)
+            .where(
+                CapabilityRecommendation.capability_id.in_(capability_ids),
+                MaturityLevel.level_number == 3,
+            )
+            .order_by(CapabilityRecommendation.capability_id.asc())
+        )
+        rows = result.all()
+        return {
+            int(capability_id): {
+                "recommendation_guideline": normalize_text(str(recommendation_guideline or "")).strip() or None,
+                "initiative_suggestions": normalize_text(str(initiative_suggestions or "")).strip() or None,
+            }
+            for capability_id, recommendation_guideline, initiative_suggestions in rows
+        }
+
+    async def get_axis_maturity_content(self) -> dict[tuple[str, int], dict[str, str | None]]:
+        result = await self.db.execute(
+            select(
+                Axis.code,
+                MaturityLevel.level_number,
+                AxisMaturityContent.axis_description,
+                AxisMaturityContent.axis_panel_copy,
+            )
+            .join(Axis, Axis.id == AxisMaturityContent.axis_id)
+            .join(MaturityLevel, MaturityLevel.id == AxisMaturityContent.maturity_level_id)
+            .order_by(Axis.sort_order.asc(), MaturityLevel.level_number.asc())
+        )
+        rows = result.all()
+        return {
+            ((normalize_axis_code(str(axis_code)) or str(axis_code)).lower(), int(level_number)): {
+                "axis_description": normalize_text(str(axis_description or "")).strip() or None,
+                "axis_panel_copy": normalize_text(str(axis_panel_copy or "")).strip() or None,
+            }
+            for axis_code, level_number, axis_description, axis_panel_copy in rows
+        }
+
+    async def get_capability_maturity_content(self) -> dict[tuple[int, int], dict[str, str | None]]:
+        result = await self.db.execute(
+            select(
+                CapabilityMaturityContent.capability_id,
+                MaturityLevel.level_number,
+                CapabilityMaturityContent.card_summary,
+                CapabilityMaturityContent.modal_summary,
+            )
+            .join(MaturityLevel, MaturityLevel.id == CapabilityMaturityContent.maturity_level_id)
+            .order_by(CapabilityMaturityContent.capability_id.asc(), MaturityLevel.level_number.asc())
+        )
+        rows = result.all()
+        return {
+            (int(capability_id), int(level_number)): {
+                "card_summary": normalize_text(str(card_summary or "")).strip() or None,
+                "modal_summary": normalize_text(str(modal_summary or "")).strip() or None,
+            }
+            for capability_id, level_number, card_summary, modal_summary in rows
+        }
+
     async def get_recommendations_for_scores(self, assessment_id: int) -> list[dict]:
+        latest_insight_subquery = (
+            select(
+                AssessmentInsight.capability_id.label("capability_id"),
+                func.max(AssessmentInsight.id).label("latest_insight_id"),
+            )
+            .where(AssessmentInsight.assessment_id == assessment_id)
+            .group_by(AssessmentInsight.capability_id)
+            .subquery()
+        )
+        latest_insight = AssessmentInsight.__table__.alias("latest_insight")
         result = await self.db.execute(
             select(
                 Capability.id,
@@ -336,6 +420,8 @@ class CapabilityRepository:
                 AssessmentScore.confidence,
                 AssessmentScore.assessment_status,
                 AssessmentScore.justification,
+                latest_insight.c.evidence_text,
+                latest_insight.c.justification,
                 CapabilityRecommendation.recommendation_guideline,
                 CapabilityRecommendation.priority_hint,
                 CapabilityRecommendation.consultant_note,
@@ -350,10 +436,18 @@ class CapabilityRepository:
                 (AssessmentScore.capability_id == Capability.id)
                 & (AssessmentScore.assessment_id == assessment_id),
             )
-            .outerjoin(
-                CapabilityRecommendation,
-                (CapabilityRecommendation.capability_id == Capability.id)
-                & (CapabilityRecommendation.maturity_level_id == AssessmentScore.maturity_level_id),
+              .outerjoin(
+                  latest_insight_subquery,
+                  latest_insight_subquery.c.capability_id == Capability.id,
+              )
+              .outerjoin(
+                  latest_insight,
+                  latest_insight.c.id == latest_insight_subquery.c.latest_insight_id,
+              )
+              .outerjoin(
+                  CapabilityRecommendation,
+                  (CapabilityRecommendation.capability_id == Capability.id)
+                  & (CapabilityRecommendation.maturity_level_id == AssessmentScore.maturity_level_id),
             )
             .order_by(Axis.sort_order.asc(), Capability.sort_order.asc(), Capability.id.asc())
         )
@@ -364,11 +458,13 @@ class CapabilityRepository:
                 "capability_code": str(capability_code),
                 "capability_name": str(capability_name),
                 "axis": normalize_axis_code(str(axis_name)) or str(axis_name),
-                "maturity_level_id": int(maturity_level_id) if maturity_level_id is not None else None,
-                "confidence": float(confidence) if confidence is not None else None,
-                "assessment_status": str(assessment_status or "not_assessed"),
-                "justification": justification,
-                "recommendation_guideline": recommendation_guideline,
+                  "maturity_level_id": int(maturity_level_id) if maturity_level_id is not None else None,
+                  "confidence": float(confidence) if confidence is not None else None,
+                  "assessment_status": str(assessment_status or "not_assessed"),
+                  "justification": justification,
+                  "evidence_text": evidence_text,
+                  "insight_justification": insight_justification,
+                  "recommendation_guideline": recommendation_guideline,
                 "priority_hint": priority_hint,
                 "consultant_note": consultant_note,
                 "evidence_to_cite": evidence_to_cite,
@@ -382,10 +478,12 @@ class CapabilityRepository:
                 capability_name,
                 axis_name,
                 maturity_level_id,
-                confidence,
-                assessment_status,
-                justification,
-                recommendation_guideline,
+                  confidence,
+                  assessment_status,
+                  justification,
+                  evidence_text,
+                  insight_justification,
+                  recommendation_guideline,
                 priority_hint,
                 consultant_note,
                 evidence_to_cite,

@@ -6,6 +6,7 @@ from app.repositories.assessment_answer_repository import AssessmentAnswerReposi
 from app.repositories.assessment_axis_memory_repository import AssessmentAxisMemoryRepository
 from app.repositories.assessment_idempotency_repository import AssessmentIdempotencyRepository
 from app.repositories.assessment_repository import AssessmentRepository
+from app.repositories.assessment_website_audit_repository import AssessmentWebsiteAuditRepository
 from app.repositories.capability_repository import CapabilityRepository
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.company_size_repository import CompanySizeRepository
@@ -51,6 +52,7 @@ class AssessmentService:
         answers: AssessmentAnswerRepository,
         axis_memory: AssessmentAxisMemoryRepository,
         idempotency: AssessmentIdempotencyRepository,
+        website_audits: AssessmentWebsiteAuditRepository,
         llm_service: LLMService,
         uow: AsyncUnitOfWork,
         state_service: AssessmentStateService,
@@ -67,6 +69,7 @@ class AssessmentService:
         self.answers = answers
         self.axis_memory = axis_memory
         self.idempotency = idempotency
+        self.website_audits = website_audits
         self.llm = llm_service
         self.uow = uow
         self.state = state_service
@@ -79,6 +82,8 @@ class AssessmentService:
         company_name: str,
         sector_label: str | None,
         company_size_label: str | None,
+        region: str | None = None,
+        website_url: str | None = None,
         prompt_profile: str | None = None,
     ):
         async with self.uow:
@@ -92,7 +97,13 @@ class AssessmentService:
                 sector_code=sector_label,
                 company_size_code=company_size_label,
             )
-            company = await self.companies.create(name=company_name, sector_id=sector.id, size_id=size.id)
+            company = await self.companies.create(
+                name=company_name,
+                sector_id=sector.id,
+                size_id=size.id,
+                region=region,
+                website_url=website_url,
+            )
             first_axis = await self.state.get_first_axis()
 
             assessment = await self.assessments.create(
@@ -102,6 +113,8 @@ class AssessmentService:
                 prompt_profile=selected_profile,
             )
             await self.assessments.initialize_scores(assessment.id)
+            if website_url:
+                await self.website_audits.create_pending(assessment_id=assessment.id, website_url=website_url)
             return assessment
 
     async def get_assessment(self, assessment_id: int) -> AssessmentResponse | None:

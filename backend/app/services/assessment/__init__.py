@@ -9,6 +9,7 @@ __all__ = [
     "AssessmentScoringService",
     "AssessmentService",
     "AssessmentStateService",
+    "BenchmarkEvidenceSignal",
     "BenchmarkQueryContext",
     "BenchmarkService",
     "MemorySyncService",
@@ -24,7 +25,11 @@ __all__ = [
 
 if TYPE_CHECKING:
     from app.services.assessment.conversation.answer_flow_service import AnswerFlowService, build_answer_flow_service
-    from app.services.assessment.reporting.benchmark_service import BenchmarkQueryContext, BenchmarkService
+    from app.services.assessment.reporting.benchmark_service import (
+        BenchmarkEvidenceSignal,
+        BenchmarkQueryContext,
+        BenchmarkService,
+    )
     from app.services.assessment.conversation.memory_sync_service import MemorySyncService, build_memory_sync_service
     from app.services.assessment.conversation.question_flow_service import QuestionFlowService, build_question_flow_service
     from app.services.assessment.conversation.service import AssessmentConversationService
@@ -40,10 +45,18 @@ def __getattr__(name: str) -> Any:
         from app.services.assessment.conversation.answer_flow_service import AnswerFlowService, build_answer_flow_service
 
         return {"AnswerFlowService": AnswerFlowService, "build_answer_flow_service": build_answer_flow_service}[name]
-    if name in {"BenchmarkQueryContext", "BenchmarkService"}:
-        from app.services.assessment.reporting.benchmark_service import BenchmarkQueryContext, BenchmarkService
+    if name in {"BenchmarkEvidenceSignal", "BenchmarkQueryContext", "BenchmarkService"}:
+        from app.services.assessment.reporting.benchmark_service import (
+            BenchmarkEvidenceSignal,
+            BenchmarkQueryContext,
+            BenchmarkService,
+        )
 
-        return {"BenchmarkQueryContext": BenchmarkQueryContext, "BenchmarkService": BenchmarkService}[name]
+        return {
+            "BenchmarkEvidenceSignal": BenchmarkEvidenceSignal,
+            "BenchmarkQueryContext": BenchmarkQueryContext,
+            "BenchmarkService": BenchmarkService,
+        }[name]
     if name in {"MemorySyncService", "build_memory_sync_service"}:
         from app.services.assessment.conversation.memory_sync_service import MemorySyncService, build_memory_sync_service
 

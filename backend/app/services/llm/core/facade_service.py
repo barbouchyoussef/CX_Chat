@@ -123,11 +123,11 @@ class LLMService:
             prompt_profile=prompt_profile,
         )
 
-    async def route_user_intent(self, text: str) -> str:
-        return await self.intent_router.route(text)
+    async def route_user_intent(self, text: str, previous_question: str | None = None) -> str:
+        return await self.intent_router.route(text, previous_question=previous_question)
 
-    def _fast_route_intent(self, text: str) -> str | None:
-        return self.intent_router.fast_route(text)
+    def _fast_route_intent(self, text: str, previous_question: str | None = None) -> str | None:
+        return self.intent_router.fast_route(text, previous_question=previous_question)
 
     def _normalize_fast_intent_text(self, text: str) -> str:
         return self.intent_router.normalize_fast_intent_text(text)

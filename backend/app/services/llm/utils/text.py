@@ -9,6 +9,9 @@ def clean_single_text(text: str | None) -> str:
     value = normalize_text(text)
     if len(value) >= 2 and ((value[0] == '"' and value[-1] == '"') or (value[0] == "'" and value[-1] == "'")):
         value = value[1:-1].strip()
+    value = value.replace("**", "").replace("__", "")
+    value = re.sub(r"(?<!\w)[*_](?!\s)|(?<!\s)[*_](?!\w)", "", value)
+    value = re.sub(r"(^|\s)[-•]\s+", r"\1", value)
     return re.sub(r"\s+", " ", value).strip()
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Awaitable, Callable
 
 from app.core.config import Settings
@@ -10,6 +11,17 @@ logger = logging.getLogger(__name__)
 
 class MemoryService:
     """Axis memory updater for compact conversational state."""
+
+    _ALLOWED_FACT_TYPES = {
+        "owner",
+        "tool",
+        "channel",
+        "cadence",
+        "metric",
+        "process",
+        "absence",
+        "outcome",
+    }
 
     def __init__(
         self,
@@ -38,7 +50,12 @@ class MemoryService:
         except Exception as exc:
             logger.error("LLM memory update failed: %s", exc, exc_info=True)
             return (current_summary or "").strip()
-        return self._clean_memory_text(text) or (current_summary or "").strip()
+        cleaned = self._clean_memory_text(text) or (current_summary or "").strip()
+        return self._enforce_memory_labels(
+            memory_text=cleaned,
+            current_summary=current_summary,
+            covered_labels=covered_labels,
+        )
 
     def _build_memory_update_messages(
         self,
@@ -64,10 +81,111 @@ class MemoryService:
             "- Rhythms, cadences, or frequencies (e.g., weekly, monthly, ad hoc).\n"
             "- Explicit absences of process (e.g., 'no formal KPIs', 'we don't track this').\n"
             "Keep it short (max 8 lines), factual, no fluff.\n"
-            "Format each fact as a simple bullet point (-).\n"
+            "Format each fact as one semi-structured line using this shape exactly: - capability: <label> | <type>: <fact>\n"
+            "Allowed <type> values: owner, tool, channel, cadence, metric, process, absence, outcome.\n"
+            "CRITICAL: 'Newly covered criteria labels' contains canonical capability labels from the database. Reuse those labels exactly as written. Do not paraphrase, shorten, translate, or invent capability labels.\n"
+            "If a fact clearly belongs to one of the provided labels, you MUST use that exact label.\n"
+            "If no provided label clearly applies, use exactly: capability: General\n"
+            "Prefer one fact per line. Do not combine multiple unrelated facts in the same line.\n"
+            "Keep existing valid lines unless the new answer corrects or replaces them.\n"
+            "Examples:\n"
+            "- capability: Complaint follow-up | owner: CX Lead\n"
+            "- capability: Complaint follow-up | cadence: weekly\n"
+            "- capability: KPI tracking | absence: no formal KPI tracked\n"
             "Return only the updated memory text, no markdown."
         )
         return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+    def _enforce_memory_labels(
+        self,
+        memory_text: str,
+        current_summary: str | None,
+        covered_labels: list[str],
+    ) -> str:
+        lines = [line.strip() for line in str(memory_text or "").split("\n") if line.strip()]
+        if not lines:
+            return ""
+
+        allowed_labels = {
+            label.strip()
+            for label in covered_labels
+            if str(label or "").strip()
+        }
+        allowed_labels.add("General")
+        allowed_labels.update(self._extract_capability_labels(current_summary or ""))
+
+        normalized_lines: list[str] = []
+        seen_lines: set[str] = set()
+        sole_covered_label = covered_labels[0].strip() if len(covered_labels) == 1 and covered_labels[0].strip() else None
+        fallback_label = sole_covered_label or self._single_existing_non_general_label(current_summary)
+        for line in lines[:8]:
+            match = re.match(r"^-\s*capability:\s*(.*?)\s*\|\s*([a-z]+)\s*:\s*(.+)$", line, flags=re.IGNORECASE)
+            if not match:
+                if line not in seen_lines:
+                    normalized_lines.append(line)
+                    seen_lines.add(line)
+                continue
+
+            capability_label = match.group(1).strip()
+            fact_type = self._normalize_fact_type(match.group(2).strip().lower(), match.group(3).strip())
+            fact_value = match.group(3).strip()
+            if not fact_value:
+                continue
+            if capability_label not in allowed_labels:
+                capability_label = fallback_label or "General"
+            elif capability_label == "General" and fallback_label:
+                capability_label = fallback_label
+
+            normalized = f"- capability: {capability_label} | {fact_type}: {fact_value}"
+            dedupe_key = normalized.lower()
+            if dedupe_key in seen_lines:
+                continue
+            normalized_lines.append(normalized)
+            seen_lines.add(dedupe_key)
+
+        return "\n".join(normalized_lines).strip()
+
+    def _extract_capability_labels(self, memory_text: str) -> set[str]:
+        labels: set[str] = set()
+        for line in str(memory_text or "").split("\n"):
+            match = re.match(r"^-\s*capability:\s*(.*?)\s*\|", line.strip(), flags=re.IGNORECASE)
+            if match:
+                labels.add(match.group(1).strip())
+        return labels
+
+    def _single_existing_non_general_label(self, memory_text: str | None) -> str | None:
+        labels = {
+            label
+            for label in self._extract_capability_labels(memory_text or "")
+            if label and label != "General"
+        }
+        if len(labels) == 1:
+            return next(iter(labels))
+        return None
+
+    def _normalize_fact_type(self, fact_type: str, fact_value: str) -> str:
+        normalized_type = str(fact_type or "").strip().lower()
+        if normalized_type in self._ALLOWED_FACT_TYPES:
+            return normalized_type
+
+        value = str(fact_value or "").strip().lower()
+        if not value:
+            return "process"
+        if any(marker in value for marker in ("no ", "not ", "none", "without ", "lack of", "don't", "do not")):
+            return "absence"
+        if any(marker in value for marker in ("weekly", "monthly", "daily", "quarterly", "annually", "ad hoc")):
+            return "cadence"
+        if any(marker in value for marker in ("email", "phone", "call", "survey", "whatsapp", "chat")):
+            return "channel"
+        if any(marker in value for marker in ("crm", "excel", "jira", "trello", "dashboard", "backlog", "tool", "system")):
+            return "tool"
+        if any(marker in value for marker in ("owner", "lead", "manager", "team", "director")):
+            return "owner"
+        if any(marker in value for marker in ("nps", "kpi", "csat", "complaint volume", "metric", "measure")):
+            return "metric"
+        if any(marker in value for marker in ("improve", "reduced", "faster", "better", "higher", "lower")):
+            return "outcome"
+        return "process"
 
 
 def build_memory_service(

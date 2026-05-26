@@ -1,0 +1,2497 @@
+{
+  "url": "https://www.tunisietelecom.tn/particulier/",
+  "generatedAt": "2026-05-13T13:19:16",
+  "overallScore": 5.9,
+  "desktopViewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "mobileViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "desktopSignals": {
+    "url": "https://www.tunisietelecom.tn/particulier/",
+    "title": "The URL you requested has been blocked",
+    "lang": "",
+    "metaDescription": "",
+    "bodyText": "block Web Page Blocked! The page cannot be displayed. Please contact the administrator for additional information. URL: www.tunisietelecom.tn/particulier/ Client IP: 145.62.80.61 Attack ID: 20000051 Message ID: 002164374816",
+    "wordCount": 27,
+    "h1": [],
+    "headings": [
+      {
+        "tag": "h2",
+        "text": "block",
+        "rect": {
+          "x": 52.5,
+          "y": 130,
+          "width": 90,
+          "height": 92
+        }
+      },
+      {
+        "tag": "h3",
+        "text": "Web Page Blocked!",
+        "rect": {
+          "x": 200,
+          "y": 123,
+          "width": 1235,
+          "height": 25
+        }
+      }
+    ],
+    "links": [],
+    "controls": [],
+    "inputs": [],
+    "images": [],
+    "navText": [],
+    "hasHeader": false,
+    "hasMain": false,
+    "hasFooter": false,
+    "hasNav": false,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "documentSize": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflowPx": 0,
+    "oversized": [],
+    "fontSizes": [
+      13.3333,
+      13.3333,
+      20,
+      13.3333,
+      21.3333,
+      13.3333,
+      13.3333,
+      13.3333
+    ],
+    "trustSignalCount": 1,
+    "perf": {
+      "domContentLoaded": 819,
+      "loadEventEnd": 852
+    }
+  },
+  "mobileSignals": {
+    "url": "https://www.tunisietelecom.tn/particulier/",
+    "title": "Tunisie Telecom - Particulier",
+    "lang": "fr",
+    "metaDescription": "Portail Tunisie Telecom",
+    "bodyText": "Entreprise Nos services rapides Achat Internet Recharge TTCash Ehdia Net Internet Sabba Paiement Factures Voir tous les services Nos forfaits Internet mobile Achetez en ligne et profitez d'une remise de 10% et plus d'internet gratuite 200 Go 100 Dinars 60 Jours 45 Go 50 Dinars 30 Jours 25 Go 30 Dinars 30 Jours 4 Go 10 Dinars 30 Jours 1.5 Go 6 Dinars 30 Jours 650 Mo 3 Dinars 7 Jours 60 Go 60 Dinars 30 Jours 110 Go 80 Dinars 60 Jours 100 Mo 450 Millimes Minuit Divertissement Musique & VOD Découvrir Gaming Découvrir Jeux Quizz Découvrir Culture & Education Découvrir Sport Découvrir Services divers Découvrir Actualités & évènements Tunisie Telecom lance Kashy, sa nouvelle application de paiement mobile : L’opérateur se transforme d’un opérateur de connectivité à un opérateur de services Publié le : 18/03/2026 Lire la suite Résultats des offres de recrutement N°02/03/04, 2024 : listes complémentaires Publié le : 10/03/2026 Lire la suite Tunisie Telecom participe au Club Pionnier 2.0 de transformation numérique Publié le : 05/03/2026 Lire la suite Voir toutes les actualités Programmes RSE Découvrir Pour les bons plans c'est par ici Télécharger Découvrir SERVICE PORTABILITÉ CODES DES SERVICES Gagnez du temps, gérez tout avec l’application MyTT Installer X Besoin d'aide ? Appeler le 1298 ou le 71001298 Nous contacter sur Messenger Couverture réseau Trouver un Espace TT À propos Actualités Stages Accès à l'information",
+    "wordCount": 231,
+    "h1": [
+      {
+        "text": "Nos services rapides",
+        "rect": {
+          "x": 0,
+          "y": 383.546875,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "text": "Nos forfaits Internet mobile",
+        "rect": {
+          "x": 30,
+          "y": 750.5,
+          "width": 330,
+          "height": 67.1875
+        }
+      },
+      {
+        "text": "Achetez en ligne et profitez d'une remise de 10% et plus d'internet gratuite",
+        "rect": {
+          "x": 30,
+          "y": 825.6875,
+          "width": 330,
+          "height": 70.78125
+        }
+      },
+      {
+        "text": "Divertissement",
+        "rect": {
+          "x": 0,
+          "y": 1152.46875,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "text": "Actualités & évènements",
+        "rect": {
+          "x": 0,
+          "y": 1824.0625,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "text": "Programmes RSE",
+        "rect": {
+          "x": 0,
+          "y": 2904.078125,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "text": "Pour les bons plans c'est par ici",
+        "rect": {
+          "x": 0,
+          "y": 3561.671875,
+          "width": 390,
+          "height": 67.1875
+        }
+      },
+      {
+        "text": "SERVICE PORTABILITÉ",
+        "rect": {
+          "x": 49.53125,
+          "y": 4990.65625,
+          "width": 223.375,
+          "height": 26.390625
+        }
+      },
+      {
+        "text": "Besoin d'aide ?",
+        "rect": {
+          "x": 0,
+          "y": 5268.046875,
+          "width": 390,
+          "height": 36
+        }
+      }
+    ],
+    "headings": [
+      {
+        "tag": "h1",
+        "text": "Nos services rapides",
+        "rect": {
+          "x": 0,
+          "y": 383.546875,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "Nos forfaits Internet mobile",
+        "rect": {
+          "x": 30,
+          "y": 750.5,
+          "width": 330,
+          "height": 67.1875
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "Achetez en ligne et profitez d'une remise de 10% et plus d'internet gratuite",
+        "rect": {
+          "x": 30,
+          "y": 825.6875,
+          "width": 330,
+          "height": 70.78125
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "Divertissement",
+        "rect": {
+          "x": 0,
+          "y": 1152.46875,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "Actualités & évènements",
+        "rect": {
+          "x": 0,
+          "y": 1824.0625,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "Programmes RSE",
+        "rect": {
+          "x": 0,
+          "y": 2904.078125,
+          "width": 390,
+          "height": 33.59375
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "Pour les bons plans c'est par ici",
+        "rect": {
+          "x": 0,
+          "y": 3561.671875,
+          "width": 390,
+          "height": 67.1875
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "SERVICE PORTABILITÉ",
+        "rect": {
+          "x": 49.53125,
+          "y": 4990.65625,
+          "width": 223.375,
+          "height": 26.390625
+        }
+      },
+      {
+        "tag": "h1",
+        "text": "Besoin d'aide ?",
+        "rect": {
+          "x": 0,
+          "y": 5268.046875,
+          "width": 390,
+          "height": 36
+        }
+      }
+    ],
+    "links": [
+      {
+        "text": "Entreprise",
+        "href": "https://www.tunisietelecom.tn/entreprise/",
+        "rect": {
+          "x": 18,
+          "y": 15.75,
+          "width": 93.078125,
+          "height": 33
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/#searchCollapse",
+        "rect": {
+          "x": 281.125,
+          "y": 16.25,
+          "width": 25.328125,
+          "height": 30.5
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/trouver-un-espace-tt/",
+        "rect": {
+          "x": 316.453125,
+          "y": 16.25,
+          "width": 19.546875,
+          "height": 30.5
+        }
+      },
+      {
+        "text": "",
+        "href": "https://mytt.tunisietelecom.tn/",
+        "rect": {
+          "x": 346,
+          "y": 16,
+          "width": 26,
+          "height": 31
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier",
+        "rect": {
+          "x": 18,
+          "y": 65.78125,
+          "width": 70,
+          "height": 27
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/nperfetrapido/",
+        "rect": {
+          "x": 112.953125,
+          "y": 66.765625,
+          "width": 204.109375,
+          "height": 27
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/tt-nperf-2025/",
+        "rect": {
+          "x": 0,
+          "y": 125.546875,
+          "width": 390,
+          "height": 210
+        }
+      },
+      {
+        "text": "Achat Internet",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 134,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "text": "Recharge TTCash",
+        "href": "https://mytt.tunisietelecom.tn/anonymous/ttcash#",
+        "rect": {
+          "x": 388,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "text": "Ehdia Net",
+        "href": "https://mytt.tunisietelecom.tn/topup-options/hdianet-option#",
+        "rect": {
+          "x": 658.03125,
+          "y": 495.140625,
+          "width": 89.9375,
+          "height": 96
+        }
+      },
+      {
+        "text": "Internet Sabba",
+        "href": "https://mytt.tunisietelecom.tn/topup/sabba#",
+        "rect": {
+          "x": 896,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "text": "Paiement Factures",
+        "href": "https://mytt.tunisietelecom.tn/anonymous/paiement-facture#",
+        "rect": {
+          "x": 1150,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "text": "Voir tous les services",
+        "href": "https://www.tunisietelecom.tn/particulier/particulier-selfcare-services/",
+        "rect": {
+          "x": 100.3125,
+          "y": 691.140625,
+          "width": 189.375,
+          "height": 35.359375
+        }
+      },
+      {
+        "text": "Achetez en ligne et profitez d'une remise de 10% et plus d'internet gratuite",
+        "href": "https://myspace.tunisietelecom.tn/Pages/AchatForfaitAno.aspx",
+        "rect": {
+          "x": 57.40625,
+          "y": 823.6875,
+          "width": 275.1875,
+          "height": 73.1875
+        }
+      },
+      {
+        "text": "200 Go 100 Dinars 60 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 58,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "45 Go 50 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 308,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "25 Go 30 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 558,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "4 Go 10 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 808,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "1.5 Go 6 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 1058,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "650 Mo 3 Dinars 7 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 1308,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "60 Go 60 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 1558,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "110 Go 80 Dinars 60 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait#",
+        "rect": {
+          "x": 1808,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "100 Mo 450 Millimes Minuit",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "rect": {
+          "x": 2058,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/musique-vod/#Musique%20&%20VOD",
+        "rect": {
+          "x": 94.703125,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/gaming/#Gaming",
+        "rect": {
+          "x": 420.125,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/jeux-quiz/#Jeux%20Quiz",
+        "rect": {
+          "x": 745.546875,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/culture-education/#Culture%20&%20Education",
+        "rect": {
+          "x": 1070.96875,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/sport/#Sport",
+        "rect": {
+          "x": 1396.390625,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/services-divers/#Services%20Divers",
+        "rect": {
+          "x": 1721.8125,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "text": "Lire la suite",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/tunisie-telecom-lance-kashy/",
+        "rect": {
+          "x": 234.953125,
+          "y": 2136.34375,
+          "width": 108.046875,
+          "height": 36
+        }
+      },
+      {
+        "text": "Lire la suite",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/offre24/",
+        "rect": {
+          "x": 234.953125,
+          "y": 2452.03125,
+          "width": 108.046875,
+          "height": 36
+        }
+      },
+      {
+        "text": "Lire la suite",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/tunisie-telecom-participe-au-club-pionnier-20-de-transformation-numerique/",
+        "rect": {
+          "x": 234.953125,
+          "y": 2767.71875,
+          "width": 108.046875,
+          "height": 36
+        }
+      },
+      {
+        "text": "Voir toutes les actualités",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/",
+        "rect": {
+          "x": 78.625,
+          "y": 2850.734375,
+          "width": 232.75,
+          "height": 21
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/rse-echmelni/echmelni/#RSE",
+        "rect": {
+          "x": 102.140625,
+          "y": 3421.671875,
+          "width": 185.71875,
+          "height": 72
+        }
+      },
+      {
+        "text": "Télécharger",
+        "href": "https://play.google.com/store/apps/details?id=com.tunisietelecom.selfcare",
+        "rect": {
+          "x": 85,
+          "y": 4168.859375,
+          "width": 220,
+          "height": 75
+        }
+      },
+      {
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/kelma/programme-kelma/presentationkelma/",
+        "rect": {
+          "x": 121.78125,
+          "y": 4808.859375,
+          "width": 146.4375,
+          "height": 75
+        }
+      },
+      {
+        "text": "",
+        "href": "tel:*172#",
+        "rect": {
+          "x": 280.453125,
+          "y": 4988.859375,
+          "width": 60,
+          "height": 60
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/mobile/options-services/codes-des-services/",
+        "rect": {
+          "x": 272.09375,
+          "y": 5120.453125,
+          "width": 60,
+          "height": 60
+        }
+      },
+      {
+        "text": "Gagnez du temps, gérez tout avec l’application MyTT",
+        "href": "https://onelink.to/6zgrf9",
+        "rect": {
+          "x": 8,
+          "y": 22,
+          "width": 299.546875,
+          "height": 65
+        }
+      },
+      {
+        "text": "Installer",
+        "href": "https://onelink.to/6zgrf9",
+        "rect": {
+          "x": 315.546875,
+          "y": 46.1875,
+          "width": 45.890625,
+          "height": 16.609375
+        }
+      },
+      {
+        "text": "",
+        "href": "tel:71001298",
+        "rect": {
+          "x": 99.0625,
+          "y": 5371.046875,
+          "width": 49.875,
+          "height": 21
+        }
+      },
+      {
+        "text": "Appeler le",
+        "href": "tel:71001298",
+        "rect": {
+          "x": 60.5,
+          "y": 5412.03125,
+          "width": 69.515625,
+          "height": 21
+        }
+      },
+      {
+        "text": "1298",
+        "href": "tel:1298",
+        "rect": {
+          "x": 130.015625,
+          "y": 5412.03125,
+          "width": 37.171875,
+          "height": 22
+        }
+      },
+      {
+        "text": "71001298",
+        "href": "tel:71001298",
+        "rect": {
+          "x": 94.046875,
+          "y": 5432.578125,
+          "width": 74.765625,
+          "height": 22
+        }
+      },
+      {
+        "text": "Nous contacter sur Messenger",
+        "href": "https://www.facebook.com/TunisieTelecom/",
+        "rect": {
+          "x": 200,
+          "y": 5371.546875,
+          "width": 132,
+          "height": 82.578125
+        }
+      },
+      {
+        "text": "Couverture réseau",
+        "href": "https://www.tunisietelecom.tn/particulier/assistance/couverture-reseau/#Couverture%20R%C3%A9seau",
+        "rect": {
+          "x": 58,
+          "y": 5494.75,
+          "width": 132,
+          "height": 82.71875
+        }
+      },
+      {
+        "text": "Trouver un Espace TT",
+        "href": "https://www.tunisietelecom.tn/particulier/trouver-un-espace-tt/",
+        "rect": {
+          "x": 200,
+          "y": 5494.6875,
+          "width": 132,
+          "height": 82.65625
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.facebook.com/TunisieTelecom/",
+        "rect": {
+          "x": 109,
+          "y": 5608.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "text": "",
+        "href": "https://twitter.com/_TunisieTelecom",
+        "rect": {
+          "x": 175,
+          "y": 5608.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "text": "",
+        "href": "https://tn.linkedin.com/company/tunisie-t-l-com",
+        "rect": {
+          "x": 241,
+          "y": 5608.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.instagram.com/tunisietelecom/",
+        "rect": {
+          "x": 109,
+          "y": 5658.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.youtube.com/c/groupeTT",
+        "rect": {
+          "x": 175,
+          "y": 5658.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "text": "",
+        "href": "https://www.tiktok.com/@tunisie.telecom?lang=fr",
+        "rect": {
+          "x": 241,
+          "y": 5658.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "text": "À propos",
+        "href": "https://www.tunisietelecom.tn/particulier/a-propos-de-tt/",
+        "rect": {
+          "x": 12,
+          "y": 5820.46875,
+          "width": 57.21875,
+          "height": 45.09375
+        }
+      },
+      {
+        "text": "Actualités",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/",
+        "rect": {
+          "x": 90.21875,
+          "y": 5820.46875,
+          "width": 70.671875,
+          "height": 45.09375
+        }
+      },
+      {
+        "text": "Stages",
+        "href": "https://www.tunisietelecom.tn/particulier/stages",
+        "rect": {
+          "x": 181.890625,
+          "y": 5820.46875,
+          "width": 50.890625,
+          "height": 45.09375
+        }
+      },
+      {
+        "text": "Accès à l'information",
+        "href": "https://www.tunisietelecom.tn/particulier/acces-a-linformation/",
+        "rect": {
+          "x": 253.78125,
+          "y": 5820.46875,
+          "width": 124.21875,
+          "height": 45.09375
+        }
+      }
+    ],
+    "controls": [
+      {
+        "tag": "a",
+        "text": "Entreprise",
+        "href": "https://www.tunisietelecom.tn/entreprise/",
+        "role": "",
+        "rect": {
+          "x": 18,
+          "y": 15.75,
+          "width": 93.078125,
+          "height": 33
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/#searchCollapse",
+        "role": "button",
+        "rect": {
+          "x": 281.125,
+          "y": 16.25,
+          "width": 25.328125,
+          "height": 30.5
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/trouver-un-espace-tt/",
+        "role": "",
+        "rect": {
+          "x": 316.453125,
+          "y": 16.25,
+          "width": 19.546875,
+          "height": 30.5
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://mytt.tunisietelecom.tn/",
+        "role": "",
+        "rect": {
+          "x": 346,
+          "y": 16,
+          "width": 26,
+          "height": 31
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier",
+        "role": "",
+        "rect": {
+          "x": 18,
+          "y": 65.78125,
+          "width": 70,
+          "height": 27
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/nperfetrapido/",
+        "role": "",
+        "rect": {
+          "x": 112.953125,
+          "y": 66.765625,
+          "width": 204.109375,
+          "height": 27
+        }
+      },
+      {
+        "tag": "button",
+        "text": "Name",
+        "href": "",
+        "role": "",
+        "rect": {
+          "x": 342,
+          "y": 56,
+          "width": 30,
+          "height": 30
+        }
+      },
+      {
+        "tag": "button",
+        "text": "Slide 1",
+        "href": "",
+        "role": "",
+        "rect": {
+          "x": 159,
+          "y": 338.546875,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "tag": "button",
+        "text": "Slide 2",
+        "href": "",
+        "role": "",
+        "rect": {
+          "x": 186,
+          "y": 335.546875,
+          "width": 10,
+          "height": 30
+        }
+      },
+      {
+        "tag": "button",
+        "text": "Slide 3",
+        "href": "",
+        "role": "",
+        "rect": {
+          "x": 202,
+          "y": 335.546875,
+          "width": 10,
+          "height": 30
+        }
+      },
+      {
+        "tag": "button",
+        "text": "Slide 4",
+        "href": "",
+        "role": "",
+        "rect": {
+          "x": 218,
+          "y": 335.546875,
+          "width": 10,
+          "height": 30
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/tt-nperf-2025/",
+        "role": "",
+        "rect": {
+          "x": 0,
+          "y": 125.546875,
+          "width": 390,
+          "height": 210
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Achat Internet",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 134,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Recharge TTCash",
+        "href": "https://mytt.tunisietelecom.tn/anonymous/ttcash#",
+        "role": "",
+        "rect": {
+          "x": 388,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Ehdia Net",
+        "href": "https://mytt.tunisietelecom.tn/topup-options/hdianet-option#",
+        "role": "",
+        "rect": {
+          "x": 658.03125,
+          "y": 495.140625,
+          "width": 89.9375,
+          "height": 96
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Internet Sabba",
+        "href": "https://mytt.tunisietelecom.tn/topup/sabba#",
+        "role": "",
+        "rect": {
+          "x": 896,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Paiement Factures",
+        "href": "https://mytt.tunisietelecom.tn/anonymous/paiement-facture#",
+        "role": "",
+        "rect": {
+          "x": 1150,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 135,
+          "y": 655.140625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 159,
+          "y": 655.140625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 183,
+          "y": 655.140625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 207,
+          "y": 655.140625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 231,
+          "y": 655.140625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Voir tous les services",
+        "href": "https://www.tunisietelecom.tn/particulier/particulier-selfcare-services/",
+        "role": "",
+        "rect": {
+          "x": 100.3125,
+          "y": 691.140625,
+          "width": 189.375,
+          "height": 35.359375
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Achetez en ligne et profitez d'une remise de 10% et plus d'internet gratuite",
+        "href": "https://myspace.tunisietelecom.tn/Pages/AchatForfaitAno.aspx",
+        "role": "",
+        "rect": {
+          "x": 57.40625,
+          "y": 823.6875,
+          "width": 275.1875,
+          "height": 73.1875
+        }
+      },
+      {
+        "tag": "a",
+        "text": "200 Go 100 Dinars 60 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 58,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "45 Go 50 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 308,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "25 Go 30 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 558,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "4 Go 10 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 808,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "1.5 Go 6 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 1058,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "650 Mo 3 Dinars 7 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 1308,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "60 Go 60 Dinars 30 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 1558,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "110 Go 80 Dinars 60 Jours",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait#",
+        "role": "",
+        "rect": {
+          "x": 1808,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "100 Mo 450 Millimes Minuit",
+        "href": "https://mytt.tunisietelecom.tn/internet/achat-forfait",
+        "role": "",
+        "rect": {
+          "x": 2058,
+          "y": 958.46875,
+          "width": 176,
+          "height": 87
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/musique-vod/#Musique%20&%20VOD",
+        "role": "",
+        "rect": {
+          "x": 94.703125,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/gaming/#Gaming",
+        "role": "",
+        "rect": {
+          "x": 420.125,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/jeux-quiz/#Jeux%20Quiz",
+        "role": "",
+        "rect": {
+          "x": 745.546875,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/culture-education/#Culture%20&%20Education",
+        "role": "",
+        "rect": {
+          "x": 1070.96875,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/sport/#Sport",
+        "role": "",
+        "rect": {
+          "x": 1396.390625,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/divertissement/services-divers/#Services%20Divers",
+        "role": "",
+        "rect": {
+          "x": 1721.8125,
+          "y": 1673.0625,
+          "width": 200,
+          "height": 67
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 123,
+          "y": 1780.0625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 147,
+          "y": 1780.0625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 171,
+          "y": 1780.0625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 195,
+          "y": 1780.0625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 219,
+          "y": 1780.0625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "href": "",
+        "role": "button",
+        "rect": {
+          "x": 243,
+          "y": 1780.0625,
+          "width": 24,
+          "height": 20
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Lire la suite",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/tunisie-telecom-lance-kashy/",
+        "role": "",
+        "rect": {
+          "x": 234.953125,
+          "y": 2136.34375,
+          "width": 108.046875,
+          "height": 36
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Lire la suite",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/offre24/",
+        "role": "",
+        "rect": {
+          "x": 234.953125,
+          "y": 2452.03125,
+          "width": 108.046875,
+          "height": 36
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Lire la suite",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/tunisie-telecom-participe-au-club-pionnier-20-de-transformation-numerique/",
+        "role": "",
+        "rect": {
+          "x": 234.953125,
+          "y": 2767.71875,
+          "width": 108.046875,
+          "height": 36
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Voir toutes les actualités",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/",
+        "role": "",
+        "rect": {
+          "x": 78.625,
+          "y": 2850.734375,
+          "width": 232.75,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/rse-echmelni/echmelni/#RSE",
+        "role": "",
+        "rect": {
+          "x": 102.140625,
+          "y": 3421.671875,
+          "width": 185.71875,
+          "height": 72
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Télécharger",
+        "href": "https://play.google.com/store/apps/details?id=com.tunisietelecom.selfcare",
+        "role": "",
+        "rect": {
+          "x": 85,
+          "y": 4168.859375,
+          "width": 220,
+          "height": 75
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Découvrir",
+        "href": "https://www.tunisietelecom.tn/particulier/kelma/programme-kelma/presentationkelma/",
+        "role": "",
+        "rect": {
+          "x": 121.78125,
+          "y": 4808.859375,
+          "width": 146.4375,
+          "height": 75
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "tel:*172#",
+        "role": "",
+        "rect": {
+          "x": 280.453125,
+          "y": 4988.859375,
+          "width": 60,
+          "height": 60
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.tunisietelecom.tn/particulier/mobile/options-services/codes-des-services/",
+        "role": "",
+        "rect": {
+          "x": 272.09375,
+          "y": 5120.453125,
+          "width": 60,
+          "height": 60
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Gagnez du temps, gérez tout avec l’application MyTT",
+        "href": "https://onelink.to/6zgrf9",
+        "role": "",
+        "rect": {
+          "x": 8,
+          "y": 22,
+          "width": 299.546875,
+          "height": 65
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Installer",
+        "href": "https://onelink.to/6zgrf9",
+        "role": "",
+        "rect": {
+          "x": 315.546875,
+          "y": 46.1875,
+          "width": 45.890625,
+          "height": 16.609375
+        }
+      },
+      {
+        "tag": "button",
+        "text": "X",
+        "href": "",
+        "role": "",
+        "rect": {
+          "x": 361.4375,
+          "y": 22,
+          "width": 20.5625,
+          "height": 24.5
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "tel:71001298",
+        "role": "",
+        "rect": {
+          "x": 99.0625,
+          "y": 5371.046875,
+          "width": 49.875,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Appeler le",
+        "href": "tel:71001298",
+        "role": "",
+        "rect": {
+          "x": 60.5,
+          "y": 5412.03125,
+          "width": 69.515625,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "1298",
+        "href": "tel:1298",
+        "role": "",
+        "rect": {
+          "x": 130.015625,
+          "y": 5412.03125,
+          "width": 37.171875,
+          "height": 22
+        }
+      },
+      {
+        "tag": "a",
+        "text": "71001298",
+        "href": "tel:71001298",
+        "role": "",
+        "rect": {
+          "x": 94.046875,
+          "y": 5432.578125,
+          "width": 74.765625,
+          "height": 22
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Nous contacter sur Messenger",
+        "href": "https://www.facebook.com/TunisieTelecom/",
+        "role": "",
+        "rect": {
+          "x": 200,
+          "y": 5371.546875,
+          "width": 132,
+          "height": 82.578125
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Couverture réseau",
+        "href": "https://www.tunisietelecom.tn/particulier/assistance/couverture-reseau/#Couverture%20R%C3%A9seau",
+        "role": "",
+        "rect": {
+          "x": 58,
+          "y": 5494.75,
+          "width": 132,
+          "height": 82.71875
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Trouver un Espace TT",
+        "href": "https://www.tunisietelecom.tn/particulier/trouver-un-espace-tt/",
+        "role": "",
+        "rect": {
+          "x": 200,
+          "y": 5494.6875,
+          "width": 132,
+          "height": 82.65625
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.facebook.com/TunisieTelecom/",
+        "role": "",
+        "rect": {
+          "x": 109,
+          "y": 5608.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://twitter.com/_TunisieTelecom",
+        "role": "",
+        "rect": {
+          "x": 175,
+          "y": 5608.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://tn.linkedin.com/company/tunisie-t-l-com",
+        "role": "",
+        "rect": {
+          "x": 241,
+          "y": 5608.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.instagram.com/tunisietelecom/",
+        "role": "",
+        "rect": {
+          "x": 109,
+          "y": 5658.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.youtube.com/c/groupeTT",
+        "role": "",
+        "rect": {
+          "x": 175,
+          "y": 5658.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "",
+        "href": "https://www.tiktok.com/@tunisie.telecom?lang=fr",
+        "role": "",
+        "rect": {
+          "x": 241,
+          "y": 5658.46875,
+          "width": 40,
+          "height": 21
+        }
+      },
+      {
+        "tag": "a",
+        "text": "À propos",
+        "href": "https://www.tunisietelecom.tn/particulier/a-propos-de-tt/",
+        "role": "",
+        "rect": {
+          "x": 12,
+          "y": 5820.46875,
+          "width": 57.21875,
+          "height": 45.09375
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Actualités",
+        "href": "https://www.tunisietelecom.tn/particulier/actualite/",
+        "role": "",
+        "rect": {
+          "x": 90.21875,
+          "y": 5820.46875,
+          "width": 70.671875,
+          "height": 45.09375
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Stages",
+        "href": "https://www.tunisietelecom.tn/particulier/stages",
+        "role": "",
+        "rect": {
+          "x": 181.890625,
+          "y": 5820.46875,
+          "width": 50.890625,
+          "height": 45.09375
+        }
+      },
+      {
+        "tag": "a",
+        "text": "Accès à l'information",
+        "href": "https://www.tunisietelecom.tn/particulier/acces-a-linformation/",
+        "role": "",
+        "rect": {
+          "x": 253.78125,
+          "y": 5820.46875,
+          "width": 124.21875,
+          "height": 45.09375
+        }
+      }
+    ],
+    "inputs": [],
+    "images": [
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/search-icon-particulier.svg",
+        "alt": "recherche",
+        "rect": {
+          "x": 281.125,
+          "y": 21.75,
+          "width": 25.328125,
+          "height": 25
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/pos-icon-particulier.svg",
+        "alt": "Trouver un espace TT",
+        "rect": {
+          "x": 316.453125,
+          "y": 21.75,
+          "width": 19.546875,
+          "height": 25
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/user-icon-particulier-mobile.svg",
+        "alt": "Espace TT",
+        "rect": {
+          "x": 346,
+          "y": 21,
+          "width": 26,
+          "height": 26
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/logo-small.svg",
+        "alt": "Logo Tunisie Telecom",
+        "rect": {
+          "x": 18,
+          "y": 56,
+          "width": 70,
+          "height": 53.546875
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/orkhinan/mdtt2026.svg",
+        "alt": "",
+        "rect": {
+          "x": 112.953125,
+          "y": 67.765625,
+          "width": 204.109375,
+          "height": 32
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/0mfo0tym/nperf-1920x600-2.png",
+        "alt": "",
+        "rect": {
+          "x": 0,
+          "y": 125.546875,
+          "width": 390,
+          "height": 210
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/ja3npqlb/output-onlinepngtools.png",
+        "alt": "Achat Internet",
+        "rect": {
+          "x": 170,
+          "y": 484.140625,
+          "width": 50,
+          "height": 50
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/3ltgmnq0/recharge.svg",
+        "alt": "Recharge TTCash",
+        "rect": {
+          "x": 428.171875,
+          "y": 484.140625,
+          "width": 41.65625,
+          "height": 50
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/vl3ksb1q/e-hdeya.svg",
+        "alt": "Ehdia Net",
+        "rect": {
+          "x": 681.78125,
+          "y": 495.140625,
+          "width": 42.421875,
+          "height": 50
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/2kufkcch/internet-sabba.svg",
+        "alt": "Internet Sabba",
+        "rect": {
+          "x": 919.6875,
+          "y": 484.140625,
+          "width": 74.609375,
+          "height": 50
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/jw4cfs0m/facture.svg",
+        "alt": "Paiement Factures",
+        "rect": {
+          "x": 1191.25,
+          "y": 484.140625,
+          "width": 39.5,
+          "height": 50
+        }
+      },
+      {
+        "src": "",
+        "alt": ">",
+        "rect": {
+          "x": 254.328125,
+          "y": 691.140625,
+          "width": 35.359375,
+          "height": 35.359375
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/chevron-right-white.svg",
+        "alt": ">",
+        "rect": {
+          "x": 222.0625,
+          "y": 1699.0625,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/chevron-right-white.svg",
+        "alt": ">",
+        "rect": {
+          "x": 547.484375,
+          "y": 1699.0625,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/chevron-right-white.svg",
+        "alt": ">",
+        "rect": {
+          "x": 872.90625,
+          "y": 1699.0625,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/chevron-right-white.svg",
+        "alt": ">",
+        "rect": {
+          "x": 1198.328125,
+          "y": 1699.0625,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/chevron-right-white.svg",
+        "alt": ">",
+        "rect": {
+          "x": 1523.75,
+          "y": 1699.0625,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/chevron-right-white.svg",
+        "alt": ">",
+        "rect": {
+          "x": 1849.171875,
+          "y": 1699.0625,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/xttf41fx/photos-1.jpg?width=776&height=428&rxy=0.75,0&quality=100&mode=min",
+        "alt": "Tunisie Telecom lance Kashy, sa nouvelle application de paiement mobile : L’opérateur se transforme d’un opérateur de connectivité à un opérateur de services",
+        "rect": {
+          "x": 31,
+          "y": 1890.65625,
+          "width": 328,
+          "height": 180.90625
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/i1kbi0wx/emploi2025.png?width=776&height=428&rxy=0.75,0&quality=100&mode=min",
+        "alt": "Résultats des offres de recrutement N°02/03/04, 2024 : listes complémentaires",
+        "rect": {
+          "x": 31,
+          "y": 2206.34375,
+          "width": 328,
+          "height": 180.90625
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/3inislzm/tt-wmc2026.webp?width=776&height=428&rxy=0.75,0&quality=100&mode=min",
+        "alt": "Tunisie Telecom participe au Club Pionnier 2.0 de transformation numérique",
+        "rect": {
+          "x": 31,
+          "y": 2522.03125,
+          "width": 328,
+          "height": 180.90625
+        }
+      },
+      {
+        "src": "",
+        "alt": ">",
+        "rect": {
+          "x": 268.015625,
+          "y": 2844.71875,
+          "width": 35.359375,
+          "height": 35.359375
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/gsfdicbx/echmelnimobile.png",
+        "alt": "",
+        "rect": {
+          "x": 38,
+          "y": 2979.671875,
+          "width": 314,
+          "height": 550
+        }
+      },
+      {
+        "src": "",
+        "alt": ">",
+        "rect": {
+          "x": 219.859375,
+          "y": 3447.671875,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/kbrf4kah/281x500.png",
+        "alt": "",
+        "rect": {
+          "x": 20,
+          "y": 3672.859375,
+          "width": 350,
+          "height": 600
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/i35dnkp1/groupe-1267.png",
+        "alt": "",
+        "rect": {
+          "x": 67.8125,
+          "y": 3697.859375,
+          "width": 254.375,
+          "height": 180
+        }
+      },
+      {
+        "src": "",
+        "alt": ">",
+        "rect": {
+          "x": 232.15625,
+          "y": 4196.359375,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/knzfdpec/kelmamobile.png",
+        "alt": "",
+        "rect": {
+          "x": 20,
+          "y": 4312.859375,
+          "width": 350,
+          "height": 600
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/supi4y2e/groupe-1268.png",
+        "alt": "",
+        "rect": {
+          "x": 67.8125,
+          "y": 4347.859375,
+          "width": 254.375,
+          "height": 180
+        }
+      },
+      {
+        "src": "",
+        "alt": ">",
+        "rect": {
+          "x": 224.21875,
+          "y": 4836.359375,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/uk4jyjvn/port.svg",
+        "alt": "Service Portabilité",
+        "rect": {
+          "x": 95.015625,
+          "y": 5017.046875,
+          "width": 132.390625,
+          "height": 30
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/media/3n3h4jx4/mytt.svg",
+        "alt": "Télécharger l'application",
+        "rect": {
+          "x": 8,
+          "y": 22,
+          "width": 65,
+          "height": 65
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/phone-icon.svg",
+        "alt": "71001298",
+        "rect": {
+          "x": 99.0625,
+          "y": 5355.046875,
+          "width": 49.875,
+          "height": 57.984375
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/messenger-icon.svg",
+        "alt": "Messenger",
+        "rect": {
+          "x": 241.984375,
+          "y": 5355.046875,
+          "width": 48.03125,
+          "height": 58.984375
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/discovery-icon.svg",
+        "alt": "Couverture Réseau",
+        "rect": {
+          "x": 98.375,
+          "y": 5478.125,
+          "width": 51.25,
+          "height": 59.25
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/position-icon.svg",
+        "alt": "Trouver un espace TT",
+        "rect": {
+          "x": 246,
+          "y": 5478.125,
+          "width": 40,
+          "height": 59.125
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/fb.svg",
+        "alt": "Facebook",
+        "rect": {
+          "x": 109,
+          "y": 5601.46875,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/twitter.svg",
+        "alt": "Twitter",
+        "rect": {
+          "x": 175,
+          "y": 5601.46875,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/linkedin.svg",
+        "alt": "LinkedIn",
+        "rect": {
+          "x": 241,
+          "y": 5601.46875,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/ig.svg",
+        "alt": "Instagram",
+        "rect": {
+          "x": 109,
+          "y": 5651.46875,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/youtube.svg",
+        "alt": "YouTube",
+        "rect": {
+          "x": 175,
+          "y": 5651.46875,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "src": "https://www.tunisietelecom.tn/assets/svg/tiktok.svg",
+        "alt": "TikTok",
+        "rect": {
+          "x": 241,
+          "y": 5651.46875,
+          "width": 40,
+          "height": 40
+        }
+      }
+    ],
+    "navText": [
+      "Entreprise",
+      "Entreprise",
+      "Mobile Offres Prépayées BIG Bonus HADRANET Pass Marhaba Voir Plus Offres à Facture Forfaits FANCY Internet Mobile FORFAITS INTERNET PROLONGATION DE VALIDITÉ EHDIA NET Voir Plus Options & Services CODES DES SERVICES eSim PORTABILITÉ Voir Plus International & Roaming Promotions Fixe & internet Offres WAFFI LA FIBRE RAPIDO BOX 5G TT Voir Plus Options & Services TT-Wifi Mesh Simulateur Internet Home E-FACTURE Voir Plus Promotions Divertissement Musique & VOD VIU PREMIUM Play VOD by TT DIWAN SPORT Voir Plus Gaming Playweez by TT ESPORTS BY TT TT GAME ZONE Voir Plus Jeux Quiz Football Fantasy Jeu 100 Secondes Culture & Education Service Es2alNA T’Toons by TT BUSUU Voir Plus Sport Services Divers Assistance Aide & Assistance Réclamation & Suivi Renseignement Tutos Voir Plus Paiement & Recharges INTERNET صبّة E FACTURE PRÉLÈVEMENT Voir Plus Couverture Réseau Couverture Internet Couverture Réseau Mobile Couverture Roaming Voir Plus Configuration IPv6 Activation Ipv6 Recherche Trouver un espace TT My TT"
+    ],
+    "hasHeader": true,
+    "hasMain": true,
+    "hasFooter": true,
+    "hasNav": true,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "documentSize": {
+      "width": 390,
+      "height": 5914
+    },
+    "horizontalOverflowPx": 0,
+    "oversized": [
+      {
+        "text": "Achat Internet Recharge TTCash Ehdia Net Internet Sabba Paiement Factures",
+        "rect": {
+          "x": 93,
+          "y": 441.140625,
+          "width": 1270,
+          "height": 204
+        }
+      },
+      {
+        "text": "Recharge TTCash",
+        "rect": {
+          "x": 347,
+          "y": 441.140625,
+          "width": 204,
+          "height": 204
+        }
+      },
+      {
+        "text": "Recharge TTCash",
+        "rect": {
+          "x": 369,
+          "y": 463.140625,
+          "width": 160,
+          "height": 160
+        }
+      },
+      {
+        "text": "Recharge TTCash",
+        "rect": {
+          "x": 369,
+          "y": 463.140625,
+          "width": 160,
+          "height": 160
+        }
+      },
+      {
+        "text": "Recharge TTCash",
+        "rect": {
+          "x": 388,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "text": "",
+        "rect": {
+          "x": 428.171875,
+          "y": 484.140625,
+          "width": 41.65625,
+          "height": 50
+        }
+      },
+      {
+        "text": "Recharge TTCash",
+        "rect": {
+          "x": 388,
+          "y": 534.140625,
+          "width": 122,
+          "height": 52
+        }
+      },
+      {
+        "text": "Ehdia Net",
+        "rect": {
+          "x": 601,
+          "y": 441.140625,
+          "width": 204,
+          "height": 204
+        }
+      },
+      {
+        "text": "Ehdia Net",
+        "rect": {
+          "x": 623,
+          "y": 463.140625,
+          "width": 160,
+          "height": 160
+        }
+      },
+      {
+        "text": "Ehdia Net",
+        "rect": {
+          "x": 623,
+          "y": 463.140625,
+          "width": 160,
+          "height": 160
+        }
+      },
+      {
+        "text": "Ehdia Net",
+        "rect": {
+          "x": 658.03125,
+          "y": 495.140625,
+          "width": 89.9375,
+          "height": 96
+        }
+      },
+      {
+        "text": "",
+        "rect": {
+          "x": 681.78125,
+          "y": 495.140625,
+          "width": 42.421875,
+          "height": 50
+        }
+      },
+      {
+        "text": "Ehdia Net",
+        "rect": {
+          "x": 658.03125,
+          "y": 545.140625,
+          "width": 89.9375,
+          "height": 30
+        }
+      },
+      {
+        "text": "Internet Sabba",
+        "rect": {
+          "x": 855,
+          "y": 441.140625,
+          "width": 204,
+          "height": 204
+        }
+      },
+      {
+        "text": "Internet Sabba",
+        "rect": {
+          "x": 877,
+          "y": 463.140625,
+          "width": 160,
+          "height": 160
+        }
+      },
+      {
+        "text": "Internet Sabba",
+        "rect": {
+          "x": 877,
+          "y": 463.140625,
+          "width": 160,
+          "height": 160
+        }
+      },
+      {
+        "text": "Internet Sabba",
+        "rect": {
+          "x": 896,
+          "y": 484.140625,
+          "width": 122,
+          "height": 118
+        }
+      },
+      {
+        "text": "",
+        "rect": {
+          "x": 919.6875,
+          "y": 484.140625,
+          "width": 74.609375,
+          "height": 50
+        }
+      },
+      {
+        "text": "Internet Sabba",
+        "rect": {
+          "x": 896,
+          "y": 534.140625,
+          "width": 122,
+          "height": 52
+        }
+      },
+      {
+        "text": "Paiement Factures",
+        "rect": {
+          "x": 1109,
+          "y": 441.140625,
+          "width": 204,
+          "height": 204
+        }
+      }
+    ],
+    "fontSizes": [
+      16,
+      16,
+      20,
+      20,
+      20,
+      14,
+      13,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      16,
+      16,
+      16,
+      16,
+      15,
+      15,
+      15,
+      15,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      28,
+      16,
+      16,
+      16,
+      16,
+      22,
+      22,
+      22,
+      22,
+      22,
+      16,
+      22,
+      22,
+      22,
+      22,
+      22,
+      16,
+      22,
+      22,
+      22,
+      22,
+      22,
+      16,
+      22,
+      22,
+      22,
+      22,
+      22,
+      16,
+      22,
+      22,
+      22,
+      22,
+      22,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      16,
+      28,
+      18,
+      18,
+      15,
+      15,
+      15,
+      13,
+      13,
+      15
+    ],
+    "trustSignalCount": 0,
+    "perf": {
+      "domContentLoaded": 3106,
+      "loadEventEnd": 0
+    }
+  },
+  "findings": [
+    {
+      "title": "Above-the-fold value proposition",
+      "severity": "major",
+      "score": 4.8,
+      "issue": "The homepage does not make the offer, audience, or value proposition clear enough in the first screen.",
+      "why_it_matters": "Visitors need to understand what the company does and why it matters before they decide to explore.",
+      "recommendation": "Use one specific H1, a short supporting paragraph, and a visible next action that names the outcome.",
+      "evidence_image": "value-proposition.png"
+    },
+    {
+      "title": "Primary action clarity",
+      "severity": "moderate",
+      "score": 6.2,
+      "issue": "The homepage does not expose a strong, clearly labeled primary CTA early enough.",
+      "why_it_matters": "A weak or hidden CTA makes qualified visitors work harder to start a commercial journey.",
+      "recommendation": "Place one primary CTA above the fold and label it with a verb plus outcome, such as 'Contact us', 'Book a call', or 'View work'.",
+      "evidence_image": "primary-cta.png"
+    },
+    {
+      "title": "Navigation discoverability",
+      "severity": "major",
+      "score": 4.8,
+      "issue": "Navigation is missing, too sparse, or not structured as a recognizable navigation landmark.",
+      "why_it_matters": "Clear navigation lets users validate scope, services, proof, and contact paths without guessing.",
+      "recommendation": "Use a semantic nav/header with a small set of persistent links for the main user decisions.",
+      "evidence_image": "navigation.png"
+    },
+    {
+      "title": "Accessibility fundamentals",
+      "severity": "moderate",
+      "score": 6.2,
+      "issue": "Accessibility basics need review: H1 count=0, missing image alt=0, unlabeled inputs=0.",
+      "why_it_matters": "Basic semantic structure and labels improve usability for assistive technology, search, and scanning.",
+      "recommendation": "Keep one H1, add a main landmark, write meaningful alt text for content images, and label every form control.",
+      "evidence_image": "accessibility.png"
+    },
+    {
+      "title": "Trust and proof",
+      "severity": "minor",
+      "score": 7.6,
+      "issue": "The homepage does not surface enough proof signals such as clients, case studies, testimonials, or credibility markers.",
+      "why_it_matters": "Visitors need evidence that the offer is credible before they spend time evaluating it.",
+      "recommendation": "Bring proof closer to the first or second viewport: client logos, quantified outcomes, case studies, testimonials, or certifications.",
+      "evidence_image": "trust.png"
+    }
+  ]
+}

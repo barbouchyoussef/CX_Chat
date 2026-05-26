@@ -1,22 +1,96 @@
-from app.services.assessment.reporting.reporting_service import *
-from app.services.assessment.reporting.trace_service import AssessmentTraceService
-from app.services.assessment.reporting.recommendation_service import RecommendationService
-from app.services.assessment.reporting.final_report_service import ReportBuilderService
-from app.services.assessment.reporting.benchmark_service import BenchmarkQueryContext, BenchmarkService
-from app.services.assessment.reporting.evidence_quality import EvidenceQuality, EvidenceQualityCalculator
-from app.services.assessment.reporting.maturity_level_cache import MaturityLevelCache
-from app.services.assessment.reporting.recommendation_metrics import RecommendationMetrics
+from __future__ import annotations
+
+from importlib import import_module
 
 __all__ = [
-    *globals().get("__all__", []),
+    "AssessmentReportingService",
+    "build_assessment_reporting_service",
     "AssessmentTraceService",
     "RecommendationService",
     "ReportBuilderService",
     "BenchmarkQueryContext",
+    "BenchmarkEvidenceSignal",
     "BenchmarkService",
     "EvidenceQuality",
     "EvidenceQualityCalculator",
     "MaturityLevelCache",
     "RecommendationMetrics",
+    "SemanticLeadersService",
+    "WebsiteAuditService",
+    "build_website_audit_service",
 ]
 
+
+_EXPORTS: dict[str, tuple[str, str]] = {
+    "AssessmentReportingService": (
+        "app.services.assessment.reporting.reporting_service",
+        "AssessmentReportingService",
+    ),
+    "build_assessment_reporting_service": (
+        "app.services.assessment.reporting.reporting_service",
+        "build_assessment_reporting_service",
+    ),
+    "AssessmentTraceService": (
+        "app.services.assessment.reporting.trace_service",
+        "AssessmentTraceService",
+    ),
+    "RecommendationService": (
+        "app.services.assessment.reporting.recommendation_service",
+        "RecommendationService",
+    ),
+    "ReportBuilderService": (
+        "app.services.assessment.reporting.final_report_service",
+        "ReportBuilderService",
+    ),
+    "BenchmarkQueryContext": (
+        "app.services.assessment.reporting.benchmark_service",
+        "BenchmarkQueryContext",
+    ),
+    "BenchmarkEvidenceSignal": (
+        "app.services.assessment.reporting.benchmark_service",
+        "BenchmarkEvidenceSignal",
+    ),
+    "BenchmarkService": (
+        "app.services.assessment.reporting.benchmark_service",
+        "BenchmarkService",
+    ),
+    "EvidenceQuality": (
+        "app.services.assessment.reporting.evidence_quality",
+        "EvidenceQuality",
+    ),
+    "EvidenceQualityCalculator": (
+        "app.services.assessment.reporting.evidence_quality",
+        "EvidenceQualityCalculator",
+    ),
+    "MaturityLevelCache": (
+        "app.services.assessment.reporting.maturity_level_cache",
+        "MaturityLevelCache",
+    ),
+    "RecommendationMetrics": (
+        "app.services.assessment.reporting.recommendation_metrics",
+        "RecommendationMetrics",
+    ),
+    "SemanticLeadersService": (
+        "app.services.assessment.reporting.semantic_leaders_service",
+        "SemanticLeadersService",
+    ),
+    "WebsiteAuditService": (
+        "app.services.assessment.reporting.website_audit_service",
+        "WebsiteAuditService",
+    ),
+    "build_website_audit_service": (
+        "app.services.assessment.reporting.website_audit_service",
+        "build_website_audit_service",
+    ),
+}
+
+
+def __getattr__(name: str):
+    target = _EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module_name, attr_name = target
+    module = import_module(module_name)
+    value = getattr(module, attr_name)
+    globals()[name] = value
+    return value

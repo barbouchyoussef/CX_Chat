@@ -1,11 +1,33 @@
 import { useEffect, useState } from "react";
-import AssessmentResultsPage from "./assessment-results-page";
+import AssessmentReport from "../report/AssessmentReport";
 import AssessmentGeneratingPage from "./assessment-generating-page";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 
-type FinalReport = Parameters<typeof AssessmentResultsPage>[0]["report"];
-type AssessmentMeta = { company?: { name?: string } };
+type FinalReport = Parameters<typeof AssessmentReport>[0]["report"];
+
+const inFlightFinalReportRequests = new Map<number, Promise<FinalReport>>();
+
+function fetchFinalReport(assessmentId: number): Promise<FinalReport> {
+  const existingRequest = inFlightFinalReportRequests.get(assessmentId);
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const request = fetch(`${API_BASE_URL}/assessments/${assessmentId}/final-report`)
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error("Failed to load final report");
+      }
+      return (await response.json()) as FinalReport;
+    })
+    .finally(() => {
+      inFlightFinalReportRequests.delete(assessmentId);
+    });
+
+  inFlightFinalReportRequests.set(assessmentId, request);
+  return request;
+}
 
 type Props = {
   assessmentId: number;
@@ -14,7 +36,6 @@ type Props = {
 
 export default function AdminAssessmentReport({ assessmentId, onBack }: Props) {
   const [report, setReport] = useState<FinalReport | null>(null);
-  const [companyName, setCompanyName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,18 +44,10 @@ export default function AdminAssessmentReport({ assessmentId, onBack }: Props) {
     setLoading(true);
     setError(null);
 
-    Promise.all([
-      fetch(`${API_BASE_URL}/assessments/${assessmentId}/final-report`),
-      fetch(`${API_BASE_URL}/assessments/${assessmentId}`),
-    ])
-      .then(async ([reportRes, metaRes]) => {
-        if (!reportRes.ok) throw new Error("Failed to load final report");
-        const reportPayload = await reportRes.json();
-        let metaPayload: AssessmentMeta = {};
-        if (metaRes.ok) metaPayload = await metaRes.json();
+    fetchFinalReport(assessmentId)
+      .then((reportPayload) => {
         if (!mounted) return;
         setReport(reportPayload);
-        setCompanyName(metaPayload.company?.name ?? null);
       })
       .catch((e) => {
         if (!mounted) return;
@@ -67,5 +80,5 @@ export default function AdminAssessmentReport({ assessmentId, onBack }: Props) {
     );
   }
 
-  return <AssessmentResultsPage report={report} companyName={companyName} onBack={onBack} />;
+  return <AssessmentReport report={report} onBack={onBack} />;
 }

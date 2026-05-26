@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+import httpx
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import Settings
@@ -31,6 +33,66 @@ class ReportSynthesisService:
         self._chat_messages = chat_messages
         self._clean_text = clean_text
         self._extract_json = extract_json
+        self._mistral_rate_limited = False
+
+    def _log_failure(
+        self,
+        *,
+        failure_mode: str,
+        company_name: str,
+        strongest_axis: str,
+        priority_axis: str,
+        exc: Exception | None = None,
+        raw_content: str | None = None,
+    ) -> None:
+        extra: dict[str, Any] = {
+            "failure_mode": failure_mode,
+            "company_name": company_name,
+            "strongest_axis": strongest_axis,
+            "priority_axis": priority_axis,
+        }
+        if isinstance(exc, httpx.HTTPStatusError) and exc.response is not None:
+            extra["status_code"] = exc.response.status_code
+        if raw_content is not None:
+            extra["raw_content_preview"] = raw_content[:500]
+
+        if exc is not None:
+            logger.error(
+                "LLM report synthesis failed",
+                extra=extra,
+                exc_info=True,
+            )
+            return
+
+        logger.error("LLM report synthesis failed", extra=extra)
+
+    def _extract_payload_from_malformed_json(self, content: str) -> dict[str, str] | None:
+        normalized = str(content or "").strip()
+        if normalized.startswith("```"):
+            normalized = re.sub(r"^```(?:json)?\s*", "", normalized, flags=re.IGNORECASE)
+            normalized = re.sub(r"\s*```$", "", normalized)
+
+        blob = self._extract_json(normalized)
+        if isinstance(blob, dict):
+            return blob
+
+        executive_match = re.search(
+            r'"executive_summary"\s*:\s*"(?P<value>.*?)"\s*,\s*"priority_message"\s*:',
+            normalized,
+            flags=re.DOTALL,
+        )
+        priority_match = re.search(
+            r'"priority_message"\s*:\s*"(?P<value>.*?)"\s*\}?\s*$',
+            normalized,
+            flags=re.DOTALL,
+        )
+        if executive_match and priority_match:
+            return {
+                "executive_summary": executive_match.group("value").strip(),
+                "priority_message": priority_match.group("value").strip(),
+            }
+
+        return None
 
     async def generate_report_synthesis(
         self,
@@ -54,6 +116,11 @@ class ReportSynthesisService:
 
         if not self.settings.mistral_api_key:
             raise RuntimeError("Cannot generate report synthesis because MISTRAL_API_KEY is not set.")
+        if self._mistral_rate_limited:
+            return {
+                "executive_summary": fallback_summary,
+                "priority_message": fallback_priority,
+            }
 
         user = REPORT_SYNTHESIS_USER_TEMPLATE.format(
             company_name=company_name,
@@ -74,18 +141,81 @@ class ReportSynthesisService:
                     {"role": "user", "content": user},
                 ]
             )
+        except (httpx.ReadTimeout, httpx.ConnectTimeout) as exc:
+            self._log_failure(
+                failure_mode="timeout",
+                company_name=company_name,
+                strongest_axis=strongest_axis,
+                priority_axis=priority_axis,
+                exc=exc,
+            )
+            raise
+        except httpx.HTTPStatusError as exc:
+            if exc.response is not None and exc.response.status_code == 429:
+                self._mistral_rate_limited = True
+                logger.warning(
+                    "Mistral rate limit reached during report synthesis; using fallback copy.",
+                    extra={
+                        "failure_mode": "429",
+                        "company_name": company_name,
+                        "strongest_axis": strongest_axis,
+                        "priority_axis": priority_axis,
+                        "status_code": 429,
+                    },
+                )
+                return {
+                    "executive_summary": fallback_summary,
+                    "priority_message": fallback_priority,
+                }
+            self._log_failure(
+                failure_mode="http_status",
+                company_name=company_name,
+                strongest_axis=strongest_axis,
+                priority_axis=priority_axis,
+                exc=exc,
+            )
+            raise
         except Exception as exc:
-            logger.error("LLM report synthesis failed: %s", exc, exc_info=True)
+            self._log_failure(
+                failure_mode="unexpected_exception",
+                company_name=company_name,
+                strongest_axis=strongest_axis,
+                priority_axis=priority_axis,
+                exc=exc,
+            )
             raise
 
-        blob = self._extract_json(content)
+        blob = self._extract_payload_from_malformed_json(content)
         if not isinstance(blob, dict):
-            logger.error("LLM report synthesis returned invalid JSON: %r", content)
+            self._log_failure(
+                failure_mode="invalid_json",
+                company_name=company_name,
+                strongest_axis=strongest_axis,
+                priority_axis=priority_axis,
+                raw_content=content,
+            )
             raise ValueError("LLM report synthesis returned invalid JSON.")
+        if not self._extract_json(content):
+            logger.warning(
+                "Recovered malformed report synthesis payload without degrading the report.",
+                extra={
+                    "company_name": company_name,
+                    "strongest_axis": strongest_axis,
+                    "priority_axis": priority_axis,
+                    "recovery_mode": "multiline_json_strings",
+                },
+            )
         try:
             parsed = ReportSynthesisResponse.model_validate(blob)
         except ValidationError as exc:
-            logger.error("LLM report synthesis schema validation failed: %s", exc, exc_info=True)
+            self._log_failure(
+                failure_mode="schema_validation",
+                company_name=company_name,
+                strongest_axis=strongest_axis,
+                priority_axis=priority_axis,
+                exc=exc,
+                raw_content=content,
+            )
             raise
 
         return {

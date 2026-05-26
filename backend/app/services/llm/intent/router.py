@@ -25,9 +25,10 @@ class IntentRouter:
         self._chat_messages = chat_messages
         self._clean_text = clean_text
 
-    async def route(self, text: str) -> str:
+    async def route(self, text: str, previous_question: str | None = None) -> str:
         cleaned_text = self._clean_text(text)
-        fast_intent = self.fast_route(cleaned_text)
+        cleaned_previous_question = self._clean_text(previous_question or "")
+        fast_intent = self.fast_route(cleaned_text, previous_question=cleaned_previous_question)
         if fast_intent is not None:
             return fast_intent
 
@@ -37,7 +38,15 @@ class IntentRouter:
 
         messages = [
             {"role": "system", "content": INTENT_ROUTER_SYSTEM_PROMPT},
-            {"role": "user", "content": f"<user_message>{cleaned_text}</user_message>"},
+            {
+                "role": "user",
+                "content": (
+                    "<intent_context>\n"
+                    f"<previous_assistant_question>{cleaned_previous_question or 'n/a'}</previous_assistant_question>\n"
+                    f"<user_message>{cleaned_text}</user_message>\n"
+                    "</intent_context>"
+                ),
+            },
         ]
         try:
             raw_intent = await self._chat_messages(messages)
@@ -51,11 +60,11 @@ class IntentRouter:
             return "LOW_QUALITY"
         return intent
 
-    def fast_route(self, text: str) -> str | None:
+    def fast_route(self, text: str, previous_question: str | None = None) -> str | None:
         normalized = self.normalize_fast_intent_text(text)
         if self.is_placeholder_noise_text(normalized):
             return "LOW_QUALITY"
-        if self.is_negative_evidence_text(normalized):
+        if self.is_negative_evidence_text(normalized, previous_question=previous_question):
             return "VALID_ANSWER"
         if self.is_confusion_request_text(normalized):
             return "CONFUSION"
@@ -80,27 +89,58 @@ class IntentRouter:
         noise_patterns = (
             r"\b(bla\s*bla(?:\s*bla)*)\b",
             r"\b(blah\s*blah(?:\s*blah)*)\b",
-            r"\b(test(?:\s*test)*)\b",
             r"\b(lorem ipsum)\b",
-            r"^(?:[a-z])(?:\s+[a-z]){0,3}$",
         )
         if any(re.search(pattern, normalized_text) for pattern in noise_patterns):
             return True
 
         tokens = normalized_text.split()
+        if normalized_text in {"test", "test test", "this is a test", "ceci est un test"}:
+            return True
         if len(tokens) >= 3 and len(set(tokens)) == 1:
             return True
+        if self._looks_like_keyboard_mash(tokens):
+            return True
         return False
+
+    def _looks_like_keyboard_mash(self, tokens: list[str]) -> bool:
+        letter_only = [token for token in tokens if token.isalpha()]
+        if not letter_only:
+            return False
+
+        suspicious_tokens: list[str] = []
+        meaningful_tokens: list[str] = []
+        for token in letter_only:
+            if len(token) < 6:
+                meaningful_tokens.append(token)
+                continue
+            unique_ratio = len(set(token)) / len(token)
+            vowel_ratio = sum(1 for char in token if char in "aeiouy") / len(token)
+            if unique_ratio >= 0.8 and vowel_ratio <= 0.2:
+                suspicious_tokens.append(token)
+            else:
+                meaningful_tokens.append(token)
+
+        if not suspicious_tokens:
+            return False
+
+        if len(letter_only) == 1 and len(suspicious_tokens) == 1:
+            return True
+
+        return len(suspicious_tokens) >= 2 and len(suspicious_tokens) >= len(meaningful_tokens)
 
     def normalize_fast_intent_text(self, text: str) -> str:
         value = self._clean_text(text).lower()
         value = re.sub(r"[^\w\s]", "", value)
         return re.sub(r"\s+", " ", value).strip()
 
-    def is_negative_evidence_answer(self, text: str) -> bool:
-        return self.is_negative_evidence_text(self.normalize_fast_intent_text(text))
+    def is_negative_evidence_answer(self, text: str, previous_question: str | None = None) -> bool:
+        return self.is_negative_evidence_text(
+            self.normalize_fast_intent_text(text),
+            previous_question=self.normalize_fast_intent_text(previous_question or "") if previous_question else None,
+        )
 
-    def is_negative_evidence_text(self, normalized_text: str) -> bool:
+    def is_negative_evidence_text(self, normalized_text: str, previous_question: str | None = None) -> bool:
         if normalized_text in {
             "idk",
             "i dont know",
@@ -108,19 +148,14 @@ class IntentRouter:
             "dont know",
             "do not know",
             "no idea",
-            "none",
-            "nothing",
-            "no",
-            "non",
             "not yet",
             "je ne sais pas",
             "j en sais rien",
-            "aucun",
-            "aucune",
-            "rien",
             "pas encore",
         }:
             return True
+        if normalized_text in {"none", "nothing", "no", "non", "aucun", "aucune", "rien"}:
+            return self._question_supports_brief_negative_evidence(previous_question or "")
         return any(
             re.search(pattern, normalized_text)
             for pattern in (
@@ -134,16 +169,56 @@ class IntentRouter:
             )
         )
 
+    def _question_supports_brief_negative_evidence(self, normalized_question: str) -> bool:
+        if not normalized_question:
+            return False
+        return bool(
+            re.search(
+                r"\b("
+                r"do you have|did you have|have you|"
+                r"do you use|did you use|"
+                r"do you track|did you track|"
+                r"do you measure|did you measure|"
+                r"do you collect|did you collect|"
+                r"is there|was there|are there|"
+                r"any |any$|"
+                r"what tool|which tool|what system|which system|"
+                r"what process|which process|"
+                r"what owner|which owner|who owns|who is responsible|"
+                r"quel outil|quel systeme|quel processus|"
+                r"est ce quil y a|avez vous|utilisez vous|suivez vous|mesurez vous|collectez vous|"
+                r"y a t il|existe t il"
+                r")\b",
+                normalized_question,
+            )
+        )
+
     def is_confusion_request_text(self, normalized_text: str) -> bool:
         if normalized_text in {
+            "example",
+            "an example",
+            "give example",
+            "give me an example",
+            "can you give an example",
+            "can you give me an example",
+            "could you give an example",
+            "could you give me an example",
             "explain",
             "explain please",
             "please explain",
+            "simplify",
+            "simple terms",
+            "in simple terms",
+            "say it simply",
+            "make it simple",
             "what do you mean",
+            "what does that mean",
             "i dont understand",
             "i do not understand",
             "can you explain",
             "could you explain",
+            "which steps",
+            "what steps",
             "explique",
             "explique moi",
             "expliquez",
@@ -153,7 +228,19 @@ class IntentRouter:
             "que voulez vous dire",
         }:
             return True
-        return normalized_text.startswith(("explain ", "please explain ", "can you explain ", "could you explain "))
+        return normalized_text.startswith(
+            (
+                "explain ",
+                "please explain ",
+                "can you explain ",
+                "could you explain ",
+                "simplify ",
+                "in simple terms ",
+                "what do you mean ",
+                "what does that mean ",
+                "give me an example ",
+            )
+        )
 
 
 def build_intent_router(
