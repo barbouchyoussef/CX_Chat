@@ -19,7 +19,6 @@ from app.db.models.maturity_level import MaturityLevel
 from app.db.session import SessionLocal
 from app.domain.constants import ASSESSMENT_STATUS_COMPLETED
 from app.repositories.assessment_repository import AssessmentRepository
-from app.repositories.assessment_website_audit_repository import AssessmentWebsiteAuditRepository
 from app.repositories.capability_repository import CapabilityRepository
 from app.schemas.final_report import (
     FinalReportAxisItem,
@@ -40,8 +39,6 @@ from app.schemas.final_report import (
     FinalReportResponse,
     FinalReportSummary,
     FinalReportThemeItem,
-    FinalReportWebsiteAudit,
-    FinalReportWebsiteAuditFinding,
 )
 from app.services.assessment.scoring.scoring_service import AssessmentScoringService
 from app.services.assessment.scoring.scoring_service import build_assessment_scoring_service
@@ -78,7 +75,6 @@ def _get_leaders_snapshot_job_semaphore(settings: Settings) -> asyncio.Semaphore
 
 def _build_report_builder_service(db: AsyncSession, settings: Settings) -> "ReportBuilderService":
     assessments = AssessmentRepository(db)
-    website_audits = AssessmentWebsiteAuditRepository(db)
     capabilities = CapabilityRepository(db)
     llm = build_llm_service(settings=settings)
     benchmarks = BenchmarkService(db=db)
@@ -92,7 +88,6 @@ def _build_report_builder_service(db: AsyncSession, settings: Settings) -> "Repo
     return ReportBuilderService(
         db=db,
         assessments=assessments,
-        website_audits=website_audits,
         capabilities=capabilities,
         llm_service=llm,
         benchmark_service=benchmarks,
@@ -108,7 +103,6 @@ class ReportBuilderService:
         self,
         db: AsyncSession,
         assessments: AssessmentRepository,
-        website_audits: AssessmentWebsiteAuditRepository,
         capabilities: CapabilityRepository,
         llm_service: LLMService,
         benchmark_service: BenchmarkService,
@@ -118,7 +112,6 @@ class ReportBuilderService:
     ) -> None:
         self.db = db
         self.assessments = assessments
-        self.website_audits = website_audits
         self.capabilities = capabilities
         self.llm = llm_service
         self.benchmarks = benchmark_service
@@ -138,7 +131,9 @@ class ReportBuilderService:
         report_date_label = self._report_date_label(getattr(assessment, "updated_at", None))
         company_name = normalize_text(getattr(assessment.company, "name", None))
         sector_name = normalize_text(getattr(getattr(assessment.company, "sector", None), "name", None))
-        region = normalize_text(getattr(assessment.company, "region", None))
+        region = normalize_text(
+            getattr(getattr(assessment.company, "region_ref", None), "name", None)
+        )
 
         capability_rows = await self.capabilities.list_all_for_assessment(assessment_id=assessment_id)
         recommendation_rows = await self.capabilities.get_recommendations_for_scores(assessment_id=assessment_id)
@@ -365,7 +360,6 @@ class ReportBuilderService:
         quick_wins_timeline = await self._build_quick_wins_timeline(
             assessment_id=assessment_id,
             capability_rows=capability_rows,
-            recommendation_rows=recommendation_rows,
             capabilities=capabilities,
             maturity_number_by_id=maturity_number_by_id,
         )
@@ -379,7 +373,6 @@ class ReportBuilderService:
             axis_maturity_content=axis_maturity_content,
             rubric_content_by_capability_id=rubric_content_by_capability_id,
         )
-        website_audit = await self._website_audit_section(assessment_id=assessment_id)
 
         return FinalReportResponse(
             assessment_id=assessment_id,
@@ -394,7 +387,6 @@ class ReportBuilderService:
             leaders_snapshot=leaders_snapshot,
             quick_wins_timeline=quick_wins_timeline,
             working_missing=working_missing,
-            website_audit=website_audit,
         )
 
     async def debug_competitive_first_layer(
@@ -757,7 +749,6 @@ class ReportBuilderService:
         *,
         assessment_id: int,
         capability_rows: list[dict[str, Any]],
-        recommendation_rows: list[dict[str, Any]],
         capabilities: list[FinalReportCapabilityItem],
         maturity_number_by_id: dict[int, int],
     ) -> FinalReportQuickWinsTimeline | None:
@@ -771,6 +762,7 @@ class ReportBuilderService:
                 CapabilityQuickWinTemplate.capability_id,
                 CapabilityQuickWinTemplate.maturity_level_id,
                 CapabilityQuickWinTemplate.quick_win_guideline,
+                CapabilityQuickWinTemplate.after_text,
                 CapabilityQuickWinTemplate.owner_hint,
                 CapabilityQuickWinTemplate.timeline_hint,
             )
@@ -782,16 +774,16 @@ class ReportBuilderService:
         template_by_key = {
             (int(capability_id), int(maturity_level_id)): {
                 "quick_win_guideline": normalize_text(str(quick_win_guideline or "")).strip() or None,
+                "after_text": normalize_text(str(after_text or "")).strip() or None,
                 "owner_hint": normalize_text(str(owner_hint or "")).strip() or None,
                 "timeline_hint": normalize_text(str(timeline_hint or "")).strip() or None,
             }
-            for capability_id, maturity_level_id, quick_win_guideline, owner_hint, timeline_hint in template_result.all()
+            for capability_id, maturity_level_id, quick_win_guideline, after_text, owner_hint, timeline_hint in template_result.all()
             if capability_id is not None and maturity_level_id is not None
         }
 
         selected = self._select_quick_win_candidates(
             capability_rows=capability_rows,
-            recommendation_rows=recommendation_rows,
             capabilities=capabilities,
             maturity_number_by_id=maturity_number_by_id,
             template_by_key=template_by_key,
@@ -859,7 +851,7 @@ class ReportBuilderService:
                     "capability": item["capability"],
                     "maturity_band": item["maturity_band"],
                     "quick_win_guideline": item.get("quick_win_guideline"),
-                    "business_impact": item.get("business_impact"),
+                    "after_text": item.get("after_text"),
                     "owner_hint": item.get("owner_hint"),
                     "timeline_hint": item.get("timeline_hint"),
                     "respondent_answers": answers_by_capability.get(int(item["capability_id"]), [])[:3],
@@ -875,7 +867,6 @@ class ReportBuilderService:
         self,
         *,
         capability_rows: list[dict[str, Any]],
-        recommendation_rows: list[dict[str, Any]],
         capabilities: list[FinalReportCapabilityItem],
         maturity_number_by_id: dict[int, int],
         template_by_key: dict[tuple[int, int], dict[str, str | None]],
@@ -885,12 +876,6 @@ class ReportBuilderService:
             for item in capabilities
             if item.capability_id is not None
         }
-        recommendation_by_capability = {
-            int(row["capability_id"]): row
-            for row in recommendation_rows
-            if row.get("capability_id") is not None
-        }
-
         candidates: list[dict[str, Any]] = []
         for row in capability_rows:
             if str(row.get("assessment_status") or "not_assessed") != "assessed":
@@ -905,15 +890,11 @@ class ReportBuilderService:
             maturity_level_number = maturity_number_by_id.get(int(maturity_level_id))
             if maturity_level_number is None:
                 continue
-            rec = recommendation_by_capability.get(int(capability_id), {})
             template = template_by_key.get((int(capability_id), int(maturity_level_id))) or {}
             timeline_hint = normalize_text(str(template.get("timeline_hint") or "")).strip() or None
-            quick_win_guideline = (
-                normalize_text(str(template.get("quick_win_guideline") or "")).strip()
-                or normalize_text(str(rec.get("recommendation_guideline") or "")).strip()
-                or normalize_text(capability_item.recommendation).strip()
-                or None
-            )
+            quick_win_guideline = normalize_text(str(template.get("quick_win_guideline") or "")).strip() or None
+            if not quick_win_guideline:
+                continue
             candidates.append(
                 {
                     "capability_id": int(capability_id),
@@ -928,10 +909,8 @@ class ReportBuilderService:
                         or str(row.get("justification") or row.get("insight_justification") or row.get("evidence_text") or "")
                     ).strip()
                     or None,
-                    "recommendation": normalize_text(capability_item.recommendation).strip() or None,
-                    "recommendation_guideline": normalize_text(str(rec.get("recommendation_guideline") or "")).strip() or None,
-                    "business_impact": normalize_text(str(rec.get("business_impact") or "")).strip() or None,
                     "quick_win_guideline": quick_win_guideline,
+                    "after_text": normalize_text(str(template.get("after_text") or "")).strip() or None,
                     "owner_hint": normalize_text(str(template.get("owner_hint") or "")).strip() or None,
                     "timeline_hint": timeline_hint,
                     "timeline_stage": self._quick_win_timeline_stage(timeline_hint),
@@ -939,7 +918,7 @@ class ReportBuilderService:
                         timeline_hint=timeline_hint,
                         maturity_level_number=int(maturity_level_number),
                         confidence=float(capability_item.confidence or 0.0),
-                        has_business_impact=bool(normalize_text(str(rec.get("business_impact") or "")).strip()),
+                        has_after_text=bool(normalize_text(str(template.get("after_text") or "")).strip()),
                     ),
                 }
             )
@@ -992,7 +971,7 @@ class ReportBuilderService:
             "- Write a short action title of 5 to 10 words, suitable for the timeline label and popup.\n"
             "- Prefer owners explicitly mentioned in respondent answers or insights; otherwise infer the most plausible concise owner role.\n"
             "- `today_text` must summarize the respondent's current weakness in plain language.\n"
-            "- Do not rewrite or embellish `after_text`; the backend will derive that separately from business impact.\n"
+            "- Do not rewrite or embellish `after_text`; the backend derives that separately from the quick-win template.\n"
             "- Use only the provided inputs.\n"
             "- Never mention competitors, benchmarks, or sources.\n"
             "- Keep owner concise, like 'CX Lead' or 'Operations Manager'.\n"
@@ -1066,12 +1045,12 @@ class ReportBuilderService:
         timeline_hint: str | None,
         maturity_level_number: int,
         confidence: float,
-        has_business_impact: bool,
+        has_after_text: bool,
     ) -> tuple[float, int, int, float]:
         return (
             float(self._quick_win_timeline_stage(timeline_hint)),
             int(maturity_level_number),
-            0 if has_business_impact else 1,
+            0 if has_after_text else 1,
             -round(float(confidence), 4),
         )
 
@@ -1130,7 +1109,7 @@ class ReportBuilderService:
         }
         if capability_text in title_map:
             return title_map[capability_text]
-        title_source = normalize_text(str(candidate.get("quick_win_guideline") or candidate.get("recommendation") or "")).strip()
+        title_source = normalize_text(str(candidate.get("quick_win_guideline") or "")).strip()
         title = title_source.split(".")[0].strip() if title_source else ""
         if not title or len(title) > 90:
             title = f"Strengthen {candidate['capability']}"
@@ -1157,12 +1136,9 @@ class ReportBuilderService:
         return f"{candidate['capability']} is still inconsistent and relies on informal habits instead of a repeatable routine."
 
     def _quick_win_after_text(self, candidate: dict[str, Any]) -> str:
-        business_impact = normalize_text(str(candidate.get("business_impact") or "")).strip()
-        if business_impact:
-            return business_impact
-        quick_win_guideline = normalize_text(str(candidate.get("quick_win_guideline") or "")).strip()
-        if quick_win_guideline:
-            return quick_win_guideline
+        after_text = normalize_text(str(candidate.get("after_text") or "")).strip()
+        if after_text:
+            return after_text
         return f"{candidate['capability']} becomes clearer, more repeatable, and easier for the team to sustain."
 
     def _finalize_quick_win_item(
@@ -1387,71 +1363,6 @@ class ReportBuilderService:
             for item in selected_rows
         ]
         return pain_points
-
-    async def _website_audit_section(self, assessment_id: int) -> FinalReportWebsiteAudit | None:
-        audit = await self.website_audits.get_by_assessment_id(assessment_id)
-        if audit is None:
-            return None
-
-        payload = audit.payload or {}
-        raw_findings = payload.get("findings") if isinstance(payload, dict) else []
-        findings: list[FinalReportWebsiteAuditFinding] = []
-        if isinstance(raw_findings, list):
-            for item in raw_findings[:6]:
-                if not isinstance(item, dict):
-                    continue
-                findings.append(
-                    FinalReportWebsiteAuditFinding(
-                        title=str(item.get("title") or "Website finding"),
-                        severity=item.get("severity"),
-                        score=item.get("score"),
-                        issue=item.get("issue"),
-                        why_it_matters=item.get("why_it_matters"),
-                        recommendation=item.get("recommendation"),
-                        evidence_image=item.get("evidence_image"),
-                        evidence_image_url=self._audit_artifact_url(
-                            assessment_id=assessment_id,
-                            relative_path=f"evidence/{item.get('evidence_image')}",
-                        )
-                        if item.get("evidence_image")
-                        else None,
-                    )
-                )
-
-        return FinalReportWebsiteAudit(
-            status=str(audit.status),
-            website_url=str(audit.website_url),
-            generated_at=payload.get("generatedAt") if isinstance(payload, dict) else None,
-            overall_score=payload.get("overallScore") if isinstance(payload, dict) else None,
-            error_message=audit.error_message,
-            artifacts_base_url=self._audit_artifact_url(assessment_id=assessment_id),
-            report_url=self._audit_artifact_url(assessment_id=assessment_id, relative_path="report.html"),
-            audit_json_url=self._audit_artifact_url(assessment_id=assessment_id, relative_path="audit.json"),
-            desktop_screenshot_url=self._audit_artifact_url(
-                assessment_id=assessment_id,
-                relative_path="screenshots/desktop.png",
-            ),
-            desktop_full_screenshot_url=self._audit_artifact_url(
-                assessment_id=assessment_id,
-                relative_path="screenshots/desktop-full.png",
-            ),
-            mobile_screenshot_url=self._audit_artifact_url(
-                assessment_id=assessment_id,
-                relative_path="screenshots/mobile.png",
-            ),
-            mobile_full_screenshot_url=self._audit_artifact_url(
-                assessment_id=assessment_id,
-                relative_path="screenshots/mobile-full.png",
-            ),
-            raw_payload=payload if isinstance(payload, dict) and str(audit.status) == "completed" else None,
-            findings=findings,
-        )
-
-    def _audit_artifact_url(self, assessment_id: int, relative_path: str | None = None) -> str:
-        base = f"/audit-artifacts/{assessment_id}"
-        if not relative_path:
-            return base
-        return f"{base}/{relative_path.lstrip('/')}"
 
     async def _get_or_generate_report_synthesis(
         self,

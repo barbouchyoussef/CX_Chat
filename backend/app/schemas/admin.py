@@ -10,6 +10,7 @@ class AssessmentListItem(BaseModel):
     company_name: str = Field(min_length=1, max_length=255)
     sector: str = Field(min_length=1, max_length=255)
     size: str = Field(min_length=1, max_length=255)
+    region: str | None = Field(default=None, max_length=120)
     created_at: datetime
     updated_at: datetime
 

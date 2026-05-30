@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings, get_settings
 from app.repositories.assessment_answer_repository import AssessmentAnswerRepository
 from app.repositories.assessment_repository import AssessmentRepository
-from app.repositories.assessment_website_audit_repository import AssessmentWebsiteAuditRepository
 from app.repositories.capability_repository import CapabilityRepository
 from app.schemas.final_report import FinalReportResponse
 from app.schemas.recommendations import (
@@ -111,7 +110,6 @@ def build_assessment_reporting_service(
     settings = settings or get_settings()
     assessments = AssessmentRepository(db)
     answers = AssessmentAnswerRepository(db)
-    website_audits = AssessmentWebsiteAuditRepository(db)
     capabilities = CapabilityRepository(db)
     llm = llm_service or build_llm_service(settings=settings)
     benchmarks = benchmark_service or BenchmarkService(db=db)
@@ -139,7 +137,6 @@ def build_assessment_reporting_service(
     report_builder = ReportBuilderService(
         db=db,
         assessments=assessments,
-        website_audits=website_audits,
         capabilities=capabilities,
         llm_service=llm,
         benchmark_service=benchmarks,

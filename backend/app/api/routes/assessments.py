@@ -1,11 +1,9 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.dependencies.db import get_db
 from app.domain.errors import AssessmentStateConflictError
-from app.repositories.assessment_repository import AssessmentRepository
-from app.repositories.assessment_website_audit_repository import AssessmentWebsiteAuditRepository
 from app.schemas.assessment import (
     AnswerRequest,
     AnswerResponse,
@@ -34,7 +32,6 @@ from app.services.assessment import (
     build_assessment_reporting_service,
     build_assessment_service,
 )
-from app.services.assessment.reporting.website_audit_service import run_website_audit_background
 from app.services.platform import AsyncUnitOfWork
 
 router = APIRouter(prefix="/assessments")
@@ -63,7 +60,6 @@ def _http_500_with_dev_detail(exc: Exception) -> HTTPException:
 @router.post("", response_model=StartAssessmentResponse)
 async def start_assessment(
     req: StartAssessmentRequest,
-    background_tasks: BackgroundTasks,
     service: AssessmentService = Depends(get_assessment_service),
 ) -> StartAssessmentResponse:
     try:
@@ -72,10 +68,8 @@ async def start_assessment(
             sector_label=req.sector,
             company_size_label=req.size,
             region=req.region,
-            website_url=req.website_url,
             prompt_profile=req.prompt_profile,
         )
-        background_tasks.add_task(run_website_audit_background, assessment.id, req.website_url)
         return StartAssessmentResponse(assessment_id=assessment.id)
     except (ValueError, RuntimeError) as e:
         # If auto-classification fails, the client can retry with explicit sector/size.
@@ -153,9 +147,10 @@ async def get_assessment_memory(
 async def list_assessments(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
+    region_code: str | None = Query(default=None),
     service: AssessmentService = Depends(get_assessment_service),
 ) -> AssessmentsListResponse:
-    return await service.list_assessments(limit=limit, offset=offset)
+    return await service.list_assessments(limit=limit, offset=offset, region_code=region_code)
 
 
 @router.get("/{assessment_id}/messages", response_model=MessagesResponse)
@@ -309,29 +304,6 @@ async def telecom_discovery_leaders_debug(
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
-
-
-@router.post("/{assessment_id}/website-audit/retry")
-async def retry_website_audit(
-    assessment_id: int,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, str]:
-    assessment = await AssessmentRepository(db).get_by_id(assessment_id)
-    if assessment is None:
-        raise HTTPException(status_code=404, detail="Assessment not found")
-
-    website_url = str(getattr(assessment.company, "website_url", "") or "").strip()
-    if not website_url:
-        raise HTTPException(status_code=422, detail="Assessment has no website URL to audit")
-
-    async with AsyncUnitOfWork(db):
-        await AssessmentWebsiteAuditRepository(db).create_pending(
-            assessment_id=assessment_id,
-            website_url=website_url,
-        )
-    background_tasks.add_task(run_website_audit_background, assessment_id, website_url)
-    return {"status": "queued"}
 
 
 @router.get("/{assessment_id}/trace", response_model=AssessmentTraceResponse)

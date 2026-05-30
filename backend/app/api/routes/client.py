@@ -12,9 +12,6 @@ def get_assessment_service(db: AsyncSession = Depends(get_db)) -> AssessmentServ
     return build_assessment_service(db)
 
 
-@router.get("/welcome", response_model=WelcomeResponse)
-def welcome() -> WelcomeResponse:
-    return WelcomeResponse(message="Welcome. What is your company name?")
 
 
 @router.post("/turn", response_model=ClientTurnResponse)

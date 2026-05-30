@@ -45,6 +45,8 @@ class QuestionComposerService:
         transition_topic: str | None = None,
         related_topics: list[str] | None = None,
         memory_summary: str | None = None,
+        axis_description: str | None = None,
+        axis_question_guidelines: str | None = None,
         question_guidelines: list[str] | None = None,
         maturity_rubrics: list[dict] | None = None,
         conversation_stage: str = "intro",
@@ -73,6 +75,8 @@ class QuestionComposerService:
             transition_topic=transition_topic,
             related_topics=related_topics,
             memory_summary=memory_summary,
+            axis_description=axis_description,
+            axis_question_guidelines=axis_question_guidelines,
             question_guidelines=question_guidelines,
             maturity_rubrics=maturity_rubrics,
             conversation_stage=conversation_stage,
@@ -158,9 +162,11 @@ class QuestionComposerService:
         user = QUESTION_USER_TEMPLATE.format(
             sector=sector,
             axis=axis,
+            axis_description=self._clean_text(axis_description or "not provided"),
             transition_topic=readable_transition_topic,
             related_topics="\n".join(f"- {topic}" for topic in readable_related) or "- (none)",
             axis_guidance=AXIS_CONSULTANT_GUIDANCE,
+            axis_guidelines_block=self._build_axis_guidelines_block(axis_question_guidelines),
             stage_guidance=stage_discovery_guidance(
                 conversation_stage=conversation_stage,
                 focus=readable_transition_topic,
@@ -432,6 +438,20 @@ class QuestionComposerService:
             f"<current_capability_question_guideline>{primary_guideline}</current_capability_question_guideline>\n"
             f"{supplemental}\n"
             "</admin_question_guidelines>\n"
+        )
+
+    def _build_axis_guidelines_block(self, axis_question_guidelines: str | None) -> str:
+        cleaned = self._clean_text(axis_question_guidelines or "")
+        if not cleaned:
+            return ""
+        return (
+            "<axis_question_guidelines>\n"
+            "<guideline_instruction>"
+            "These database-managed axis guidelines define the high-level business angle for the current axis. "
+            "Use them as context, then focus the actual question on the selected capability."
+            "</guideline_instruction>\n"
+            f"<axis_guideline>{escape(cleaned)}</axis_guideline>\n"
+            "</axis_question_guidelines>\n"
         )
 
     def _build_maturity_rubric_block(self, rubrics: list[dict]) -> str:

@@ -58,9 +58,6 @@ class Settings:
     maturity_average_established_threshold: float
     maturity_score_basic_threshold: float
     maturity_score_established_threshold: float
-    website_audit_enabled: bool
-    website_audit_output_dir: str
-    website_audit_timeout_seconds: float
     benchmark_langsearch_max_requests_per_second: int
     benchmark_langsearch_max_requests_per_minute: int
     benchmark_langsearch_max_requests_per_day: int
@@ -215,9 +212,6 @@ def get_settings() -> Settings:
         maturity_average_established_threshold=_get_float("MATURITY_AVERAGE_ESTABLISHED_THRESHOLD", 2.34),
         maturity_score_basic_threshold=_get_float("MATURITY_SCORE_BASIC_THRESHOLD", 40.0),
         maturity_score_established_threshold=_get_float("MATURITY_SCORE_ESTABLISHED_THRESHOLD", 75.0),
-        website_audit_enabled=_get_bool("WEBSITE_AUDIT_ENABLED", False),
-        website_audit_output_dir=os.getenv("WEBSITE_AUDIT_OUTPUT_DIR", "UX_UI_AUDIT/output/assessments"),
-        website_audit_timeout_seconds=_get_float("WEBSITE_AUDIT_TIMEOUT_SECONDS", 120.0),
         benchmark_langsearch_max_requests_per_second=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_SECOND", 1),
         benchmark_langsearch_max_requests_per_minute=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_MINUTE", 20),
         benchmark_langsearch_max_requests_per_day=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_DAY", 2000),

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Building2, CheckCircle2, Circle, FileText, Globe2, Loader2, Send, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, CheckCircle2, Circle, FileText, Loader2, Send, Sparkles, X } from "lucide-react";
 import { Avatar } from "./avatar-1";
 import AssessmentResultsPage from "./assessment-results-page";
 import AssessmentGeneratingPage from "./assessment-generating-page";
@@ -16,7 +16,6 @@ type CompanyProfileForm = {
   sector: string;
   companySize: string;
   region: string;
-  websiteUrl: string;
 };
 type FinalReport = {
   assessment_id: number;
@@ -88,15 +87,6 @@ type OnboardingStage = "await_company_name" | "await_sector_choice" | "await_siz
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
-const REGION_OPTIONS = [
-  "Africa",
-  "Europe",
-  "Middle East",
-  "North America",
-  "Latin America",
-  "Asia-Pacific",
-  "Global / Multi-region",
-];
 const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim().toUpperCase();
 
 export default function AssessmentChatStatic({ onBack }: Props) {
@@ -118,13 +108,13 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     sector: "",
     companySize: "",
     region: "",
-    websiteUrl: "",
   });
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isReferenceLoading, setIsReferenceLoading] = useState(false);
   const [selectedSector, setSelectedSector] = useState<Option | null>(null);
   const [sectorOptions, setSectorOptions] = useState<Option[]>([]);
   const [sizeOptions, setSizeOptions] = useState<Option[]>([]);
+  const [regionOptions, setRegionOptions] = useState<Option[]>([]);
   const [finalReport, setFinalReport] = useState<FinalReport | null>(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showGeneratingPage, setShowGeneratingPage] = useState(false);
@@ -207,7 +197,8 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     const payload = await response.json();
     setSectorOptions(payload.sectors ?? []);
     setSizeOptions(payload.company_sizes ?? []);
-    return payload as { sectors: Option[]; company_sizes: Option[] };
+    setRegionOptions(payload.regions ?? []);
+    return payload as { sectors: Option[]; company_sizes: Option[]; regions: Option[] };
   };
 
   const startAssessment = async (payload: {
@@ -215,7 +206,6 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     sector?: string;
     size?: string;
     region?: string;
-    website_url?: string;
   }) => {
     const response = await fetch(`${API_BASE_URL}/assessments`, {
       method: "POST",
@@ -251,16 +241,10 @@ export default function AssessmentChatStatic({ onBack }: Props) {
       sector: companyProfile.sector.trim(),
       companySize: companyProfile.companySize.trim(),
       region: companyProfile.region.trim(),
-      websiteUrl: companyProfile.websiteUrl.trim(),
     };
 
-    if (!profile.companyName || !profile.sector || !profile.companySize || !profile.region || !profile.websiteUrl) {
-      setProfileError("Please complete company name, sector, company size, region, and website URL before starting.");
-      return;
-    }
-
-    if (!/^https?:\/\/.+\..+/i.test(profile.websiteUrl)) {
-      setProfileError("Please enter a valid website URL starting with http:// or https://.");
+    if (!profile.companyName || !profile.sector || !profile.companySize || !profile.region) {
+      setProfileError("Please complete company name, sector, company size, and region before starting.");
       return;
     }
 
@@ -272,7 +256,6 @@ export default function AssessmentChatStatic({ onBack }: Props) {
         sector: profile.sector,
         size: profile.companySize,
         region: profile.region,
-        website_url: profile.websiteUrl,
       });
     } catch {
       setProfileError("I could not start the assessment yet. Please check the selected profile and try again.");
@@ -422,7 +405,6 @@ export default function AssessmentChatStatic({ onBack }: Props) {
       sector: "",
       companySize: "",
       region: "",
-      websiteUrl: "",
     });
     setProfileError(null);
     setSelectedSector(null);
@@ -538,17 +520,12 @@ export default function AssessmentChatStatic({ onBack }: Props) {
               Welcome. I am Orion, your EY CX maturity assessment assistant.
             </h1>
             <p className="mt-5 text-base leading-7 text-slate-600">
-              Before we begin the interview, I need a short company profile. This helps me adapt the questions,
-              benchmark examples, and homepage UX/UI review to your business context.
+              Before we begin the interview, I need a short company profile. This helps me adapt the questions and benchmark examples to your business context.
             </p>
             <div className="mt-7 grid gap-3 text-sm text-slate-700">
               <div className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <Building2 className="mt-0.5 h-5 w-5 text-violet-600" />
                 <span>Sector and company size are used as structured context, not guessed from the company name.</span>
-              </div>
-              <div className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                <Globe2 className="mt-0.5 h-5 w-5 text-violet-600" />
-                <span>The website field powers the homepage UX/UI section included in the final report.</span>
               </div>
             </div>
           </motion.section>
@@ -623,39 +600,24 @@ export default function AssessmentChatStatic({ onBack }: Props) {
                 </div>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="region" className="text-sm font-semibold text-slate-800">
-                    Region
-                  </label>
-                  <select
-                    id="region"
-                    value={companyProfile.region}
-                    onChange={(event) => updateCompanyProfile("region", event.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-                  >
-                    <option value="">Select region</option>
-                    {REGION_OPTIONS.map((region) => (
-                      <option key={region} value={region}>
-                        {region}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="websiteUrl" className="text-sm font-semibold text-slate-800">
-                    Website URL
-                  </label>
-                  <input
-                    id="websiteUrl"
-                    value={companyProfile.websiteUrl}
-                    onChange={(event) => updateCompanyProfile("websiteUrl", event.target.value)}
-                    placeholder="https://www.company.com"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-                  />
-                  <p className="text-xs text-slate-500">Required for the homepage UX/UI review included in the final report.</p>
-                </div>
+              <div className="space-y-2">
+                <label htmlFor="region" className="text-sm font-semibold text-slate-800">
+                  Region
+                </label>
+                <select
+                  id="region"
+                  value={companyProfile.region}
+                  onChange={(event) => updateCompanyProfile("region", event.target.value)}
+                  disabled={isReferenceLoading}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                >
+                  <option value="">{isReferenceLoading ? "Loading regions..." : "Select region"}</option>
+                  {regionOptions.map((region) => (
+                    <option key={region.code} value={region.code}>
+                      {region.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {profileError ? (

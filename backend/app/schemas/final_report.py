@@ -1,5 +1,3 @@
-from typing import Any
-
 from pydantic import BaseModel
 
 
@@ -139,34 +137,6 @@ class FinalReportLeadersSnapshot(BaseModel):
     leaders: list[FinalReportLeaderItem] = []
 
 
-class FinalReportWebsiteAuditFinding(BaseModel):
-    title: str
-    severity: str | None = None
-    score: float | None = None
-    issue: str | None = None
-    why_it_matters: str | None = None
-    recommendation: str | None = None
-    evidence_image: str | None = None
-    evidence_image_url: str | None = None
-
-
-class FinalReportWebsiteAudit(BaseModel):
-    status: str
-    website_url: str | None = None
-    generated_at: str | None = None
-    overall_score: float | None = None
-    error_message: str | None = None
-    artifacts_base_url: str | None = None
-    report_url: str | None = None
-    audit_json_url: str | None = None
-    desktop_screenshot_url: str | None = None
-    desktop_full_screenshot_url: str | None = None
-    mobile_screenshot_url: str | None = None
-    mobile_full_screenshot_url: str | None = None
-    raw_payload: dict[str, Any] | None = None
-    findings: list[FinalReportWebsiteAuditFinding] = []
-
-
 class FinalReportWorkingMissingItem(BaseModel):
     capability: str
     maturity_band: str
@@ -215,4 +185,3 @@ class FinalReportResponse(BaseModel):
     leaders_snapshot: FinalReportLeadersSnapshot | None = None
     quick_wins_timeline: FinalReportQuickWinsTimeline | None = None
     working_missing: list[FinalReportWorkingMissingAxis] = []
-    website_audit: FinalReportWebsiteAudit | None = None

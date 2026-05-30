@@ -7,6 +7,7 @@ from app.domain.constants import normalize_axis_code, normalize_axis_name
 from app.db.models.axis import Axis
 from app.db.models.company_size import CompanySize
 from app.db.models.maturity_level import MaturityLevel
+from app.db.models.region import Region
 from app.db.models.sector import Sector
 from app.dependencies.db import get_db
 from app.schemas.admin_reference import (
@@ -19,6 +20,9 @@ from app.schemas.admin_reference import (
     MaturityLevelCreate,
     MaturityLevelRead,
     MaturityLevelUpdate,
+    RegionCreate,
+    RegionRead,
+    RegionUpdate,
     SectorCreate,
     SectorRead,
     SectorUpdate,
@@ -26,7 +30,6 @@ from app.schemas.admin_reference import (
 from app.schemas.admin_ui_metadata import (
     AdminUiFieldMetadata,
     AdminUiMetadataResponse,
-    AdminUiOptionItem,
     AdminUiSectionMetadata,
 )
 
@@ -35,6 +38,13 @@ router = APIRouter(prefix="/admin/reference")
 
 def _normalize(value: str) -> str:
     return value.strip().lower()
+
+
+def _clean_optional_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
 
 
 async def _handle_integrity_error(db: AsyncSession, entity_name: str) -> None:
@@ -48,91 +58,98 @@ def get_admin_ui_metadata() -> AdminUiMetadataResponse:
         capabilities=AdminUiSectionMetadata(
             title="Capabilities",
             help_text=(
-                "Question guidance shapes how the LLM asks the next question. "
-                "Use it to describe the discovery goal, useful examples, and maturity signals to test."
+                "Capability definition, evidence signals, and question strategy shape how the LLM understands, scores, and asks about each capability."
             ),
             fields={
-                "question_guidelines": AdminUiFieldMetadata(
-                    label="Question guidance for the LLM",
+                "description": AdminUiFieldMetadata(
+                    label="Capability definition",
                     description=(
-                        "Internal business guidance used to generate better questions. "
+                        "Defines what this capability means. The LLM uses it to understand the business intent "
+                        "and separate it from adjacent capabilities."
+                    ),
+                    button_label="Edit definition",
+                    modal_title="Edit capability definition",
+                    placeholder="Describe what this capability means and what business area it evaluates...",
+                ),
+                "evidence_required": AdminUiFieldMetadata(
+                    label="Evidence signals",
+                    description=(
+                        "Examples of concrete proof the LLM should recognize. These are semantic signals, "
+                        "not strict keywords."
+                    ),
+                    button_label="Edit signals",
+                    modal_title="Edit evidence signals",
+                    placeholder="List evidence signals separated by semicolons, for example: named owner; review cadence; action log...",
+                ),
+                "question_guidelines": AdminUiFieldMetadata(
+                    label="Question strategy",
+                    description=(
+                        "Internal guidance for how the LLM should ask about this capability. "
                         "This is not a fixed client-facing script."
                     ),
-                    button_label="Edit guidance",
-                    modal_title="Edit question guidance for the LLM",
-                    placeholder="Write the internal guidance used by the LLM...",
+                    button_label="Edit strategy",
+                    modal_title="Edit question strategy",
+                    placeholder="Write the internal questioning strategy used by the LLM...",
                 )
             },
         ),
-        recommendations=AdminUiSectionMetadata(
-            title="Capability recommendations",
+        axes=AdminUiSectionMetadata(
+            title="Axes",
             help_text=(
-                "The report prompt gives most weight to recommended action direction, priority level, expected business impact, and writing tone. "
-                "Optional framing notes help with nuance but do not replace the core recommendation."
+                "Axis guidance defines the high-level meaning of Manage, Analyze, and Improve. "
+                "The LLM uses it as context before focusing on the selected capability."
             ),
             fields={
-                "recommendation_guideline": AdminUiFieldMetadata(
-                    label="Recommended action direction",
-                    description="Primary action logic injected into the report prompt.",
-                    button_label="Edit logic",
-                    modal_title="Edit recommended action direction",
-                    placeholder="Write the core action direction used by the report...",
+                "description": AdminUiFieldMetadata(
+                    label="Axis definition",
+                    description="Defines what this axis means in the CX maturity model.",
+                    button_label="Edit definition",
+                    modal_title="Edit axis definition",
+                    placeholder="Describe the scope and business meaning of this axis...",
                 ),
-                "priority_hint": AdminUiFieldMetadata(
-                    label="Priority level",
-                    description="Priority framing such as urgent_foundation, build_consistency, or scale_advantage.",
-                    options=[
-                        AdminUiOptionItem(
-                            value="urgent_foundation",
-                            label="Urgent foundation",
-                            description="Use when the recommendation builds a missing base capability or fixes a structural gap.",
-                        ),
-                        AdminUiOptionItem(
-                            value="build_consistency",
-                            label="Build consistency",
-                            description="Use when the organization already has a base and now needs more discipline, scale, or repeatability.",
-                        ),
-                        AdminUiOptionItem(
-                            value="scale_advantage",
-                            label="Scale advantage",
-                            description="Use when the capability is mature and the recommendation is about optimization, differentiation, or value acceleration.",
-                        ),
-                    ],
+                "question_guidelines": AdminUiFieldMetadata(
+                    label="Axis question strategy",
+                    description="Guides how the LLM should frame questions while it is inside this axis.",
+                    button_label="Edit strategy",
+                    modal_title="Edit axis question strategy",
+                    placeholder="Write the questioning strategy for this axis...",
                 ),
-                "business_impact": AdminUiFieldMetadata(
-                    label="Expected business impact",
-                    description="Business or customer outcome expected if the recommendation is implemented well.",
-                    button_label="Edit impact",
-                    modal_title="Edit expected business impact",
-                    placeholder="Describe the customer or business outcome expected from this recommendation...",
+            },
+        ),
+        recommendations=AdminUiSectionMetadata(
+            title="Quick win templates",
+            help_text=(
+                "Quick win templates are the single admin source for quick-win action direction, after text, owner hints, and sequencing hints. "
+                "The before text is generated from assessment insights."
+            ),
+            fields={
+                "quick_win_guideline": AdminUiFieldMetadata(
+                    label="Quick win action",
+                    description="The practical action the quick win should recommend in the final report.",
+                    button_label="Edit action",
+                    modal_title="Edit quick win action",
+                    placeholder="Write the practical quick-win action...",
                 ),
-                "tone_hint": AdminUiFieldMetadata(
-                    label="Writing tone",
-                    description="Preferred tone for the final report wording, such as direct, balanced, or executive.",
-                    options=[
-                        AdminUiOptionItem(
-                            value="direct",
-                            label="Direct",
-                            description="Short, practical, and action-focused wording.",
-                        ),
-                        AdminUiOptionItem(
-                            value="balanced",
-                            label="Balanced",
-                            description="Clear and professional wording with a mix of action and context.",
-                        ),
-                        AdminUiOptionItem(
-                            value="executive",
-                            label="Executive",
-                            description="Leadership-oriented wording with stronger strategic framing and business impact language.",
-                        ),
-                    ],
+                "after_text": AdminUiFieldMetadata(
+                    label="Expected outcome",
+                    description="The improved state or business/customer outcome after this quick win is completed.",
+                    button_label="Edit outcome",
+                    modal_title="Edit expected outcome",
+                    placeholder="Describe the expected outcome after this quick win...",
                 ),
-                "consultant_note": AdminUiFieldMetadata(
-                    label="Optional framing note",
-                    description="Optional nuance or framing support for the final recommendation wording.",
-                    button_label="Edit note",
-                    modal_title="Edit optional framing note",
-                    placeholder="Add optional nuance or framing for the final report wording...",
+                "owner_hint": AdminUiFieldMetadata(
+                    label="Suggested owner",
+                    description="The role most likely to own this quick win.",
+                    button_label="Edit owner",
+                    modal_title="Edit suggested owner",
+                    placeholder="Example: CX Lead, Insights Lead, Operations Lead...",
+                ),
+                "timeline_hint": AdminUiFieldMetadata(
+                    label="Timing",
+                    description="When this quick win should usually happen in the quick-win sequence.",
+                    button_label="Edit timing",
+                    modal_title="Edit timing",
+                    placeholder="Example: earliest quick win, after first routine is in place...",
                 ),
             },
         ),
@@ -152,10 +169,71 @@ async def list_axes(
             id=r.id,
             code=(normalize_axis_code(r.code) or r.code).lower(),
             name=normalize_axis_name(r.name) or r.name,
+            description=r.description,
+            question_guidelines=r.question_guidelines,
             sort_order=r.sort_order,
         )
         for r in rows
     ]
+
+
+@router.get("/regions", response_model=list[RegionRead])
+async def list_regions(
+    limit: int = Query(default=200, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+) -> list[RegionRead]:
+    result = await db.execute(select(Region).order_by(Region.name.asc()).offset(offset).limit(limit))
+    rows = result.scalars().all()
+    return [
+        RegionRead(
+            id=r.id,
+            name=r.name,
+        )
+        for r in rows
+    ]
+
+
+@router.post("/regions", response_model=RegionRead)
+async def create_region(payload: RegionCreate, db: AsyncSession = Depends(get_db)) -> RegionRead:
+    row = Region(name=payload.name.strip())
+    db.add(row)
+    try:
+        await db.commit()
+    except IntegrityError:
+        await _handle_integrity_error(db, "Region")
+    await db.refresh(row)
+    return RegionRead(id=row.id, name=row.name)
+
+
+@router.patch("/regions/{region_id}", response_model=RegionRead)
+async def update_region(region_id: int, payload: RegionUpdate, db: AsyncSession = Depends(get_db)) -> RegionRead:
+    result = await db.execute(select(Region).where(Region.id == region_id))
+    row = result.scalar_one_or_none()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Region not found")
+    if payload.name is not None:
+        row.name = payload.name.strip()
+    try:
+        await db.commit()
+    except IntegrityError:
+        await _handle_integrity_error(db, "Region")
+    await db.refresh(row)
+    return RegionRead(id=row.id, name=row.name)
+
+
+@router.delete("/regions/{region_id}")
+async def delete_region(region_id: int, db: AsyncSession = Depends(get_db)) -> dict[str, str]:
+    result = await db.execute(select(Region).where(Region.id == region_id))
+    row = result.scalar_one_or_none()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Region not found")
+    await db.delete(row)
+    try:
+        await db.commit()
+    except IntegrityError:
+        await _handle_integrity_error(db, "Region")
+    return {"status": "deleted"}
 
 
 @router.post("/axes", response_model=AxisRead)
@@ -163,6 +241,8 @@ async def create_axis(payload: AxisCreate, db: AsyncSession = Depends(get_db)) -
     row = Axis(
         code=(normalize_axis_code(payload.code) or _normalize(payload.code)).lower(),
         name=normalize_axis_name(payload.name.strip()) or payload.name.strip(),
+        description=_clean_optional_text(payload.description),
+        question_guidelines=_clean_optional_text(payload.question_guidelines),
         sort_order=payload.sort_order,
     )
     db.add(row)
@@ -175,6 +255,8 @@ async def create_axis(payload: AxisCreate, db: AsyncSession = Depends(get_db)) -
         id=row.id,
         code=(normalize_axis_code(row.code) or row.code).lower(),
         name=normalize_axis_name(row.name) or row.name,
+        description=row.description,
+        question_guidelines=row.question_guidelines,
         sort_order=row.sort_order,
     )
 
@@ -190,6 +272,11 @@ async def update_axis(axis_id: int, payload: AxisUpdate, db: AsyncSession = Depe
         row.code = (normalize_axis_code(payload.code) or _normalize(payload.code)).lower()
     if payload.name is not None:
         row.name = normalize_axis_name(payload.name.strip()) or payload.name.strip()
+    provided_fields = getattr(payload, "model_fields_set", getattr(payload, "__fields_set__", set()))
+    if "description" in provided_fields:
+        row.description = _clean_optional_text(payload.description)
+    if "question_guidelines" in provided_fields:
+        row.question_guidelines = _clean_optional_text(payload.question_guidelines)
     if payload.sort_order is not None:
         row.sort_order = payload.sort_order
     try:
@@ -201,6 +288,8 @@ async def update_axis(axis_id: int, payload: AxisUpdate, db: AsyncSession = Depe
         id=row.id,
         code=(normalize_axis_code(row.code) or row.code).lower(),
         name=normalize_axis_name(row.name) or row.name,
+        description=row.description,
+        question_guidelines=row.question_guidelines,
         sort_order=row.sort_order,
     )
 

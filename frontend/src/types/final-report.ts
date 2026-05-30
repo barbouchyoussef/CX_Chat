@@ -169,34 +169,6 @@ export type FinalReportQuickWinsTimeline = {
   items: FinalReportQuickWinItem[];
 };
 
-export type FinalReportWebsiteAuditFinding = {
-  title: string;
-  severity?: string | null;
-  score?: number | null;
-  issue?: string | null;
-  why_it_matters?: string | null;
-  recommendation?: string | null;
-  evidence_image?: string | null;
-  evidence_image_url?: string | null;
-};
-
-export type FinalReportWebsiteAudit = {
-  status: string;
-  website_url?: string | null;
-  generated_at?: string | null;
-  overall_score?: number | null;
-  error_message?: string | null;
-  artifacts_base_url?: string | null;
-  report_url?: string | null;
-  audit_json_url?: string | null;
-  desktop_screenshot_url?: string | null;
-  desktop_full_screenshot_url?: string | null;
-  mobile_screenshot_url?: string | null;
-  mobile_full_screenshot_url?: string | null;
-  raw_payload?: Record<string, unknown> | null;
-  findings?: FinalReportWebsiteAuditFinding[];
-};
-
 export type FinalReport = {
   assessment_id: number;
   hero: FinalReportHero;
@@ -210,5 +182,4 @@ export type FinalReport = {
   leaders_snapshot?: FinalReportLeadersSnapshot | null;
   quick_wins_timeline?: FinalReportQuickWinsTimeline | null;
   working_missing: FinalReportWorkingMissingAxis[];
-  website_audit?: FinalReportWebsiteAudit | null;
 };

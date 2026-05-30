@@ -8,49 +8,49 @@ VALUES
   ('improve', 'Improve', 3)
 ON CONFLICT (code) DO NOTHING;
 
--- Generic capabilities per axis (MVP seed)
+-- Capabilities (real code set)
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'manage.feedback_collection', 'Feedback collection channels and cadence', 10
+SELECT a.id, 'manage_cx_culture', 'CX culture', 10
 FROM axes a WHERE a.code = 'manage'
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'manage.ticketing_process', 'Support/ticketing process and ownership', 20
+SELECT a.id, 'manage_ownership_governance', 'Ownership and governance', 20
 FROM axes a WHERE a.code = 'manage'
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'manage.customer_journeys', 'Key customer journeys documented and monitored', 30
+SELECT a.id, 'manage_decision_making', 'Decision-making', 30
 FROM axes a WHERE a.code = 'manage'
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'analyze.kpis', 'Customer experience KPIs (NPS, CSAT, CES) measured and reviewed', 10
+SELECT a.id, 'analyze_feedback_collection', 'Feedback collection', 10
 FROM axes a WHERE a.code = 'analyze'
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'analyze.segmentation', 'Segmentation by customer type or behavior for insights', 20
+SELECT a.id, 'analyze_use_of_insights', 'Use of insights', 20
 FROM axes a WHERE a.code = 'analyze'
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'analyze.root_cause', 'Root cause analysis on top issues (qualitative and quantitative)', 30
+SELECT a.id, 'analyze_channel_consistency', 'Channel consistency', 30
 FROM axes a WHERE a.code = 'analyze'
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'improve.improvement_loop', 'Continuous improvement loop with prioritization and tracking', 10
+SELECT a.id, 'analyze_journey_visibility', 'Journey visibility', 40
+FROM axes a WHERE a.code = 'analyze'
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO capabilities (axis_id, code, name, sort_order)
+SELECT a.id, 'improve_measurement_continuous_improvement', 'Measurement and continuous improvement', 10
 FROM axes a WHERE a.code = 'improve'
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'improve.training', 'Teams trained and enabled to deliver consistent CX', 20
-FROM axes a WHERE a.code = 'improve'
-ON CONFLICT (code) DO NOTHING;
-
-INSERT INTO capabilities (axis_id, code, name, sort_order)
-SELECT a.id, 'improve.governance', 'Governance: roles, rituals, and accountability for CX outcomes', 30
+SELECT a.id, 'improve_acting_on_pain_points', 'Acting on pain points', 20
 FROM axes a WHERE a.code = 'improve'
 ON CONFLICT (code) DO NOTHING;
 

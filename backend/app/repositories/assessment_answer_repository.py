@@ -6,7 +6,7 @@ from app.db.models.assessment_answer import AssessmentAnswer
 from app.db.models.capability import Capability
 from app.db.models.axis import Axis
 from app.db.models.assessment_score import AssessmentScore
-from app.db.models.capability_recommendation import CapabilityRecommendation
+from app.db.models.capability_quick_win_template import CapabilityQuickWinTemplate
 
 
 class AssessmentAnswerRepository:
@@ -41,37 +41,7 @@ class AssessmentAnswerRepository:
         return list(result.scalars().all())
 
     async def list_trace(self, assessment_id: int, limit: int = 500, offset: int = 0) -> list[dict]:
-        result = await self.db.execute(
-            select(
-                AssessmentAnswer.capability_id,
-                Capability.code,
-                Axis.name,
-                AssessmentAnswer.question,
-                AssessmentAnswer.answer,
-                AssessmentAnswer.created_at,
-                AssessmentScore.maturity_level_id,
-                AssessmentScore.confidence,
-                AssessmentScore.justification,
-                CapabilityRecommendation.recommendation_guideline,
-                CapabilityRecommendation.priority_hint,
-            )
-            .outerjoin(Capability, Capability.id == AssessmentAnswer.capability_id)
-            .outerjoin(Axis, Axis.id == Capability.axis_id)
-            .outerjoin(
-                AssessmentScore,
-                (AssessmentScore.assessment_id == AssessmentAnswer.assessment_id)
-                & (AssessmentScore.capability_id == AssessmentAnswer.capability_id),
-            )
-            .outerjoin(
-                CapabilityRecommendation,
-                (CapabilityRecommendation.capability_id == AssessmentAnswer.capability_id)
-                & (CapabilityRecommendation.maturity_level_id == AssessmentScore.maturity_level_id),
-            )
-            .where(AssessmentAnswer.assessment_id == assessment_id)
-            .order_by(AssessmentAnswer.id.asc())
-            .offset(offset)
-            .limit(limit)
-        )
+        result = await self.db.execute(self._trace_statement(assessment_id, limit, offset))
         rows = result.all()
         return [
             {
@@ -101,3 +71,44 @@ class AssessmentAnswerRepository:
                 priority_hint,
             ) in rows
         ]
+
+    def _trace_statement(
+        self,
+        assessment_id: int,
+        limit: int,
+        offset: int,
+    ):
+        statement = (
+            select(
+                AssessmentAnswer.capability_id,
+                Capability.code,
+                Axis.name,
+                AssessmentAnswer.question,
+                AssessmentAnswer.answer,
+                AssessmentAnswer.created_at,
+                AssessmentScore.maturity_level_id,
+                AssessmentScore.confidence,
+                AssessmentScore.justification,
+                CapabilityQuickWinTemplate.quick_win_guideline,
+                CapabilityQuickWinTemplate.timeline_hint,
+            )
+            .outerjoin(Capability, Capability.id == AssessmentAnswer.capability_id)
+            .outerjoin(Axis, Axis.id == Capability.axis_id)
+            .outerjoin(
+                AssessmentScore,
+                (AssessmentScore.assessment_id == AssessmentAnswer.assessment_id)
+                & (AssessmentScore.capability_id == AssessmentAnswer.capability_id),
+            )
+            .outerjoin(
+                CapabilityQuickWinTemplate,
+                (CapabilityQuickWinTemplate.capability_id == AssessmentAnswer.capability_id)
+                & (CapabilityQuickWinTemplate.maturity_level_id == AssessmentScore.maturity_level_id)
+                & (CapabilityQuickWinTemplate.active.is_(True)),
+            )
+        )
+        return (
+            statement.where(AssessmentAnswer.assessment_id == assessment_id)
+            .order_by(AssessmentAnswer.id.asc())
+            .offset(offset)
+            .limit(limit)
+        )

@@ -7,10 +7,10 @@ from app.repositories.assessment_answer_repository import AssessmentAnswerReposi
 from app.repositories.assessment_axis_memory_repository import AssessmentAxisMemoryRepository
 from app.repositories.assessment_idempotency_repository import AssessmentIdempotencyRepository
 from app.repositories.assessment_repository import AssessmentRepository
-from app.repositories.assessment_website_audit_repository import AssessmentWebsiteAuditRepository
 from app.repositories.capability_repository import CapabilityRepository
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.company_size_repository import CompanySizeRepository
+from app.repositories.region_repository import RegionRepository
 from app.repositories.sector_repository import SectorRepository
 from app.services.assessment.conversation.service import AssessmentConversationService
 from app.services.assessment.reporting.reporting_service import (
@@ -75,13 +75,13 @@ def build_assessment_service(db: AsyncSession, settings: Settings | None = None)
     resolved_settings = settings or get_settings()
     sectors = SectorRepository(db)
     sizes = CompanySizeRepository(db)
+    regions = RegionRepository(db)
     companies = CompanyRepository(db)
     assessments = AssessmentRepository(db)
     capabilities = CapabilityRepository(db)
     answers = AssessmentAnswerRepository(db)
     axis_memory = AssessmentAxisMemoryRepository(db)
     idempotency = AssessmentIdempotencyRepository(db)
-    website_audits = AssessmentWebsiteAuditRepository(db)
     llm = build_llm_service(settings=resolved_settings)
     uow = AsyncUnitOfWork(db)
     state = AssessmentStateService(db, capabilities)
@@ -108,13 +108,13 @@ def build_assessment_service(db: AsyncSession, settings: Settings | None = None)
         db=db,
         sectors=sectors,
         sizes=sizes,
+        regions=regions,
         companies=companies,
         assessments=assessments,
         capabilities=capabilities,
         answers=answers,
         axis_memory=axis_memory,
         idempotency=idempotency,
-        website_audits=website_audits,
         llm_service=llm,
         uow=uow,
         state_service=state,

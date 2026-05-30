@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.text_normalization import normalize_text
 from app.domain.constants import axis_name_variants, normalize_axis_code, normalize_axis_name
 from app.db.models.capability_maturity_rubric import CapabilityMaturityRubric
-from app.db.models.capability_recommendation import CapabilityRecommendation
 from app.db.models.assessment_insight import AssessmentInsight
 from app.db.models.assessment_score import AssessmentScore
 from app.db.models.axis import Axis
@@ -14,6 +13,7 @@ from app.db.models.axis_maturity_content import AxisMaturityContent
 from app.db.models.capability import Capability
 from app.db.models.capability_maturity_content import CapabilityMaturityContent
 from app.db.models.maturity_level import MaturityLevel
+from app.db.models.capability_quick_win_template import CapabilityQuickWinTemplate
 
 
 class CapabilityRepository:
@@ -338,24 +338,25 @@ class CapabilityRepository:
 
         result = await self.db.execute(
             select(
-                CapabilityRecommendation.capability_id,
-                CapabilityRecommendation.recommendation_guideline,
-                CapabilityRecommendation.initiative_suggestions,
+                CapabilityQuickWinTemplate.capability_id,
+                CapabilityQuickWinTemplate.quick_win_guideline,
+                CapabilityQuickWinTemplate.after_text,
             )
-            .join(MaturityLevel, MaturityLevel.id == CapabilityRecommendation.maturity_level_id)
+            .join(MaturityLevel, MaturityLevel.id == CapabilityQuickWinTemplate.maturity_level_id)
             .where(
-                CapabilityRecommendation.capability_id.in_(capability_ids),
+                CapabilityQuickWinTemplate.capability_id.in_(capability_ids),
                 MaturityLevel.level_number == 3,
+                CapabilityQuickWinTemplate.active.is_(True),
             )
-            .order_by(CapabilityRecommendation.capability_id.asc())
+            .order_by(CapabilityQuickWinTemplate.capability_id.asc())
         )
         rows = result.all()
         return {
             int(capability_id): {
-                "recommendation_guideline": normalize_text(str(recommendation_guideline or "")).strip() or None,
-                "initiative_suggestions": normalize_text(str(initiative_suggestions or "")).strip() or None,
+                "recommendation_guideline": normalize_text(str(quick_win_guideline or "")).strip() or None,
+                "initiative_suggestions": normalize_text(str(after_text or "")).strip() or None,
             }
-            for capability_id, recommendation_guideline, initiative_suggestions in rows
+            for capability_id, quick_win_guideline, after_text in rows
         }
 
     async def get_axis_maturity_content(self) -> dict[tuple[str, int], dict[str, str | None]]:
@@ -410,46 +411,10 @@ class CapabilityRepository:
             .subquery()
         )
         latest_insight = AssessmentInsight.__table__.alias("latest_insight")
-        result = await self.db.execute(
-            select(
-                Capability.id,
-                Capability.code,
-                Capability.name,
-                Axis.name,
-                AssessmentScore.maturity_level_id,
-                AssessmentScore.confidence,
-                AssessmentScore.assessment_status,
-                AssessmentScore.justification,
-                latest_insight.c.evidence_text,
-                latest_insight.c.justification,
-                CapabilityRecommendation.recommendation_guideline,
-                CapabilityRecommendation.priority_hint,
-                CapabilityRecommendation.consultant_note,
-                CapabilityRecommendation.evidence_to_cite,
-                CapabilityRecommendation.initiative_suggestions,
-                CapabilityRecommendation.business_impact,
-                CapabilityRecommendation.tone_hint,
-            )
-            .join(Axis, Axis.id == Capability.axis_id)
-            .join(
-                AssessmentScore,
-                (AssessmentScore.capability_id == Capability.id)
-                & (AssessmentScore.assessment_id == assessment_id),
-            )
-              .outerjoin(
-                  latest_insight_subquery,
-                  latest_insight_subquery.c.capability_id == Capability.id,
-              )
-              .outerjoin(
-                  latest_insight,
-                  latest_insight.c.id == latest_insight_subquery.c.latest_insight_id,
-              )
-              .outerjoin(
-                  CapabilityRecommendation,
-                  (CapabilityRecommendation.capability_id == Capability.id)
-                  & (CapabilityRecommendation.maturity_level_id == AssessmentScore.maturity_level_id),
-            )
-            .order_by(Axis.sort_order.asc(), Capability.sort_order.asc(), Capability.id.asc())
+        result = await self._execute_recommendations_query(
+            assessment_id=assessment_id,
+            latest_insight_subquery=latest_insight_subquery,
+            latest_insight=latest_insight,
         )
         rows = result.all()
         return [
@@ -464,13 +429,17 @@ class CapabilityRepository:
                   "justification": justification,
                   "evidence_text": evidence_text,
                   "insight_justification": insight_justification,
-                  "recommendation_guideline": recommendation_guideline,
-                "priority_hint": priority_hint,
-                "consultant_note": consultant_note,
-                "evidence_to_cite": evidence_to_cite,
-                "initiative_suggestions": initiative_suggestions,
-                "business_impact": business_impact,
-                "tone_hint": tone_hint,
+                "recommendation_guideline": quick_win_guideline,
+                "priority_hint": timeline_hint,
+                "consultant_note": (
+                    f"Suggested owner: {normalize_text(str(owner_hint)).strip()}"
+                    if normalize_text(str(owner_hint or "")).strip()
+                    else None
+                ),
+                "evidence_to_cite": evidence_text,
+                "initiative_suggestions": quick_win_guideline,
+                "business_impact": after_text,
+                "tone_hint": "balanced",
             }
             for (
                 capability_id,
@@ -483,12 +452,57 @@ class CapabilityRepository:
                   justification,
                   evidence_text,
                   insight_justification,
-                  recommendation_guideline,
-                priority_hint,
-                consultant_note,
-                evidence_to_cite,
-                initiative_suggestions,
-                business_impact,
-                tone_hint,
+                  quick_win_guideline,
+                after_text,
+                owner_hint,
+                timeline_hint,
             ) in rows
         ]
+
+    async def _execute_recommendations_query(
+        self,
+        *,
+        assessment_id: int,
+        latest_insight_subquery,
+        latest_insight,
+    ):
+        statement = (
+            select(
+                Capability.id,
+                Capability.code,
+                Capability.name,
+                Axis.name,
+                AssessmentScore.maturity_level_id,
+                AssessmentScore.confidence,
+                AssessmentScore.assessment_status,
+                AssessmentScore.justification,
+                latest_insight.c.evidence_text,
+                latest_insight.c.justification,
+                CapabilityQuickWinTemplate.quick_win_guideline,
+                CapabilityQuickWinTemplate.after_text,
+                CapabilityQuickWinTemplate.owner_hint,
+                CapabilityQuickWinTemplate.timeline_hint,
+            )
+            .join(Axis, Axis.id == Capability.axis_id)
+            .join(
+                AssessmentScore,
+                (AssessmentScore.capability_id == Capability.id)
+                & (AssessmentScore.assessment_id == assessment_id),
+            )
+            .outerjoin(
+                latest_insight_subquery,
+                latest_insight_subquery.c.capability_id == Capability.id,
+            )
+            .outerjoin(
+                latest_insight,
+                latest_insight.c.id == latest_insight_subquery.c.latest_insight_id,
+            )
+            .outerjoin(
+                CapabilityQuickWinTemplate,
+                (CapabilityQuickWinTemplate.capability_id == Capability.id)
+                & (CapabilityQuickWinTemplate.maturity_level_id == AssessmentScore.maturity_level_id)
+                & (CapabilityQuickWinTemplate.active.is_(True)),
+            )
+        )
+        statement = statement.order_by(Axis.sort_order.asc(), Capability.sort_order.asc(), Capability.id.asc())
+        return await self.db.execute(statement)

@@ -164,19 +164,29 @@ def metabase_embed_url(
     to_date: date = Query(alias="to"),
     sector_code: str | None = Query(default=None),
     company_size_code: str | None = Query(default=None),
+    region_code: str | None = Query(default=None),
 ) -> MetabaseEmbedResponse:
     settings = get_settings()
     if not settings.metabase_site_url or not settings.metabase_embed_secret or not settings.metabase_dashboard_id:
         return MetabaseEmbedResponse(enabled=False, url=None, token=None, instance_url=None)
 
     now = datetime.now(timezone.utc)
+    params: dict[str, str] = {}
+    if sector_code:
+        params["sector"] = sector_code
+    if company_size_code:
+        params["company_size"] = company_size_code
+    if region_code:
+        params["region"] = region_code
+
     payload = {
         "resource": {"dashboard": settings.metabase_dashboard_id},
-        "params": {},
+        "params": params,
         "_embedding_params": {
             "date": "enabled",
             "sector": "enabled",
             "company_size": "enabled",
+            "region": "enabled",
         },
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(minutes=15)).timestamp()),

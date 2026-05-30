@@ -9,3 +9,4 @@ class ReferenceOption(BaseModel):
 class ReferenceOptionsResponse(BaseModel):
     sectors: list[ReferenceOption]
     company_sizes: list[ReferenceOption]
+    regions: list[ReferenceOption] = []

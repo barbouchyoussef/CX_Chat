@@ -8,38 +8,25 @@ type FooterProps = {
 };
 
 const Footer: React.FC<FooterProps> = ({
-  projectName = "Audit UX/UI — Sedad Bank by BMI",
-  date = "Avril 2026 — Confidentiel",
+  projectName = "CX Maturity Report",
+  date = "May 2026 - Confidential",
 }) => {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <div className="flex flex-col md:flex-row justify-between gap-8">
-          
-          {/* LEFT: BRAND */}
+    <footer className="bg-gray-900 py-12 text-gray-300">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col justify-between gap-8 md:flex-row">
           <div className="max-w-md">
-            <img
-              src={logoSrc}
-              alt="EY Studio+"
-              className="h-10 mb-4"
-            />
-
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Ce rapport a été généré dans le cadre du framework EY UX Optimizer.
-              Les évaluations sont basées sur une analyse experte des captures
-              d'écran fournies et les recommandations WCAG 2.1.
+            <img src={logoSrc} alt="EY Studio+" className="mb-4 h-10" />
+            <p className="text-sm leading-relaxed text-gray-400">
+              This report summarizes the CX maturity assessment, benchmark evidence, and prioritized actions from the completed interview.
             </p>
           </div>
 
-          {/* RIGHT: META */}
           <div className="text-sm text-gray-400 md:text-right">
             <p>{projectName}</p>
             <p className="mt-2">{date}</p>
           </div>
-
         </div>
-
       </div>
     </footer>
   );

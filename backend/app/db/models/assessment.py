@@ -45,9 +45,3 @@ class Assessment(Base):
     pending_focus_capability = relationship("Capability", foreign_keys=[pending_focus_capability_id])
     scores = relationship("AssessmentScore", back_populates="assessment", cascade="all, delete-orphan")
     answers = relationship("AssessmentAnswer", back_populates="assessment", cascade="all, delete-orphan")
-    website_audit = relationship(
-        "AssessmentWebsiteAudit",
-        back_populates="assessment",
-        cascade="all, delete-orphan",
-        uselist=False,
-    )

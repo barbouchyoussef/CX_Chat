@@ -11,6 +11,7 @@ from app.db.models.assessment_score import AssessmentScore
 from app.db.models.capability import Capability
 from app.db.models.company import Company
 from app.db.models.maturity_level import MaturityLevel
+from app.db.models.region import Region
 
 
 class AssessmentRepository:
@@ -21,6 +22,7 @@ class AssessmentRepository:
         return (
             joinedload(Assessment.company).joinedload(Company.sector),
             joinedload(Assessment.company).joinedload(Company.company_size),
+            joinedload(Assessment.company).joinedload(Company.region_ref),
             joinedload(Assessment.current_axis),
         )
 
@@ -80,15 +82,22 @@ class AssessmentRepository:
         ]
         self.db.add_all(links)
 
-    async def list_assessments(self, limit: int = 50, offset: int = 0) -> list[Assessment]:
-        result = await self.db.execute(
+    async def list_assessments(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        region_code: str | None = None,
+    ) -> list[Assessment]:
+        statement = (
             select(Assessment)
             .options(*self._with_context())
             .join(Company, Company.id == Assessment.company_id)
-            .order_by(Assessment.id.desc())
-            .offset(offset)
-            .limit(limit)
         )
+        if region_code:
+            statement = statement.join(Region, Region.id == Company.region_id).where(
+                Region.name == region_code
+            )
+        result = await self.db.execute(statement.order_by(Assessment.id.desc()).offset(offset).limit(limit))
         return list(result.scalars().all())
 
     async def add_insight(

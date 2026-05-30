@@ -5,17 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.capability import Capability
 from app.db.models.capability_maturity_rubric import CapabilityMaturityRubric
-from app.db.models.capability_recommendation import CapabilityRecommendation
+from app.db.models.capability_quick_win_template import CapabilityQuickWinTemplate
 from app.dependencies.db import get_db
 from app.schemas.admin_capability import (
     CapabilityCreate,
     CapabilityMaturityRubricCreate,
     CapabilityMaturityRubricRead,
     CapabilityMaturityRubricUpdate,
+    CapabilityQuickWinTemplateCreate,
+    CapabilityQuickWinTemplateRead,
+    CapabilityQuickWinTemplateUpdate,
     CapabilityRead,
-    CapabilityRecommendationCreate,
-    CapabilityRecommendationRead,
-    CapabilityRecommendationUpdate,
     CapabilityUpdate,
 )
 
@@ -148,7 +148,6 @@ async def delete_capability(capability_id: int, db: AsyncSession = Depends(get_d
         await _handle_integrity_error(db, "Capability")
     return {"status": "deleted"}
 
-
 @router.get("/capability-maturity-rubrics", response_model=list[CapabilityMaturityRubricRead])
 async def list_capability_maturity_rubrics(
     limit: int = Query(default=1000, ge=1, le=5000),
@@ -252,134 +251,126 @@ async def delete_capability_maturity_rubric(rubric_id: int, db: AsyncSession = D
     return {"status": "deleted"}
 
 
-@router.get("/capability-recommendations", response_model=list[CapabilityRecommendationRead])
-async def list_capability_recommendations(
+@router.get("/capability-quick-win-templates", response_model=list[CapabilityQuickWinTemplateRead])
+async def list_capability_quick_win_templates(
     limit: int = Query(default=1000, ge=1, le=5000),
     offset: int = Query(default=0, ge=0),
     capability_id: int | None = Query(default=None, ge=1),
     maturity_level_id: int | None = Query(default=None, ge=1),
     db: AsyncSession = Depends(get_db),
-) -> list[CapabilityRecommendationRead]:
-    statement = select(CapabilityRecommendation)
+) -> list[CapabilityQuickWinTemplateRead]:
+    statement = select(CapabilityQuickWinTemplate)
     if capability_id is not None:
-        statement = statement.where(CapabilityRecommendation.capability_id == capability_id)
+        statement = statement.where(CapabilityQuickWinTemplate.capability_id == capability_id)
     if maturity_level_id is not None:
-        statement = statement.where(CapabilityRecommendation.maturity_level_id == maturity_level_id)
+        statement = statement.where(CapabilityQuickWinTemplate.maturity_level_id == maturity_level_id)
     result = await db.execute(
-        statement.order_by(CapabilityRecommendation.capability_id.asc(), CapabilityRecommendation.maturity_level_id.asc())
+        statement.order_by(
+            CapabilityQuickWinTemplate.capability_id.asc(),
+            CapabilityQuickWinTemplate.maturity_level_id.asc(),
+        )
         .offset(offset)
         .limit(limit)
     )
     rows = result.scalars().all()
     return [
-        CapabilityRecommendationRead(
+        CapabilityQuickWinTemplateRead(
             id=r.id,
             capability_id=r.capability_id,
             maturity_level_id=r.maturity_level_id,
-            recommendation_guideline=r.recommendation_guideline,
-            priority_hint=r.priority_hint,
-            consultant_note=r.consultant_note,
-            evidence_to_cite=r.evidence_to_cite,
-            initiative_suggestions=r.initiative_suggestions,
-            business_impact=r.business_impact,
-            tone_hint=r.tone_hint,
+            quick_win_guideline=r.quick_win_guideline,
+            after_text=r.after_text,
+            owner_hint=r.owner_hint,
+            timeline_hint=r.timeline_hint,
+            active=r.active,
         )
         for r in rows
     ]
 
 
-@router.post("/capability-recommendations", response_model=CapabilityRecommendationRead)
-async def create_capability_recommendation(
-    payload: CapabilityRecommendationCreate,
+@router.post("/capability-quick-win-templates", response_model=CapabilityQuickWinTemplateRead)
+async def create_capability_quick_win_template(
+    payload: CapabilityQuickWinTemplateCreate,
     db: AsyncSession = Depends(get_db),
-) -> CapabilityRecommendationRead:
-    row = CapabilityRecommendation(
+) -> CapabilityQuickWinTemplateRead:
+    row = CapabilityQuickWinTemplate(
         capability_id=payload.capability_id,
         maturity_level_id=payload.maturity_level_id,
-        recommendation_guideline=payload.recommendation_guideline.strip(),
-        priority_hint=_clean_optional_text(payload.priority_hint),
-        consultant_note=_clean_optional_text(payload.consultant_note),
-        evidence_to_cite=_clean_optional_text(payload.evidence_to_cite),
-        initiative_suggestions=_clean_optional_text(payload.initiative_suggestions),
-        business_impact=_clean_optional_text(payload.business_impact),
-        tone_hint=_clean_optional_text(payload.tone_hint),
+        quick_win_guideline=payload.quick_win_guideline.strip(),
+        after_text=_clean_optional_text(payload.after_text),
+        owner_hint=_clean_optional_text(payload.owner_hint),
+        timeline_hint=_clean_optional_text(payload.timeline_hint),
+        active=payload.active,
     )
     db.add(row)
     try:
         await db.commit()
     except IntegrityError:
-        await _handle_integrity_error(db, "Capability recommendation")
+        await _handle_integrity_error(db, "Capability quick win template")
     await db.refresh(row)
-    return CapabilityRecommendationRead(
+    return CapabilityQuickWinTemplateRead(
         id=row.id,
         capability_id=row.capability_id,
         maturity_level_id=row.maturity_level_id,
-        recommendation_guideline=row.recommendation_guideline,
-        priority_hint=row.priority_hint,
-        consultant_note=row.consultant_note,
-        evidence_to_cite=row.evidence_to_cite,
-        initiative_suggestions=row.initiative_suggestions,
-        business_impact=row.business_impact,
-        tone_hint=row.tone_hint,
+        quick_win_guideline=row.quick_win_guideline,
+        after_text=row.after_text,
+        owner_hint=row.owner_hint,
+        timeline_hint=row.timeline_hint,
+        active=row.active,
     )
 
 
-@router.patch("/capability-recommendations/{recommendation_id}", response_model=CapabilityRecommendationRead)
-async def update_capability_recommendation(
-    recommendation_id: int,
-    payload: CapabilityRecommendationUpdate,
+@router.patch("/capability-quick-win-templates/{template_id}", response_model=CapabilityQuickWinTemplateRead)
+async def update_capability_quick_win_template(
+    template_id: int,
+    payload: CapabilityQuickWinTemplateUpdate,
     db: AsyncSession = Depends(get_db),
-) -> CapabilityRecommendationRead:
-    result = await db.execute(select(CapabilityRecommendation).where(CapabilityRecommendation.id == recommendation_id))
+) -> CapabilityQuickWinTemplateRead:
+    result = await db.execute(select(CapabilityQuickWinTemplate).where(CapabilityQuickWinTemplate.id == template_id))
     row = result.scalar_one_or_none()
     if row is None:
-        raise HTTPException(status_code=404, detail="Capability recommendation not found")
+        raise HTTPException(status_code=404, detail="Capability quick win template not found")
     if payload.capability_id is not None:
         row.capability_id = payload.capability_id
     if payload.maturity_level_id is not None:
         row.maturity_level_id = payload.maturity_level_id
-    if payload.recommendation_guideline is not None:
-        row.recommendation_guideline = payload.recommendation_guideline.strip()
-    if payload.priority_hint is not None:
-        row.priority_hint = _clean_optional_text(payload.priority_hint)
-    if payload.consultant_note is not None:
-        row.consultant_note = _clean_optional_text(payload.consultant_note)
-    if payload.evidence_to_cite is not None:
-        row.evidence_to_cite = _clean_optional_text(payload.evidence_to_cite)
-    if payload.initiative_suggestions is not None:
-        row.initiative_suggestions = _clean_optional_text(payload.initiative_suggestions)
-    if payload.business_impact is not None:
-        row.business_impact = _clean_optional_text(payload.business_impact)
-    if payload.tone_hint is not None:
-        row.tone_hint = _clean_optional_text(payload.tone_hint)
+    if payload.quick_win_guideline is not None:
+        row.quick_win_guideline = payload.quick_win_guideline.strip()
+    fields_set = payload.model_fields_set
+    if "after_text" in fields_set:
+        row.after_text = _clean_optional_text(payload.after_text)
+    if "owner_hint" in fields_set:
+        row.owner_hint = _clean_optional_text(payload.owner_hint)
+    if "timeline_hint" in fields_set:
+        row.timeline_hint = _clean_optional_text(payload.timeline_hint)
+    if payload.active is not None:
+        row.active = payload.active
     try:
         await db.commit()
     except IntegrityError:
-        await _handle_integrity_error(db, "Capability recommendation")
+        await _handle_integrity_error(db, "Capability quick win template")
     await db.refresh(row)
-    return CapabilityRecommendationRead(
+    return CapabilityQuickWinTemplateRead(
         id=row.id,
         capability_id=row.capability_id,
         maturity_level_id=row.maturity_level_id,
-        recommendation_guideline=row.recommendation_guideline,
-        priority_hint=row.priority_hint,
-        consultant_note=row.consultant_note,
-        evidence_to_cite=row.evidence_to_cite,
-        initiative_suggestions=row.initiative_suggestions,
-        business_impact=row.business_impact,
-        tone_hint=row.tone_hint,
+        quick_win_guideline=row.quick_win_guideline,
+        after_text=row.after_text,
+        owner_hint=row.owner_hint,
+        timeline_hint=row.timeline_hint,
+        active=row.active,
     )
 
 
-@router.delete("/capability-recommendations/{recommendation_id}")
-async def delete_capability_recommendation(recommendation_id: int, db: AsyncSession = Depends(get_db)) -> dict[str, str]:
-    result = await db.execute(select(CapabilityRecommendation).where(CapabilityRecommendation.id == recommendation_id))
+@router.delete("/capability-quick-win-templates/{template_id}")
+async def delete_capability_quick_win_template(template_id: int, db: AsyncSession = Depends(get_db)) -> dict[str, str]:
+    result = await db.execute(select(CapabilityQuickWinTemplate).where(CapabilityQuickWinTemplate.id == template_id))
     row = result.scalar_one_or_none()
     if row is None:
-        raise HTTPException(status_code=404, detail="Capability recommendation not found")
+        raise HTTPException(status_code=404, detail="Capability quick win template not found")
     await db.delete(row)
     try:
         await db.commit()
     except IntegrityError:
-        await _handle_integrity_error(db, "Capability recommendation")
+        await _handle_integrity_error(db, "Capability quick win template")
     return {"status": "deleted"}

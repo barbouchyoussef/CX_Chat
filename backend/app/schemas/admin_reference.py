@@ -4,6 +4,8 @@ from pydantic import BaseModel, Field
 class AxisBase(BaseModel):
     code: str = Field(min_length=1, max_length=20)
     name: str = Field(min_length=1, max_length=100)
+    description: str | None = None
+    question_guidelines: str | None = None
     sort_order: int = Field(ge=1)
 
 
@@ -14,6 +16,8 @@ class AxisCreate(AxisBase):
 class AxisUpdate(BaseModel):
     code: str | None = Field(default=None, min_length=1, max_length=20)
     name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = None
+    question_guidelines: str | None = None
     sort_order: int | None = Field(default=None, ge=1)
 
 
@@ -54,6 +58,22 @@ class CompanySizeUpdate(BaseModel):
 
 
 class CompanySizeRead(CompanySizeBase):
+    id: int
+
+
+class RegionBase(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+
+
+class RegionCreate(RegionBase):
+    pass
+
+
+class RegionUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+
+
+class RegionRead(RegionBase):
     id: int
 
 

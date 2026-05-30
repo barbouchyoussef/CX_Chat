@@ -16,8 +16,6 @@ __all__ = [
     "MaturityLevelCache",
     "RecommendationMetrics",
     "SemanticLeadersService",
-    "WebsiteAuditService",
-    "build_website_audit_service",
 ]
 
 
@@ -73,14 +71,6 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "SemanticLeadersService": (
         "app.services.assessment.reporting.semantic_leaders_service",
         "SemanticLeadersService",
-    ),
-    "WebsiteAuditService": (
-        "app.services.assessment.reporting.website_audit_service",
-        "WebsiteAuditService",
-    ),
-    "build_website_audit_service": (
-        "app.services.assessment.reporting.website_audit_service",
-        "build_website_audit_service",
     ),
 }
 

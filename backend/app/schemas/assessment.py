@@ -7,7 +7,6 @@ class StartAssessmentRequest(BaseModel):
     sector: str | None = Field(default=None, min_length=1, max_length=120)
     size: str | None = Field(default=None, min_length=1, max_length=50)
     region: str | None = Field(default=None, min_length=1, max_length=120)
-    website_url: str = Field(min_length=4, max_length=500, pattern=r"^https?://.+\..+")
     prompt_profile: str | None = Field(default=None, min_length=1, max_length=40)
 
 
@@ -20,6 +19,7 @@ class CompanyInfo(BaseModel):
     name: str
     sector: str
     size: str
+    region: str | None = None
 
 
 class AxisProgress(BaseModel):

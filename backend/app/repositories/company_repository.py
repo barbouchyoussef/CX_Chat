@@ -12,15 +12,13 @@ class CompanyRepository:
         name: str,
         sector_id: int,
         size_id: int,
-        region: str | None = None,
-        website_url: str | None = None,
+        region_id: int | None = None,
     ) -> Company:
         company = Company(
             name=name,
             sector_id=sector_id,
             size_id=size_id,
-            region=region,
-            website_url=website_url,
+            region_id=region_id,
         )
         self.db.add(company)
         await self.db.flush()

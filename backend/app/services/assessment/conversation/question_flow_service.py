@@ -165,6 +165,8 @@ class QuestionFlowService:
             transition_topic=primary_missing_topic,
             related_topics=[],
             memory_summary=memory_summary,
+            axis_description=getattr(assessment.current_axis, "description", None),
+            axis_question_guidelines=getattr(assessment.current_axis, "question_guidelines", None),
             question_guidelines=question_guidelines,
             maturity_rubrics=maturity_rubrics,
             conversation_stage=assessment.conversation_stage,

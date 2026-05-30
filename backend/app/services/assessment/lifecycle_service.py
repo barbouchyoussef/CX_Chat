@@ -6,10 +6,10 @@ from app.repositories.assessment_answer_repository import AssessmentAnswerReposi
 from app.repositories.assessment_axis_memory_repository import AssessmentAxisMemoryRepository
 from app.repositories.assessment_idempotency_repository import AssessmentIdempotencyRepository
 from app.repositories.assessment_repository import AssessmentRepository
-from app.repositories.assessment_website_audit_repository import AssessmentWebsiteAuditRepository
 from app.repositories.capability_repository import CapabilityRepository
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.company_size_repository import CompanySizeRepository
+from app.repositories.region_repository import RegionRepository
 from app.repositories.sector_repository import SectorRepository
 from app.schemas.admin import AssessmentListItem, AssessmentsListResponse
 from app.schemas.assessment import (
@@ -46,13 +46,13 @@ class AssessmentService:
         db: AsyncSession,
         sectors: SectorRepository,
         sizes: CompanySizeRepository,
+        regions: RegionRepository,
         companies: CompanyRepository,
         assessments: AssessmentRepository,
         capabilities: CapabilityRepository,
         answers: AssessmentAnswerRepository,
         axis_memory: AssessmentAxisMemoryRepository,
         idempotency: AssessmentIdempotencyRepository,
-        website_audits: AssessmentWebsiteAuditRepository,
         llm_service: LLMService,
         uow: AsyncUnitOfWork,
         state_service: AssessmentStateService,
@@ -63,13 +63,13 @@ class AssessmentService:
         self.db = db
         self.sectors = sectors
         self.sizes = sizes
+        self.regions = regions
         self.companies = companies
         self.assessments = assessments
         self.capabilities = capabilities
         self.answers = answers
         self.axis_memory = axis_memory
         self.idempotency = idempotency
-        self.website_audits = website_audits
         self.llm = llm_service
         self.uow = uow
         self.state = state_service
@@ -83,7 +83,6 @@ class AssessmentService:
         sector_label: str | None,
         company_size_label: str | None,
         region: str | None = None,
-        website_url: str | None = None,
         prompt_profile: str | None = None,
     ):
         async with self.uow:
@@ -97,12 +96,12 @@ class AssessmentService:
                 sector_code=sector_label,
                 company_size_code=company_size_label,
             )
+            region_row = await self.regions.get_by_code_or_name(region)
             company = await self.companies.create(
                 name=company_name,
                 sector_id=sector.id,
                 size_id=size.id,
-                region=region,
-                website_url=website_url,
+                region_id=getattr(region_row, "id", None),
             )
             first_axis = await self.state.get_first_axis()
 
@@ -113,8 +112,6 @@ class AssessmentService:
                 prompt_profile=selected_profile,
             )
             await self.assessments.initialize_scores(assessment.id)
-            if website_url:
-                await self.website_audits.create_pending(assessment_id=assessment.id, website_url=website_url)
             return assessment
 
     async def get_assessment(self, assessment_id: int) -> AssessmentResponse | None:
@@ -128,6 +125,7 @@ class AssessmentService:
         company = assessment.company
         sector_label = getattr(company.sector, "name", "Unknown")
         size_label = getattr(company.company_size, "name", "Unknown")
+        region_label = getattr(getattr(company, "region_ref", None), "name", None)
         current_axis_name = normalize_axis_name(assessment.current_axis.name) if assessment.current_axis is not None else None
 
         return AssessmentResponse(
@@ -136,7 +134,7 @@ class AssessmentService:
             current_axis=current_axis_name,
             state_version=int(assessment.state_version),
             overall_maturity_band=assessment.overall_maturity_band,
-            company=CompanyInfo(id=company.id, name=company.name, sector=sector_label, size=size_label),
+            company=CompanyInfo(id=company.id, name=company.name, sector=sector_label, size=size_label, region=region_label),
             progress=progress,
         )
 
@@ -151,8 +149,13 @@ class AssessmentService:
         ]
         return AssessmentMemoryResponse(assessment_id=assessment_id, items=items)
 
-    async def list_assessments(self, limit: int = 50, offset: int = 0) -> AssessmentsListResponse:
-        rows = await self.assessments.list_assessments(limit=limit, offset=offset)
+    async def list_assessments(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        region_code: str | None = None,
+    ) -> AssessmentsListResponse:
+        rows = await self.assessments.list_assessments(limit=limit, offset=offset, region_code=region_code)
         items: list[AssessmentListItem] = []
         for assessment in rows:
             company = assessment.company
@@ -164,6 +167,7 @@ class AssessmentService:
                     company_name=company.name,
                     sector=getattr(company.sector, "name", ""),
                     size=getattr(company.company_size, "name", ""),
+                    region=getattr(getattr(company, "region_ref", None), "name", None),
                     created_at=assessment.created_at,
                     updated_at=assessment.updated_at,
                 )

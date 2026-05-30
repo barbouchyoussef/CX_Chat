@@ -23,5 +23,6 @@ class AdminUiSectionMetadata(BaseModel):
 
 
 class AdminUiMetadataResponse(BaseModel):
+    axes: AdminUiSectionMetadata
     capabilities: AdminUiSectionMetadata
     recommendations: AdminUiSectionMetadata

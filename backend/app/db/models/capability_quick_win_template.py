@@ -24,6 +24,7 @@ class CapabilityQuickWinTemplate(Base):
         index=True,
     )
     quick_win_guideline: Mapped[str] = mapped_column(Text, nullable=False)
+    after_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     owner_hint: Mapped[str | None] = mapped_column(Text, nullable=True)
     timeline_hint: Mapped[str | None] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")

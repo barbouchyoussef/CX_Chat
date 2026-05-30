@@ -5,14 +5,25 @@ class CapabilityBase(BaseModel):
     axis_id: int = Field(ge=1)
     code: str = Field(min_length=1, max_length=100)
     name: str = Field(min_length=1, max_length=150)
-    description: str | None = None
-    evidence_required: str | None = None
+    description: str | None = Field(
+        default=None,
+        title="Capability definition",
+        description=(
+            "Defines what this capability means. Used by the LLM to understand the business intent "
+            "and separate it from adjacent capabilities."
+        ),
+    )
+    evidence_required: str | None = Field(
+        default=None,
+        title="Evidence signals",
+        description="Examples of concrete proof the LLM should recognize. These are semantic signals, not strict keywords.",
+    )
     question_guidelines: str | None = Field(
         default=None,
-        title="Question guidance for the LLM",
+        title="Question strategy",
         description=(
-            "Business guidance used by the LLM to generate the next question. "
-            "Describe the discovery goal, useful examples, and maturity signals to test. "
+            "Internal guidance used by the LLM to generate the next question. "
+            "Describe the discovery goal, probing approach, and maturity signals to test. "
             "This is not a fixed script shown to the client."
         ),
     )
@@ -27,14 +38,22 @@ class CapabilityUpdate(BaseModel):
     axis_id: int | None = Field(default=None, ge=1)
     code: str | None = Field(default=None, min_length=1, max_length=100)
     name: str | None = Field(default=None, min_length=1, max_length=150)
-    description: str | None = None
-    evidence_required: str | None = None
+    description: str | None = Field(
+        default=None,
+        title="Capability definition",
+        description="Defines what this capability means for LLM scoring and adjacent-capability separation.",
+    )
+    evidence_required: str | None = Field(
+        default=None,
+        title="Evidence signals",
+        description="Examples of concrete proof the LLM should recognize. These are semantic signals, not strict keywords.",
+    )
     question_guidelines: str | None = Field(
         default=None,
-        title="Question guidance for the LLM",
+        title="Question strategy",
         description=(
-            "Business guidance used by the LLM to generate the next question. "
-            "Describe the discovery goal, useful examples, and maturity signals to test."
+            "Internal guidance used by the LLM to generate the next question. "
+            "Describe the discovery goal, probing approach, and maturity signals to test."
         ),
     )
     sort_order: int | None = Field(default=None, ge=1)
@@ -66,97 +85,45 @@ class CapabilityMaturityRubricRead(CapabilityMaturityRubricBase):
     id: int
 
 
-class CapabilityRecommendationBase(BaseModel):
+class CapabilityQuickWinTemplateBase(BaseModel):
     capability_id: int = Field(ge=1)
     maturity_level_id: int = Field(ge=1)
-    recommendation_guideline: str = Field(
+    quick_win_guideline: str = Field(
         min_length=1,
-        title="Recommended action direction",
-        description=(
-            "Primary management action or recommendation logic injected into the final report prompt. "
-            "Write the action direction, not the final polished paragraph."
-        ),
+        title="Quick win guideline",
+        description="Admin-managed quick-win action direction used by the final report quick-win layer.",
     )
-    priority_hint: str | None = Field(
+    after_text: str | None = Field(
         default=None,
-        max_length=40,
-        title="Priority level",
-        description="Priority framing for the recommendation, such as urgent_foundation, build_consistency, or scale_advantage.",
+        title="After text",
+        description="Admin-managed target state shown as the quick-win after text.",
     )
-    consultant_note: str | None = Field(
+    owner_hint: str | None = Field(
         default=None,
-        title="Optional framing note",
-        description="Optional nuance or framing note that helps shape the final wording without overriding the main recommendation.",
+        title="Owner hint",
+        description="Suggested owner role for this quick win.",
     )
-    evidence_to_cite: str | None = Field(
+    timeline_hint: str | None = Field(
         default=None,
-        title="Reference evidence pattern",
-        description="Optional reminder of the type of evidence pattern that usually supports this recommendation.",
+        title="Timeline hint",
+        description="Suggested quick-win timing or sequencing hint.",
     )
-    initiative_suggestions: str | None = Field(
-        default=None,
-        title="Suggested initiatives",
-        description="Optional examples of initiatives or workstreams that can support the recommendation.",
-    )
-    business_impact: str | None = Field(
-        default=None,
-        title="Expected business impact",
-        description="Business or customer outcome expected if the recommendation is implemented well.",
-    )
-    tone_hint: str | None = Field(
-        default="balanced",
-        max_length=40,
-        title="Writing tone",
-        description="Preferred tone for the final recommendation wording, such as direct, balanced, or executive.",
-    )
+    active: bool = Field(default=True)
 
 
-class CapabilityRecommendationCreate(CapabilityRecommendationBase):
+class CapabilityQuickWinTemplateCreate(CapabilityQuickWinTemplateBase):
     pass
 
 
-class CapabilityRecommendationUpdate(BaseModel):
+class CapabilityQuickWinTemplateUpdate(BaseModel):
     capability_id: int | None = Field(default=None, ge=1)
     maturity_level_id: int | None = Field(default=None, ge=1)
-    recommendation_guideline: str | None = Field(
-        default=None,
-        min_length=1,
-        title="Recommended action direction",
-        description="Primary management action or recommendation logic injected into the report prompt.",
-    )
-    priority_hint: str | None = Field(
-        default=None,
-        max_length=40,
-        title="Priority level",
-        description="Priority framing for the recommendation.",
-    )
-    consultant_note: str | None = Field(
-        default=None,
-        title="Optional framing note",
-        description="Optional nuance or framing note for the final recommendation wording.",
-    )
-    evidence_to_cite: str | None = Field(
-        default=None,
-        title="Reference evidence pattern",
-        description="Optional reminder of the evidence pattern typically linked to this recommendation.",
-    )
-    initiative_suggestions: str | None = Field(
-        default=None,
-        title="Suggested initiatives",
-        description="Optional examples of initiatives that can support the recommendation.",
-    )
-    business_impact: str | None = Field(
-        default=None,
-        title="Expected business impact",
-        description="Business or customer outcome expected from the recommendation.",
-    )
-    tone_hint: str | None = Field(
-        default=None,
-        max_length=40,
-        title="Writing tone",
-        description="Preferred tone for the final recommendation wording.",
-    )
+    quick_win_guideline: str | None = Field(default=None, min_length=1)
+    after_text: str | None = None
+    owner_hint: str | None = None
+    timeline_hint: str | None = None
+    active: bool | None = None
 
 
-class CapabilityRecommendationRead(CapabilityRecommendationBase):
+class CapabilityQuickWinTemplateRead(CapabilityQuickWinTemplateBase):
     id: int
