@@ -1,0 +1,8 @@
+benchmark_langsearch_max_requests_per_second=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_SECOND", 1),
+benchmark_langsearch_max_requests_per_minute=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_MINUTE", 20),
+benchmark_langsearch_max_requests_per_day=_get_int("BENCHMARK_LANGSEARCH_MAX_REQUESTS_PER_DAY", 2000),
+benchmark_mistral_max_requests_per_second=_get_int("BENCHMARK_MISTRAL_MAX_REQUESTS_PER_SECOND", 1),
+benchmark_mistral_max_requests_per_minute=_get_int("BENCHMARK_MISTRAL_MAX_REQUESTS_PER_MINUTE", 12),
+benchmark_mistral_max_requests_per_day=_get_int("BENCHMARK_MISTRAL_MAX_REQUESTS_PER_DAY", 1200),
+benchmark_max_langsearch_docs_per_candidate=_get_int("BENCHMARK_MAX_LANGSEARCH_DOCS_PER_CANDIDATE", 8),
+benchmark_max_mistral_calls_per_assessment=_get_int("BENCHMARK_MAX_MISTRAL_CALLS_PER_ASSESSMENT", 4),

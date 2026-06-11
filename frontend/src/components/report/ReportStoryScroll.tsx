@@ -162,7 +162,7 @@ export default function ReportStoryScroll({ report, onBack, companyName }: Props
 
         <FlowSection aria-label="Go further" className="flow-tone-further">
           <div className="flow-stage">
-            <ReportGoFurtherSection />
+            <ReportGoFurtherSection assessmentId={report.assessment_id} />
           </div>
         </FlowSection>
       </FlowArt>

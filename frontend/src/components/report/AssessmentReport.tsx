@@ -27,7 +27,7 @@ export default function AssessmentReport({ report, onBack, companyName }: Props)
               <CapabilitiesAxesSection hero={report.hero} axes={report.working_missing} />
               <ReportLeadersSection snapshot={report.leaders_snapshot} />
               <ReportQuickWinsTimeline timeline={report.quick_wins_timeline} />
-              <ReportGoFurtherSection />
+              <ReportGoFurtherSection assessmentId={report.assessment_id} />
             </>
           }
         />

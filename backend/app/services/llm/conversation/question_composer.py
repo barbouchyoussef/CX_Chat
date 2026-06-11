@@ -147,6 +147,8 @@ class QuestionComposerService:
         transition_topic: str | None,
         related_topics: list[str] | None,
         memory_summary: str | None,
+        axis_description: str | None = None,
+        axis_question_guidelines: str | None = None,
         question_guidelines: list[str] | None = None,
         maturity_rubrics: list[dict] | None = None,
         conversation_stage: str = "intro",

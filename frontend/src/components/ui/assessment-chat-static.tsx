@@ -4,8 +4,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Building2, CheckCircle2, Circle, FileText, Loader2, Send, Sparkles, X } from "lucide-react";
 import { Avatar } from "./avatar-1";
-import AssessmentResultsPage from "./assessment-results-page";
 import AssessmentGeneratingPage from "./assessment-generating-page";
+import AssessmentReport from "../report/AssessmentReport";
+import type { FinalReport } from "../../types/final-report";
 
 type ChatMessage = { id: string; text: string; isUser: boolean };
 type AxisProgress = { axis: string; covered: number; total: number };
@@ -17,71 +18,6 @@ type CompanyProfileForm = {
   companySize: string;
   region: string;
 };
-type FinalReport = {
-  assessment_id: number;
-  hero: {
-    report_title: string;
-    report_date_label?: string | null;
-    company_name?: string | null;
-    sector_name?: string | null;
-    region?: string | null;
-    overall_level?: number | null;
-    overall_level_label?: string | null;
-    overall_maturity_band: string;
-    hero_message?: string | null;
-    strongest_axis?: string | null;
-    strongest_axis_level?: number | null;
-    strongest_axis_level_label?: string | null;
-    priority_axis?: string | null;
-    priority_axis_level?: number | null;
-    priority_axis_level_label?: string | null;
-  };
-  summary: {
-    overall_score_percent: number;
-    overall_maturity_band: string;
-    strongest_axis: string;
-    strongest_axis_score_percent: number;
-    priority_axis: string;
-    priority_axis_score_percent: number;
-    strengths_count: number;
-    pain_points_count: number;
-  };
-  axes: { axis: string; score_percent: number; maturity_band: string }[];
-  strengths: {
-    axis: string;
-    capability: string;
-    maturity_band: string;
-    rationale: string | null;
-    recommendation: string | null;
-    priority: string | null;
-  }[];
-  pain_points: {
-    axis: string;
-    capability: string;
-    maturity_band: string;
-    rationale: string | null;
-    recommendation: string | null;
-    priority: string | null;
-  }[];
-  capabilities: {
-    axis: string;
-    capability: string;
-    maturity_band: string;
-    confidence: number | null;
-    rationale: string | null;
-    recommendation: string | null;
-    priority: string | null;
-  }[];
-  benchmarks: {
-    title: string;
-    url: string;
-    site_name: string | null;
-    published_at: string | null;
-    summary: string | null;
-    method_signal: string | null;
-  }[];
-};
-
 type Props = { onBack?: () => void };
 type OnboardingStage = "await_company_name" | "await_sector_choice" | "await_size_choice" | "assessment_active" | "completed";
 
@@ -489,7 +425,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
         </div>
       );
     }
-    return <AssessmentResultsPage report={finalReport} companyName={companyName} onBack={() => setShowRecommendations(false)} />;
+    return <AssessmentReport report={finalReport} companyName={companyName} onBack={() => setShowRecommendations(false)} />;
   }
 
   if (showGeneratingPage) {

@@ -28,6 +28,7 @@ class Settings:
     mistral_base_url: str
     langsearch_api_key: str | None
     langsearch_base_url: str
+    consultation_receiver_email: str | None
     metabase_site_url: str | None
     metabase_embed_secret: str | None
     metabase_dashboard_id: int | None
@@ -182,6 +183,7 @@ def get_settings() -> Settings:
         mistral_base_url=os.getenv("MISTRAL_BASE_URL", "https://api.mistral.ai/v1"),
         langsearch_api_key=os.getenv("LANGSEARCH_API_KEY"),
         langsearch_base_url=os.getenv("LANGSEARCH_BASE_URL", "https://api.langsearch.com/v1"),
+        consultation_receiver_email=os.getenv("CONSULTATION_RECEIVER_EMAIL"),
         metabase_site_url=os.getenv("METABASE_SITE_URL"),
         metabase_embed_secret=os.getenv("METABASE_EMBED_SECRET"),
         metabase_dashboard_id=int(os.getenv("METABASE_DASHBOARD_ID")) if os.getenv("METABASE_DASHBOARD_ID") else None,

@@ -37,11 +37,13 @@ _MOJIBAKE_REPLACEMENTS = {
 
 class SemanticLeadersService:
     _langsearch_max_retries = 3
+    _rerank_summary_char_limit = 3500
 
     def __init__(self, settings: Settings | None = None, llm_service: "LLMService | None" = None) -> None:
         self.settings = settings or get_settings()
         self.llm = llm_service
         self._metrics: dict[str, int] = {}
+        self._last_rerank_debug: dict = {}
 
     async def build_leaders_snapshot(
         self,
@@ -270,22 +272,16 @@ class SemanticLeadersService:
         )
         reranked = await self._semantic_rerank(
             query=rerank_query,
-            documents=[self._document_text(item) for item in retrieved_documents],
+            documents=[self._document_text_for_rerank(item) for item in retrieved_documents],
             top_n=min(6 if generation_mode == "initial" else 8, len(retrieved_documents)),
         )
+        used_fallback_rerank = False
         if not reranked:
-            if include_debug:
-                return {
-                    "_debug": {
-                        "company_name": candidate.company_name,
-                        "retrieved_count": len(retrieved_documents),
-                        "reranked_count": 0,
-                        "semantic_dedup_skips": 0,
-                        "selected_count": 0,
-                        "reason": "no_rerank_results",
-                    }
-                }
-            return None
+            reranked = self._fallback_rerank_results(
+                documents=retrieved_documents,
+                top_n=min(6 if generation_mode == "initial" else 8, len(retrieved_documents)),
+            )
+            used_fallback_rerank = True
 
         candidate_evidence: list[dict[str, str | None]] = []
         cumulative_relevance_score = 0.0
@@ -379,7 +375,8 @@ class SemanticLeadersService:
                 "semantic_score": aggregate_score,
                 "pre_curation_score": aggregate_score,
                 "mistral_calls": 0,
-                "reason": "retrieved_and_ranked",
+                "reason": "retrieved_with_fallback_rank" if used_fallback_rerank else "retrieved_and_ranked",
+                "rerank_debug": self._last_rerank_debug,
             }
         return payload
 
@@ -507,23 +504,89 @@ class SemanticLeadersService:
 
     async def _semantic_rerank(self, *, query: str, documents: list[str], top_n: int) -> list[dict]:
         if not documents:
+            self._last_rerank_debug = {"status": "skipped", "reason": "no_documents"}
             return []
 
         endpoint = self.settings.langsearch_base_url.rstrip("/") + "/rerank"
+        requested_top_n = min(top_n, len(documents))
         payload = {
             "model": "langsearch-reranker-v1",
             "query": query,
             "documents": documents,
-            "top_n": min(top_n, len(documents)),
+            "top_n": requested_top_n,
             "return_documents": False,
+        }
+        self._last_rerank_debug = {
+            "status": "started",
+            "endpoint": endpoint,
+            "document_count": len(documents),
+            "requested_top_n": requested_top_n,
+            "query_chars": len(query),
+            "total_document_chars": sum(len(document or "") for document in documents),
+            "max_document_chars": max((len(document or "") for document in documents), default=0),
         }
         self._metrics["rerank_calls"] = self._metrics.get("rerank_calls", 0) + 1
         try:
             data = await self._post_langsearch(endpoint=endpoint, payload=payload)
+        except httpx.HTTPStatusError as exc:
+            response = exc.response
+            self._last_rerank_debug = {
+                **self._last_rerank_debug,
+                "status": "http_error",
+                "http_status": response.status_code if response is not None else None,
+                "response_body_preview": self._safe_response_preview(response.text if response is not None else ""),
+            }
+            logger.warning(
+                "Telecom semantic rerank HTTP error status=%s body=%s query=%r",
+                self._last_rerank_debug.get("http_status"),
+                self._last_rerank_debug.get("response_body_preview"),
+                query,
+            )
+            return []
         except Exception as exc:
+            self._last_rerank_debug = {
+                **self._last_rerank_debug,
+                "status": "exception",
+                "exception_type": type(exc).__name__,
+                "exception_message": str(exc)[:500],
+            }
             logger.warning("Telecom semantic rerank failed for query=%r: %s", query, exc)
             return []
-        return list((data or {}).get("results") or [])
+        results = (data or {}).get("results")
+        if results is None and isinstance((data or {}).get("data"), dict):
+            results = ((data or {}).get("data") or {}).get("results")
+        if results is None and isinstance((data or {}).get("data"), list):
+            results = (data or {}).get("data")
+        normalized_results = list(results or [])
+        self._last_rerank_debug = {
+            **self._last_rerank_debug,
+            "status": "completed" if normalized_results else "empty_results",
+            "top_level_keys": sorted((data or {}).keys()),
+            "data_type": type((data or {}).get("data")).__name__ if isinstance(data, dict) else type(data).__name__,
+            "results_count": len(normalized_results),
+        }
+        if not normalized_results:
+            logger.warning(
+                "Telecom semantic rerank returned no results keys=%s data_type=%s document_count=%s",
+                self._last_rerank_debug.get("top_level_keys"),
+                self._last_rerank_debug.get("data_type"),
+                len(documents),
+            )
+        return normalized_results
+
+    def _safe_response_preview(self, text: str, limit: int = 500) -> str:
+        compact = " ".join((text or "").split())
+        return compact[:limit]
+
+    def _fallback_rerank_results(self, *, documents: list[dict], top_n: int) -> list[dict[str, float | int]]:
+        ranked_count = min(max(int(top_n or 0), 0), len(documents))
+        return [
+            {
+                "index": index,
+                "relevance_score": max(0.35, 0.72 - (index * 0.04)),
+            }
+            for index in range(ranked_count)
+        ]
 
     async def _post_langsearch(self, *, endpoint: str, payload: dict) -> dict:
         headers = {
@@ -594,6 +657,18 @@ class SemanticLeadersService:
             f"Title: {normalize_text(str(item.get('title') or '')).strip()}",
             f"Source: {normalize_text(str(item.get('site_name') or '')).strip()}",
             f"Summary: {normalize_text(str(item.get('summary') or '')).strip()}",
+            f"URL: {str(item.get('url') or '').strip()}",
+        ]
+        return "\n".join(part for part in parts if part and not part.endswith(": "))
+
+    def _document_text_for_rerank(self, item: dict) -> str:
+        summary = normalize_text(str(item.get("summary") or "")).strip()
+        if len(summary) > self._rerank_summary_char_limit:
+            summary = summary[: self._rerank_summary_char_limit].rsplit(" ", 1)[0].strip() + "..."
+        parts = [
+            f"Title: {normalize_text(str(item.get('title') or '')).strip()}",
+            f"Source: {normalize_text(str(item.get('site_name') or '')).strip()}",
+            f"Summary: {summary}",
             f"URL: {str(item.get('url') or '').strip()}",
         ]
         return "\n".join(part for part in parts if part and not part.endswith(": "))

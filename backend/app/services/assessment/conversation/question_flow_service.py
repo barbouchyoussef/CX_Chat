@@ -315,6 +315,7 @@ class QuestionFlowService:
         normalized_label = self._normalize_topic_text(label)
         base_score = float(int(row.get("sort_order") or 9999))
         memory_types = self._memory_types_for_capability(memory_summary, label)
+        memory_text = self._normalize_topic_text(memory_summary or "")
         has_feedback_collection_history = self._has_established_feedback_collection_history(history or [])
         latest_text = self._normalize_topic_text(latest_user_answer or "")
         latest_terms = self._important_terms(latest_text)

@@ -1,3 +1,6 @@
+import { useState, type FormEvent } from "react";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 const STUDIO_LOGO_SRC = "/EY_Studio+_Logo_Primary_WithoutStrapline_RGB_White_Yellow_Grad_EN.png";
 
 const OFFERS = [
@@ -317,6 +320,76 @@ const SECTION_STYLES = `
   .report-go-further-shell .section-footer p {
     margin: 0;
   }
+  .report-go-further-shell .consultation-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(7, 10, 24, 0.72);
+    backdrop-filter: blur(12px);
+  }
+  .report-go-further-shell .consultation-modal {
+    width: min(460px, 100%);
+    border-radius: 26px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: linear-gradient(145deg, rgba(20,26,48,0.98), rgba(29,39,76,0.98));
+    box-shadow: 0 28px 90px rgba(0,0,0,0.42);
+    padding: 26px;
+  }
+  .report-go-further-shell .consultation-modal h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+  }
+  .report-go-further-shell .consultation-modal p {
+    margin: 8px 0 0;
+    color: rgba(255,255,255,0.68);
+    line-height: 1.55;
+    font-size: 0.94rem;
+  }
+  .report-go-further-shell .consultation-field {
+    margin-top: 20px;
+  }
+  .report-go-further-shell .consultation-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: rgba(255,255,255,0.78);
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+  .report-go-further-shell .consultation-field input {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    padding: 13px 14px;
+    outline: none;
+  }
+  .report-go-further-shell .consultation-field input:focus {
+    border-color: rgba(255,212,71,0.7);
+    box-shadow: 0 0 0 3px rgba(255,212,71,0.12);
+  }
+  .report-go-further-shell .consultation-error {
+    margin-top: 12px;
+    color: #ffc0d0;
+    font-size: 0.86rem;
+  }
+  .report-go-further-shell .consultation-success {
+    margin-top: 12px;
+    color: #a7f3d0;
+    font-size: 0.86rem;
+  }
+  .report-go-further-shell .consultation-modal-actions {
+    margin-top: 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
   @keyframes reportGoFurtherRiseIn {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
@@ -391,7 +464,8 @@ const SECTION_STYLES = `
     .report-go-further-shell .studio-card,
     .report-go-further-shell .studio-orbit-msg,
     .report-go-further-shell .s-offer,
-    .report-go-further-shell .studio-cta-block {
+    .report-go-further-shell .studio-cta-block,
+    .report-go-further-shell .consultation-modal {
       background: #fff !important;
       border-color: rgba(0, 0, 0, 0.1) !important;
       box-shadow: none !important;
@@ -414,7 +488,61 @@ const SECTION_STYLES = `
   }
 `;
 
-export default function ReportGoFurtherSection() {
+type Props = {
+  assessmentId: number;
+};
+
+export default function ReportGoFurtherSection({ assessmentId }: Props) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [clientName, setClientName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+    setError(null);
+  };
+
+  const closeModal = () => {
+    if (isSubmitting) return;
+    setIsModalOpen(false);
+    setClientName("");
+    setError(null);
+  };
+
+  const handleBookConsultation = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const cleanedName = clientName.trim();
+    if (!cleanedName) {
+      setError("Please enter your name.");
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/consultations/book`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessment_id: assessmentId, client_name: cleanedName }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.detail || "Could not prepare the Gmail message.");
+      }
+      const payload = (await response.json()) as { gmail_url?: string };
+      if (!payload.gmail_url) {
+        throw new Error("The backend did not return a Gmail URL.");
+      }
+      window.open(payload.gmail_url, "_blank", "noopener,noreferrer");
+      setIsModalOpen(false);
+      setClientName("");
+    } catch (exc) {
+      setError(exc instanceof Error ? exc.message : "Could not prepare the Gmail message.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="report-go-further-shell relative overflow-hidden px-3 py-4 text-white sm:px-6 sm:py-6 lg:px-10 lg:py-8 print:px-0 print:py-0">
       <style>{SECTION_STYLES}</style>
@@ -483,7 +611,7 @@ export default function ReportGoFurtherSection() {
                   <div className="scta-sub">No proposal. No commitment. First value delivered in 4 weeks.</div>
                 </div>
                 <div className="scta-actions">
-                  <a href="mailto:cx@studio.ey.com" className="btn-primary">
+                  <button type="button" className="btn-primary" onClick={openModal}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                       <path
                         d="M2 4l6 5 6-5"
@@ -494,10 +622,10 @@ export default function ReportGoFurtherSection() {
                       />
                       <rect x="1" y="3" width="14" height="10" rx="2" stroke="#111318" strokeWidth="1.5" />
                     </svg>
-                    Book a Session
-                  </a>
-                  <a href="mailto:cx@studio.ey.com" className="btn-secondary">
-                    Just send the report
+                    Book consultation
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => window.print()}>
+                    Download PDF
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                       <path
                         d="M2 7h10M8 3l4 4-4 4"
@@ -507,7 +635,7 @@ export default function ReportGoFurtherSection() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -519,6 +647,35 @@ export default function ReportGoFurtherSection() {
           </footer>
         </div>
       </div>
+      {isModalOpen ? (
+        <div className="consultation-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="consultation-title">
+          <form className="consultation-modal" onSubmit={handleBookConsultation}>
+            <h3 id="consultation-title">Book a CX consultation</h3>
+            <p>Enter your name only. Gmail will open with a prepared message that you can review before sending.</p>
+            <div className="consultation-field">
+              <label htmlFor="consultation-client-name">Your name</label>
+              <input
+                id="consultation-client-name"
+                type="text"
+                value={clientName}
+                onChange={(event) => setClientName(event.target.value)}
+                placeholder="Ahmed Ben Ali"
+                disabled={isSubmitting}
+                autoFocus
+              />
+            </div>
+            {error ? <div className="consultation-error">{error}</div> : null}
+            <div className="consultation-modal-actions">
+              <button type="button" className="btn-secondary" onClick={closeModal} disabled={isSubmitting}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary" disabled={isSubmitting || !clientName.trim()}>
+                {isSubmitting ? "Preparing..." : "Open Gmail"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </section>
   );
 }
