@@ -23,6 +23,7 @@ class Assessment(Base):
     current_axis_low_quality_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     pending_followup_hint: Mapped[str | None] = mapped_column(String(255), nullable=True)
     pending_question: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    pending_options: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     pending_focus_capability_id: Mapped[int | None] = mapped_column(
         ForeignKey("capabilities.id"), nullable=True, index=True
     )

@@ -258,6 +258,7 @@ class AnswerFlowService:
     ) -> None:
         prior_clarification_count = int(assessment.clarification_count or 0)
         assessment.pending_question = None
+        assessment.pending_options = None
         if covered_ids:
             assessment.pending_followup_hint = None
             assessment.pending_focus_capability_id = None
@@ -408,6 +409,7 @@ class AnswerFlowService:
 
         pending_focus_capability_id = self.question_flow.resolve_pending_focus_capability_id(assessment)
         assessment.pending_question = None
+        assessment.pending_options = None
         assessment.pending_followup_hint = None
         assessment.pending_focus_capability_id = None
         is_same_active_axis = (
@@ -949,6 +951,7 @@ class AnswerFlowService:
         )
         if clear_pending_question:
             assessment.pending_question = None
+            assessment.pending_options = None
         assessment.pending_followup_hint = pending_followup_hint
         assessment.pending_focus_capability_id = pending_focus_capability_id
         assessment.clarification_count = (
@@ -989,6 +992,7 @@ class AnswerFlowService:
             fallback_capability_id=focus_capability_id,
         )
         assessment.pending_question = None
+        assessment.pending_options = None
         assessment.pending_followup_hint = self.question_flow.set_followup_hint(
             "maturity_confirmation",
             focus_capability_id,

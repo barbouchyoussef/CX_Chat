@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Building2, CheckCircle2, Circle, FileText, Loade
 import { Avatar } from "./avatar-1";
 import AssessmentGeneratingPage from "./assessment-generating-page";
 import AssessmentReport from "../report/AssessmentReport";
+import MultiChoiceOptions from "./multi-choice-input";
 import type { FinalReport } from "../../types/final-report";
 
 type ChatMessage = { id: string; text: string; isUser: boolean };
@@ -57,6 +58,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   const [isReportFetching, setIsReportFetching] = useState(false);
   const [isGeneratingMinDelayDone, setIsGeneratingMinDelayDone] = useState(false);
   const [submittedAnswersCount, setSubmittedAnswersCount] = useState(0);
+  const [questionOptions, setQuestionOptions] = useState<string[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
 
   const progressStats = useMemo(() => {
@@ -120,11 +122,14 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     };
   };
 
-  const fetchNextQuestion = async (assessmentId: number): Promise<string | null> => {
+  const fetchNextQuestion = async (assessmentId: number): Promise<{ question: string | null; options: string[] }> => {
     const response = await fetch(`${API_BASE_URL}/assessments/${assessmentId}/next-question`);
     if (!response.ok) throw new Error("Failed to fetch next question");
     const payload = await response.json();
-    return payload.question ?? payload.message ?? null;
+    return {
+      question: payload.question ?? payload.message ?? null,
+      options: payload.options ?? [],
+    };
   };
 
   const fetchReferenceOptions = async () => {
@@ -153,15 +158,16 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     const snapshot = await fetchAssessmentSnapshot(Number(data.assessment_id));
     setAssessment(snapshot);
     setStage(snapshot.status === "completed" ? "completed" : "assessment_active");
-    const question = await fetchNextQuestion(snapshot.id);
-    if (question) {
+    const result = await fetchNextQuestion(snapshot.id);
+    if (result.question) {
       setMessages([
         {
           id: crypto.randomUUID(),
-          text: `Thank you. I now have your company context. Let's begin the assessment. ${question}`,
+          text: `Thank you. I now have your company context. Let's begin the assessment. ${result.question}`,
           isUser: false,
         },
       ]);
+      setQuestionOptions(result.options);
     }
   };
 
@@ -311,8 +317,11 @@ export default function AssessmentChatStatic({ onBack }: Props) {
         return;
       }
 
-      const question = await fetchNextQuestion(assessment.id);
-      if (question) appendAssistant(question);
+      const result = await fetchNextQuestion(assessment.id);
+      if (result.question) {
+        appendAssistant(result.question);
+        setQuestionOptions(result.options);
+      }
     } finally {
       setIsTyping(false);
     }
@@ -589,6 +598,12 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     );
   }
 
+  const lastAssistantMsgIndex = messages.map((m) => m.isUser).lastIndexOf(false);
+  const displayedMessages =
+    stage === "assessment_active" && lastAssistantMsgIndex >= 0
+      ? messages.slice(lastAssistantMsgIndex)
+      : messages;
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.12),transparent_45%),linear-gradient(180deg,#ffffff,#f8fafc)] px-3 py-3 sm:px-4 sm:py-4">
       <div className="mx-auto w-full max-w-[1400px]">
@@ -691,20 +706,21 @@ export default function AssessmentChatStatic({ onBack }: Props) {
               <>
                 <div className="flex-1 overflow-y-auto bg-white px-4 py-4 sm:px-5">
                   <div className="space-y-4">
-                    {messages.map((msg) => (
+                    {displayedMessages.map((msg) => (
                       <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}>
                         {!msg.isUser ? (
                           <div className="mr-2 mt-1 shrink-0">
                             <Avatar chatbot size={30} alt="CX Assistant avatar" />
                           </div>
                         ) : null}
+
                         <motion.div
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm sm:max-w-[78%] ${
+                          className={`max-w-[95%] rounded-2xl px-5 py-4 text-[17px] leading-relaxed sm:max-w-[90%] shadow-sm ${
                             msg.isUser
-                              ? "rounded-tr-none bg-slate-900 text-white"
-                              : "rounded-tl-none border border-slate-200 bg-slate-50 text-slate-800"
+                              ? "rounded-tr-none bg-slate-900 text-white font-normal"
+                              : "rounded-tl-none border border-slate-200 bg-slate-50 text-slate-800 font-semibold"
                           }`}
                         >
                           {msg.text}
@@ -733,46 +749,79 @@ export default function AssessmentChatStatic({ onBack }: Props) {
                   </div>
                 </div>
 
-                <form
-                  onSubmit={handleSubmit}
-                  className={`border-t px-4 py-4 transition sm:px-5 ${
-                    isFocused ? "border-violet-300 bg-violet-50/30" : "border-slate-100 bg-white"
-                  }`}
-                >
-                  <div className="relative">
-                    <input
-                      value={input}
-                      onChange={(event) => setInput(event.target.value)}
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
-                      placeholder={
-                        stage === "await_company_name"
-                          ? "Type your company name..."
-                          : stage === "await_sector_choice"
-                            ? "Type sector number or name..."
-                            : stage === "await_size_choice"
-                              ? "Type size number or name..."
-                              : "Describe your answer here..."
-                      }
-                      className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-4 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!input.trim() || isTyping}
-                      className={`absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl p-2.5 transition ${
-                        input.trim() && !isTyping
-                          ? "bg-slate-900 text-white hover:bg-slate-800"
-                          : "cursor-not-allowed bg-slate-100 text-slate-400"
-                      }`}
-                      aria-label="Send"
-                    >
-                      <Send className="h-4 w-4" />
-                    </button>
+                <div className="border-t border-slate-100 bg-white p-4 sm:p-5">
+                  <form
+                    onSubmit={handleSubmit}
+                    className={`relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-200 ${
+                      isFocused
+                        ? "border-violet-400 bg-white shadow-md shadow-violet-100 ring-4 ring-violet-50"
+                        : "border-slate-200 bg-white shadow-sm hover:border-slate-300"
+                    }`}
+                  >
+                    {stage === "assessment_active" && !isTyping && questionOptions.length > 0 ? (
+                      <div className="border-b border-slate-100 bg-slate-50/50">
+                        <MultiChoiceOptions
+                          options={questionOptions}
+                          disabled={isTyping}
+                          onSelect={async (text) => {
+                            setQuestionOptions([]);
+                            appendUser(text);
+                            await handleAssessmentMessage(text);
+                          }}
+                        />
+                      </div>
+                    ) : null}
+
+                    <div className="relative flex items-center bg-white min-h-[64px] transition-colors duration-150 hover:bg-violet-50/30">
+                      {stage === "assessment_active" && !isTyping && questionOptions.length > 0 ? (
+                        <div className="pl-6 pr-4">
+                          <span
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[13px] font-bold transition-all duration-150 ${
+                              isFocused
+                                ? "bg-violet-500 text-white shadow-md shadow-violet-200"
+                                : "bg-violet-50 text-violet-500"
+                            }`}
+                          >
+                            {questionOptions.length + 1}
+                          </span>
+                        </div>
+                      ) : null}
+                      <input
+                        value={input}
+                        onChange={(event) => setInput(event.target.value)}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        placeholder={
+                          stage === "await_company_name"
+                            ? "Type your company name..."
+                            : stage === "await_sector_choice"
+                              ? "Type sector number or name..."
+                              : stage === "await_size_choice"
+                                ? "Type size number or name..."
+                                : "Type your own answer or pick an option above..."
+                        }
+                        className={`w-full bg-transparent py-4 pr-14 text-[15px] text-slate-900 placeholder:text-slate-400 focus:outline-none ${
+                          stage === "assessment_active" && !isTyping && questionOptions.length > 0 ? "pl-0" : "pl-5"
+                        }`}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!input.trim() || isTyping}
+                        className={`absolute right-2 rounded-xl p-2 transition-all duration-200 ${
+                          input.trim() && !isTyping
+                            ? "bg-violet-600 text-white shadow-sm hover:bg-violet-700 hover:shadow"
+                            : "cursor-not-allowed bg-slate-100 text-slate-400"
+                        }`}
+                        aria-label="Send"
+                      >
+                        <Send className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </form>
+                  <div className="mt-2.5 px-1">
+                    <p className="text-[13px] font-medium text-slate-400">Press Enter to send or pick an option above.</p>
                   </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <p className="text-xs text-slate-500">Press Enter to send.</p>
-                  </div>
-                </form>
+                </div>
               </>
             ) : (
               <div className="flex flex-1 items-center justify-center p-6">

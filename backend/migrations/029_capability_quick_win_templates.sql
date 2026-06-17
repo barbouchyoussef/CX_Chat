@@ -3,7 +3,7 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS capability_quick_win_templates (
     id SERIAL PRIMARY KEY,
     capability_id INTEGER NOT NULL REFERENCES capabilities(id) ON DELETE CASCADE,
-    maturity_level_id INTEGER NOT NULL REFERENCES mat urity_levels(id) ON DELETE CASCADE,
+    maturity_level_id INTEGER NOT NULL REFERENCES maturity_levels(id) ON DELETE CASCADE,
     quick_win_guideline TEXT NOT NULL,
     owner_hint TEXT,
     timeline_hint TEXT,

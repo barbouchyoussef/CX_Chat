@@ -127,6 +127,7 @@ class AssessmentStateService:
 
         assessment.pending_followup_hint = None
         assessment.pending_question = None
+        assessment.pending_options = None
         assessment.pending_focus_capability_id = None
         assessment.clarification_count = 0
         if next_axis is None:

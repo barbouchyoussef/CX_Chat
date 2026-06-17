@@ -43,6 +43,7 @@ class NextQuestionResponse(BaseModel):
     axis: str | None = None
     question: str | None = None
     message: str | None = None
+    options: list[str] | None = None
 
 
 class AnswerRequest(BaseModel):

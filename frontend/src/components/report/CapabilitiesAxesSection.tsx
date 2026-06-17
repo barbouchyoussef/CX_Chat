@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FinalReportHero, FinalReportWorkingMissingAxis, FinalReportWorkingMissingItem } from "../../types/final-report";
+import { capabilityLinks } from "../../config/capabilityLinks";
 
 type Props = {
   hero: FinalReportHero;
@@ -417,8 +418,8 @@ const SECTION_STYLES = `
   .report-orbit-shell .cap-pill {
     width: 100%;
     border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 20px;
-    padding: 16px 16px 15px;
+    border-radius: 24px;
+    padding: 24px 22px 22px;
     text-align: left;
     color: inherit;
     cursor: pointer;
@@ -427,9 +428,9 @@ const SECTION_STYLES = `
   }
   .report-orbit-shell .cap-pill:hover {
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 16px 28px rgba(0, 0, 0, 0.14);
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
   }
   .report-orbit-shell .cap-pill-top {
     display: flex;
@@ -439,10 +440,11 @@ const SECTION_STYLES = `
   }
   .report-orbit-shell .cap-pill-name {
     margin: 0;
-    font-size: 0.98rem;
-    line-height: 1.35;
+    font-size: 1.1rem;
+    line-height: 1.4;
     font-weight: 700;
     color: #fff;
+    letter-spacing: -0.01em;
   }
   .report-orbit-shell .cap-tag {
     display: inline-flex;
@@ -458,10 +460,10 @@ const SECTION_STYLES = `
   .report-orbit-shell .cap-tag.positive { color: #baf7df; }
   .report-orbit-shell .cap-tag.negative { color: #ffc0d0; }
   .report-orbit-shell .cap-pill-summary {
-    margin: 12px 0 0;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.92rem;
-    line-height: 1.58;
+    margin: 14px 0 0;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.98rem;
+    line-height: 1.65;
   }
   .report-orbit-shell .modal {
     position: fixed;
@@ -479,8 +481,8 @@ const SECTION_STYLES = `
     display: flex;
   }
   .report-orbit-shell .modal-card {
-    width: min(420px, 100%);
-    max-height: min(52vh, 420px);
+    width: min(600px, 100%);
+    max-height: min(70vh, 600px);
     overflow: auto;
     border-radius: 22px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -494,7 +496,7 @@ const SECTION_STYLES = `
     align-items: start;
     justify-content: space-between;
     gap: 16px;
-    padding: 18px 18px 16px;
+    padding: 24px 24px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   }
   .report-orbit-shell .modal-overline {
@@ -506,9 +508,9 @@ const SECTION_STYLES = `
   }
   .report-orbit-shell #modal-title,
   .report-orbit-shell .modal-title {
-    margin: 8px 0 0;
-    font-size: clamp(1.15rem, 3vw, 1.35rem);
-    line-height: 1.18;
+    margin: 12px 0 0;
+    font-size: clamp(1.4rem, 4vw, 1.7rem);
+    line-height: 1.25;
     letter-spacing: -0.04em;
     color: #fff !important;
   }
@@ -523,7 +525,7 @@ const SECTION_STYLES = `
     cursor: pointer;
   }
   .report-orbit-shell .modal-body {
-    padding: 14px 18px 18px;
+    padding: 20px 24px 24px;
   }
   .report-orbit-shell .modal-evidence-list {
     display: flex;
@@ -534,13 +536,13 @@ const SECTION_STYLES = `
     border-radius: 18px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.035);
-    padding: 16px;
+    padding: 24px;
   }
   .report-orbit-shell .evidence-quote {
     margin: 0;
-    color: rgba(255, 255, 255, 0.86);
-    line-height: 1.55;
-    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.65;
+    font-size: 1.05rem;
   }
   @media (max-width: 980px) {
     .report-orbit-shell .axis-grid,
@@ -935,6 +937,19 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                 <p className="evidence-quote">
                   {modalState?.item.evidence_snippet || modalState?.item.summary || ""}
                 </p>
+                {modalState?.item.capability && capabilityLinks[modalState.item.capability] ? (
+                  <div className="mt-5">
+                    <a 
+                      href={capabilityLinks[modalState.item.capability]} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+                    >
+                      View Reference Guide
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -1003,12 +1018,32 @@ function CapabilityButton({
   onOpen: (state: ModalState) => void;
 }) {
   return (
-    <button className="cap-pill" type="button" onClick={() => onOpen({ item, status, axisLabel })}>
+    <div 
+      className="cap-pill group relative cursor-pointer" 
+      onClick={() => onOpen({ item, status, axisLabel })}
+      role="button"
+      tabIndex={0}
+    >
       <div className="cap-pill-top">
         <p className="cap-pill-name">{item.capability}</p>
         <span className={`cap-tag ${status === "working" ? "positive" : "negative"}`}>{item.maturity_band}</span>
       </div>
       <p className="cap-pill-summary">{item.summary}</p>
-    </button>
+      
+      {capabilityLinks[item.capability] ? (
+        <div className="mt-3">
+          <a
+            href={capabilityLinks[item.capability]}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-violet-400 transition hover:text-violet-300"
+          >
+            Reference Guide
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+        </div>
+      ) : null}
+    </div>
   );
 }

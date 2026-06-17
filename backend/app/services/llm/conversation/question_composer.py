@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
 from collections.abc import Awaitable, Callable
@@ -53,7 +54,7 @@ class QuestionComposerService:
         ask_evidence: bool = False,
         helper_mode: bool = False,
         prompt_profile: str = "consultant_guided",
-    ) -> str:
+    ) -> tuple[str, list[str]]:
         topic = transition_topic or (missing[0] if missing else "this axis")
         fallback = self._fallback_question(
             axis=axis,
@@ -64,7 +65,7 @@ class QuestionComposerService:
 
         if not self.settings.mistral_api_key:
             logger.error("Cannot generate question because MISTRAL_API_KEY is not set.")
-            return fallback
+            return fallback, []
 
         messages = self._build_question_messages(
             axis=axis,
@@ -86,17 +87,33 @@ class QuestionComposerService:
         )
         try:
             text = await self._chat_messages(messages)
+            # Robustly extract JSON using regex in case the LLM adds conversational filler
+            json_match = re.search(r'\{.*\}', text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+            else:
+                json_str = text
+                
+            parsed = json.loads(json_str)
+            raw_question = parsed.get("question", fallback)
+            options = parsed.get("options", [])
+            if not isinstance(options, list):
+                options = []
         except Exception as exc:
-            logger.error("LLM question generation failed: %s", exc, exc_info=True)
-            return fallback
+            logger.error("LLM question generation failed or JSON parse error: %s", exc, exc_info=True)
+            logger.error("Raw LLM text was: %s", locals().get('text', 'UNKNOWN'))
+            return fallback, []
 
-        raw_candidate = self._clean_text(text)
+        raw_candidate = self._clean_text(raw_question)
         candidate = self._shape_consultative_text(raw_candidate or fallback)
         candidate = self._ensure_question_text(candidate, fallback, raw_text=raw_candidate)
         candidate = self._reduce_stacked_question(candidate)
         if self._is_duplicate_question(candidate, history):
-            return self._ensure_question_text(fallback, fallback)
-        return candidate
+            return self._ensure_question_text(fallback, fallback), []
+            
+        # Ensure we don't return crazy long options
+        cleaned_options = [self._clean_text(str(opt))[:200] for opt in options if str(opt).strip()]
+        return candidate, cleaned_options
 
     async def generate_clarification_question(
         self,

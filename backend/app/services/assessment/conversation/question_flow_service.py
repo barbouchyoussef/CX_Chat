@@ -61,6 +61,7 @@ class QuestionFlowService:
                 status=assessment.status,
                 axis=axis,
                 question=assessment.pending_question,
+                options=assessment.pending_options,
             )
 
         helper_mode = False
@@ -108,6 +109,7 @@ class QuestionFlowService:
             if pending_hint == "low_quality_exit":
                 assessment.pending_followup_hint = None
                 assessment.pending_question = None
+                assessment.pending_options = None
                 assessment.pending_focus_capability_id = None
                 assessment.clarification_count = 0
                 assessment.current_axis_low_quality_count = 0
@@ -124,6 +126,7 @@ class QuestionFlowService:
             ):
                 assessment.pending_followup_hint = None
                 assessment.pending_question = None
+                assessment.pending_options = None
                 assessment.pending_focus_capability_id = None
                 assessment.clarification_count = 0
             else:
@@ -177,7 +180,7 @@ class QuestionFlowService:
         else:
             assessment.conversation_stage = "deep_dive"
 
-        question = await self.llm.generate_question(
+        question, generated_options = await self.llm.generate_question(
             axis=axis,
             missing=missing,
             history=history,
@@ -200,7 +203,11 @@ class QuestionFlowService:
         assessment.pending_question = question
         assessment.pending_followup_hint = None
         assessment.pending_focus_capability_id = focus.get("primary_capability_id")
-        return NextQuestionResponse(status=assessment.status, axis=axis, question=question)
+        
+        options = generated_options if generated_options and len(generated_options) >= 2 else self._derive_options_from_rubrics(maturity_rubrics)
+        assessment.pending_options = options
+        
+        return NextQuestionResponse(status=assessment.status, axis=axis, question=question, options=options)
 
     async def generate_intent_clarification_question(
         self,
@@ -659,6 +666,36 @@ class QuestionFlowService:
 
     def display_topic_label(self, topic: str | None) -> str:
         return normalize_text(str(topic or "").replace("_", " ")).strip() or "this topic"
+
+    @staticmethod
+    def _derive_options_from_rubrics(rubrics: list[dict]) -> list[str]:
+        """Convert maturity rubric descriptions into concise user-facing answer options."""
+        if not rubrics:
+            return []
+        sorted_rubrics = sorted(rubrics, key=lambda r: int(r.get("maturity_level_number", 0)))
+        options: list[str] = []
+        for rubric in sorted_rubrics:
+            text = str(rubric.get("card_summary") or rubric.get("description") or "").strip()
+            if not text:
+                continue
+            # Strip the "Level N / Label:" prefix if present
+            for prefix_pattern in ("Level 1 / ", "Level 2 / ", "Level 3 / ",
+                                    "Level 1: ", "Level 2: ", "Level 3: "):
+                if text.startswith(prefix_pattern):
+                    text = text[len(prefix_pattern):]
+                    break
+            # Also strip sub-labels like "Basic Reactive: " or "Established: " or "Advanced: "
+            for sub_label in ("Basic Reactive: ", "Basic / Reactive: ", "Established: ", "Advanced: "):
+                if text.startswith(sub_label):
+                    text = text[len(sub_label):]
+                    break
+            # Take the first sentence only to keep it concise
+            first_sentence = text.split(". ")[0].strip()
+            if first_sentence and not first_sentence.endswith("."):
+                first_sentence += "."
+            if first_sentence:
+                options.append(first_sentence)
+        return options
 
     async def _maturity_rubrics_for_focus(self, capability_id: int | None) -> list[dict]:
         if capability_id is None:

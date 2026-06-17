@@ -107,7 +107,7 @@ class LLMService:
         ask_evidence: bool = False,
         helper_mode: bool = False,
         prompt_profile: str = "consultant_guided",
-    ) -> str:
+    ) -> tuple[str, list[str]]:
         return await self.question_composer.generate_question(
             axis=axis,
             missing=missing,
