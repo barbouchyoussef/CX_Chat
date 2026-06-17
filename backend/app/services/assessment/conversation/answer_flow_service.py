@@ -398,21 +398,13 @@ class AnswerFlowService:
             previous_question=previous_question,
         )
         if intent == "LOW_QUALITY":
-            clarification_question = self._build_low_quality_clarification_message(clarification_question)
+            clarification_question = self._build_low_quality_clarification_message(
+                clarification_question,
+                low_quality_count=int(assessment.current_axis_low_quality_count or 0) + 1,
+            )
 
         if intent == "LOW_QUALITY":
-            assessment.current_axis_question_count = int(assessment.current_axis_question_count or 0) + 1
-            assessment.current_axis_low_quality_count = min(
-                int(assessment.current_axis_low_quality_count or 0) + 1,
-                self._max_extra_questions_per_axis(),
-            )
-            await self.state.advance_if_axis_complete(
-                assessment_id=assessment_id,
-                assessment=assessment,
-                max_extra_questions_per_axis=self._max_extra_questions_per_axis(),
-            )
-            if assessment.status == ASSESSMENT_STATUS_COMPLETED:
-                await self.reporting.finalize_completed_assessment(assessment_id=assessment_id, assessment=assessment)
+            assessment.current_axis_low_quality_count = int(assessment.current_axis_low_quality_count or 0) + 1
 
         pending_focus_capability_id = self.question_flow.resolve_pending_focus_capability_id(assessment)
         assessment.pending_question = None
@@ -501,6 +493,7 @@ class AnswerFlowService:
             covered_ids=[capability_id],
             focus_capability_id=capability_id,
         )
+        assessment.pending_followup_hint = self.question_flow.set_followup_hint("low_quality_exit", capability_id)
         next_question_task = self._schedule_next_question_prefetch(assessment, assessment_id, axis, None)
         await self._finalize_parallel_llm_tasks(
             assessment_id=assessment_id,
@@ -548,10 +541,7 @@ class AnswerFlowService:
         rationale = self._low_quality_exit_rationale(answer)
         evidence = self._low_quality_exit_evidence(answer)
 
-        assessment.current_axis_low_quality_count = min(
-            int(assessment.current_axis_low_quality_count or 0) + 1,
-            self._max_extra_questions_per_axis(),
-        )
+        assessment.current_axis_low_quality_count = int(assessment.current_axis_low_quality_count or 0) + 1
         await self.scoring.persist_scoring(
             assessment_id=assessment_id,
             covered_ids=[capability_id],
@@ -581,6 +571,7 @@ class AnswerFlowService:
             covered_ids=[capability_id],
             focus_capability_id=capability_id,
         )
+        assessment.pending_followup_hint = self.question_flow.set_followup_hint("low_quality_exit", capability_id)
         next_question_task = self._schedule_next_question_prefetch(assessment, assessment_id, axis, None)
         await self._finalize_parallel_llm_tasks(
             assessment_id=assessment_id,
@@ -599,7 +590,7 @@ class AnswerFlowService:
         return int(assessment.clarification_count or 0) + 1
 
     def _should_exit_repeated_low_quality(self, assessment: Any) -> bool:
-        threshold = max(2, self._max_extra_questions_per_axis() + 1)
+        threshold = 3
         return int(assessment.current_axis_low_quality_count or 0) + 1 >= threshold
 
     def _should_exit_repeated_confusion(self, assessment: Any) -> bool:
@@ -666,14 +657,19 @@ class AnswerFlowService:
         )
         return any(marker in combined for marker in uncertainty_markers)
 
-    def _build_low_quality_clarification_message(self, clarification_question: str) -> str:
+    def _build_low_quality_clarification_message(self, clarification_question: str, low_quality_count: int) -> str:
         question_text = (clarification_question or "").strip()
         if not question_text:
             question_text = "Could you restate your answer in one clear business sentence?"
-        return (
-            "I didn't understand your last answer, and it doesn't give me a clear business signal. "
-            f"{question_text}"
-        )
+
+        if low_quality_count <= 1:
+            prefix = "I didn't understand your last answer, and it doesn't give me a clear business signal."
+        elif low_quality_count == 2:
+            prefix = "That still does not give me a usable business signal."
+        else:
+            prefix = "I still cannot interpret that answer, so I will move on and continue the assessment."
+
+        return f"{prefix} {question_text}"
 
     async def _force_level_one_for_current_focus(
         self,
@@ -964,10 +960,7 @@ class AnswerFlowService:
         if increment_question_count:
             assessment.current_axis_question_count = int(assessment.current_axis_question_count or 0) + 1
         if increment_low_quality:
-            assessment.current_axis_low_quality_count = min(
-                int(assessment.current_axis_low_quality_count or 0) + 1,
-                self._max_extra_questions_per_axis(),
-            )
+            assessment.current_axis_low_quality_count = int(assessment.current_axis_low_quality_count or 0) + 1
         if increment_question_count:
             await self.state.advance_if_axis_complete(
                 assessment_id=assessment_id,

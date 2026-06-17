@@ -63,6 +63,9 @@ class QuestionFlowService:
                 question=assessment.pending_question,
             )
 
+        helper_mode = False
+        low_quality_exit_bridge = False
+        low_quality_exit_prefix: str | None = None
         axis_capabilities = await self.capabilities.list_for_axis(assessment_id, axis)
         memory_row = await self.axis_memory.get(assessment_id=assessment.id, axis=axis)
         memory_summary = memory_row.summary if memory_row is not None else None
@@ -102,7 +105,18 @@ class QuestionFlowService:
         if assessment.pending_followup_hint:
             pending_hint = self.extract_followup_hint(assessment.pending_followup_hint) or str(assessment.pending_followup_hint or "")
             latest_user_answer = next((turn.content for turn in reversed(history) if turn.role == "user"), "")
-            if await self.should_reset_followup(
+            if pending_hint == "low_quality_exit":
+                assessment.pending_followup_hint = None
+                assessment.pending_question = None
+                assessment.pending_focus_capability_id = None
+                assessment.clarification_count = 0
+                assessment.current_axis_low_quality_count = 0
+                helper_mode = True
+                low_quality_exit_bridge = True
+                low_quality_exit_prefix = (
+                    "I still cannot interpret that answer, so I will move on and continue the assessment."
+                )
+            elif await self.should_reset_followup(
                 latest_user_answer=latest_user_answer,
                 pending_hint=str(assessment.pending_followup_hint or ""),
                 clarification_count=int(assessment.clarification_count or 0),
@@ -138,6 +152,8 @@ class QuestionFlowService:
                 assessment.pending_focus_capability_id = focus.get("primary_capability_id")
                 assessment.conversation_stage = "diagnostic"
                 return NextQuestionResponse(status=assessment.status, axis=axis, question=question)
+        else:
+            low_quality_exit_bridge = False
 
         prompt_profile = str(getattr(assessment, "prompt_profile", "consultant_guided") or "consultant_guided")
         if prompt_profile == "llm_reasoning_light":
@@ -148,7 +164,12 @@ class QuestionFlowService:
         latest_user_answer = next((turn.content for turn in reversed(history) if turn.role == "user"), None)
         sector_label = getattr(assessment.company.sector, "name", "Unknown")
         ask_evidence = int(assessment.current_axis_question_count or 0) >= 1 or int(assessment.current_axis_low_quality_count or 0) > 0
-        helper_mode = self.extract_followup_hint(assessment.pending_followup_hint) == "needs explanation"
+        helper_mode = (
+            helper_mode
+            or self.extract_followup_hint(assessment.pending_followup_hint) == "needs explanation"
+            or int(assessment.current_axis_low_quality_count or 0) > 0
+            or low_quality_exit_bridge
+        )
         if int(assessment.current_axis_question_count or 0) == 0:
             assessment.conversation_stage = "intro"
         elif int(assessment.current_axis_question_count or 0) == 1:
@@ -174,6 +195,8 @@ class QuestionFlowService:
             helper_mode=helper_mode,
             prompt_profile=prompt_profile,
         )
+        if low_quality_exit_prefix:
+            question = f"{low_quality_exit_prefix} {question}".strip()
         assessment.pending_question = question
         assessment.pending_followup_hint = None
         assessment.pending_focus_capability_id = focus.get("primary_capability_id")

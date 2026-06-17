@@ -92,6 +92,7 @@ CLARIFICATION_SYSTEM_PROMPT = (
     "Do not write a long scenario by default.\n"
     "If the user asks for an explanation, give one plain-language sentence, then ask one simpler question.\n"
     "If routing_hint is 'maturity_confirmation', ask one short follow-up that checks the missing proof behind the previous answer, such as routine, owner, tracking, target, or outcome.\n"
+    "If routing_hint is 'low_quality_exit', briefly say that the previous answer could not be interpreted and then move on with one simple question so the assessment can continue.\n"
     "Use a tiny example only if it makes the concept clearer, and keep it under 12 words.\n"
     "EXIT LOGIC: If the user has already been asked to clarify and responds with 'I don't know' or 'I told you, just email', do not attempt another clarification. Transition to a simple question for the next capability.\n"
     "If the user still does not understand, provide one final simple rephrase and let the system handle the transition.\n"
