@@ -8,6 +8,7 @@ class StartAssessmentRequest(BaseModel):
     size: str | None = Field(default=None, min_length=1, max_length=50)
     region: str | None = Field(default=None, min_length=1, max_length=120)
     prompt_profile: str | None = Field(default=None, min_length=1, max_length=40)
+    language: str = Field(default="fr", min_length=2, max_length=10)
 
 
 class StartAssessmentResponse(BaseModel):

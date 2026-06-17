@@ -13,6 +13,7 @@ from app.services.llm.prompts import (
     BATCH_RECOMMENDATION_USER_TEMPLATE,
     RECOMMENDATION_SYSTEM_PROMPT,
     RECOMMENDATION_USER_TEMPLATE,
+    language_directive,
 )
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,7 @@ class RecommendationGeneratorService:
         business_impact: str | None,
         tone_hint: str | None,
         supporting_notes: str | None = None,
+        language: str = "fr",
     ) -> str:
         fallback_parts = [
             (recommendation_guideline or "").strip(),
@@ -86,7 +88,7 @@ class RecommendationGeneratorService:
         )
         try:
             text = await self._chat_messages(
-                [{"role": "system", "content": RECOMMENDATION_SYSTEM_PROMPT}, {"role": "user", "content": user}]
+                [{"role": "system", "content": RECOMMENDATION_SYSTEM_PROMPT + language_directive(language)}, {"role": "user", "content": user}]
             )
         except Exception as exc:
             logger.error("LLM recommendation generation failed: %s", exc, exc_info=True)
@@ -119,7 +121,7 @@ class RecommendationGeneratorService:
             items_json=json.dumps(items, ensure_ascii=False),
         )
         messages = [
-            {"role": "system", "content": BATCH_RECOMMENDATION_SYSTEM_PROMPT},
+            {"role": "system", "content": BATCH_RECOMMENDATION_SYSTEM_PROMPT + language_directive(language)},
             {"role": "user", "content": user},
         ]
         try:

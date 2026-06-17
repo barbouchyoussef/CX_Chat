@@ -402,6 +402,7 @@ class AnswerFlowService:
             clarification_question = self._build_low_quality_clarification_message(
                 clarification_question,
                 low_quality_count=int(assessment.current_axis_low_quality_count or 0) + 1,
+                language=getattr(assessment, "language", "fr"),
             )
 
         if intent == "LOW_QUALITY":
@@ -659,17 +660,33 @@ class AnswerFlowService:
         )
         return any(marker in combined for marker in uncertainty_markers)
 
-    def _build_low_quality_clarification_message(self, clarification_question: str, low_quality_count: int) -> str:
+    def _build_low_quality_clarification_message(self, clarification_question: str, low_quality_count: int, language: str = "fr") -> str:
         question_text = (clarification_question or "").strip()
         if not question_text:
-            question_text = "Could you restate your answer in one clear business sentence?"
+            question_text = (
+                "Could you restate your answer in one clear business sentence?"
+                if language == "en"
+                else "Pourriez-vous reformuler votre réponse en une phrase claire sur votre activité ?"
+            )
 
         if low_quality_count <= 1:
-            prefix = "I didn't understand your last answer, and it doesn't give me a clear business signal."
+            prefix = (
+                "I didn't understand your last answer, and it doesn't give me a clear business signal."
+                if language == "en"
+                else "Je n'ai pas compris votre dernière réponse, et elle ne me donne pas de signal clair."
+            )
         elif low_quality_count == 2:
-            prefix = "That still does not give me a usable business signal."
+            prefix = (
+                "That still does not give me a usable business signal."
+                if language == "en"
+                else "Cela ne me donne toujours pas de signal clair."
+            )
         else:
-            prefix = "I still cannot interpret that answer, so I will move on and continue the assessment."
+            prefix = (
+                "I still cannot interpret that answer, so I will move on and continue the assessment."
+                if language == "en"
+                else "Je n'arrive toujours pas à interpréter cette réponse, je vais donc passer à la suite de l'évaluation."
+            )
 
         return f"{prefix} {question_text}"
 
@@ -712,41 +729,79 @@ class AnswerFlowService:
             return True
         return False
 
-    def _negative_evidence_rationale(self, answer: str) -> str:
+    def _negative_evidence_rationale(self, answer: str, language: str = "fr") -> str:
+        if language == "en":
+            return (
+                "The user explicitly stated they do not know, have no answer, or lack the process; "
+                f"this is recorded as Level 1 maturity evidence. User wording: {self._compact_answer_excerpt(answer)}"
+            )
         return (
-            "The user explicitly stated they do not know, have no answer, or lack the process; "
-            f"this is recorded as Level 1 maturity evidence. User wording: {self._compact_answer_excerpt(answer)}"
+            "L'utilisateur a explicitement déclaré qu'il ne sait pas, n'a pas de réponse ou n'a pas de processus en place ; "
+            f"ceci est enregistré comme un niveau de maturité 1. Formulation de l'utilisateur : {self._compact_answer_excerpt(answer)}"
         )
 
-    def _negative_evidence_evidence(self, answer: str) -> str:
-        return f"User explicitly stated lack of knowledge or process: {self._compact_answer_excerpt(answer)}"
-
-    def _resume_rationale(self, answer: str) -> str:
+    def _negative_evidence_evidence(self, answer: str, language: str = "fr") -> str:
         return (
-            "The user explicitly asked to skip, pass, or move on before providing assessable evidence; "
-            f"this is recorded as Level 1 maturity evidence for the current capability. User wording: {self._compact_answer_excerpt(answer)}"
+            f"User explicitly stated lack of knowledge or process: {self._compact_answer_excerpt(answer)}"
+            if language == "en"
+            else f"L'utilisateur a explicitement mentionné un manque de connaissances ou de processus : {self._compact_answer_excerpt(answer)}"
         )
 
-    def _resume_evidence(self, answer: str) -> str:
-        return f"User explicitly asked to skip or move on: {self._compact_answer_excerpt(answer)}"
-
-    def _low_quality_exit_rationale(self, answer: str) -> str:
+    def _resume_rationale(self, answer: str, language: str = "fr") -> str:
+        if language == "en":
+            return (
+                "The user explicitly asked to skip, pass, or move on before providing assessable evidence; "
+                f"this is recorded as Level 1 maturity evidence for the current capability. User wording: {self._compact_answer_excerpt(answer)}"
+            )
         return (
-            "The user repeatedly provided text that could not be interpreted as credible business evidence; "
-            f"this is recorded as Level 1 maturity evidence rather than inventing details. User wording: {self._compact_answer_excerpt(answer)}"
+            "L'utilisateur a explicitement demandé à passer à la suite sans fournir de preuves tangibles ; "
+            f"ceci est enregistré comme un niveau de maturité 1 pour cette capacité. Formulation de l'utilisateur : {self._compact_answer_excerpt(answer)}"
         )
 
-    def _low_quality_exit_evidence(self, answer: str) -> str:
-        return f"Repeated low-quality or non-interpretable response: {self._compact_answer_excerpt(answer)}"
-
-    def _confusion_exit_rationale(self, answer: str) -> str:
+    def _resume_evidence(self, answer: str, language: str = "fr") -> str:
         return (
-            "The user repeatedly asked for clarification and did not provide assessable business evidence; "
-            f"this is recorded as Level 1 maturity evidence rather than inventing details. User wording: {self._compact_answer_excerpt(answer)}"
+            f"User explicitly asked to skip or move on: {self._compact_answer_excerpt(answer)}"
+            if language == "en"
+            else f"L'utilisateur a explicitement demandé à passer ou à continuer : {self._compact_answer_excerpt(answer)}"
         )
 
-    def _confusion_exit_evidence(self, answer: str) -> str:
-        return f"Repeated clarification request without assessable evidence: {self._compact_answer_excerpt(answer)}"
+    def _low_quality_exit_rationale(self, answer: str, language: str = "fr") -> str:
+        if language == "en":
+            return (
+                "The user repeatedly provided text that could not be interpreted as credible business evidence; "
+                f"this is recorded as Level 1 maturity evidence rather than inventing details. User wording: {self._compact_answer_excerpt(answer)}"
+            )
+        return (
+            "L'utilisateur a fourni à plusieurs reprises du texte ne pouvant être interprété comme une preuve commerciale crédible ; "
+            f"ceci est enregistré comme un niveau de maturité 1 plutôt que d'inventer des détails. Formulation de l'utilisateur : {self._compact_answer_excerpt(answer)}"
+        )
+
+
+
+    def _low_quality_exit_evidence(self, answer: str, language: str = "fr") -> str:
+        return (
+            f"Repeated low-quality or non-interpretable response: {self._compact_answer_excerpt(answer)}"
+            if language == "en"
+            else f"Réponse répétée de faible qualité ou non interprétable : {self._compact_answer_excerpt(answer)}"
+        )
+
+    def _confusion_exit_rationale(self, answer: str, language: str = "fr") -> str:
+        if language == "en":
+            return (
+                "The user repeatedly asked for clarification and did not provide assessable business evidence; "
+                f"this is recorded as Level 1 maturity evidence rather than inventing details. User wording: {self._compact_answer_excerpt(answer)}"
+            )
+        return (
+            "L'utilisateur a demandé des clarifications à plusieurs reprises et n'a pas fourni de preuves tangibles ; "
+            f"ceci est enregistré comme un niveau de maturité 1 plutôt que d'inventer des détails. Formulation de l'utilisateur : {self._compact_answer_excerpt(answer)}"
+        )
+
+    def _confusion_exit_evidence(self, answer: str, language: str = "fr") -> str:
+        return (
+            f"Repeated clarification request without assessable evidence: {self._compact_answer_excerpt(answer)}"
+            if language == "en"
+            else f"Demande de clarification répétée sans preuve tangible : {self._compact_answer_excerpt(answer)}"
+        )
 
     def _compact_answer_excerpt(self, answer: str) -> str:
         value = " ".join(str(answer or "").strip().split())

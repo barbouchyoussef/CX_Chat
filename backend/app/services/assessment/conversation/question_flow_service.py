@@ -117,6 +117,8 @@ class QuestionFlowService:
                 low_quality_exit_bridge = True
                 low_quality_exit_prefix = (
                     "I still cannot interpret that answer, so I will move on and continue the assessment."
+                    if getattr(assessment, "language", "fr") == "en"
+                    else "Je n'arrive toujours pas à interpréter cette réponse, je vais donc passer à la suite de l'évaluation."
                 )
             elif await self.should_reset_followup(
                 latest_user_answer=latest_user_answer,
@@ -145,6 +147,7 @@ class QuestionFlowService:
                     missing_topic=focus_topic,
                     history=history,
                     concerned_question=(assessment.pending_question or "").strip() or None,
+                    language=getattr(assessment, "language", "fr"),
                 )
                 assessment.pending_followup_hint = (
                     assessment.pending_followup_hint
@@ -197,6 +200,7 @@ class QuestionFlowService:
             ask_evidence=ask_evidence,
             helper_mode=helper_mode,
             prompt_profile=prompt_profile,
+            language=getattr(assessment, "language", "fr"),
         )
         if low_quality_exit_prefix:
             question = f"{low_quality_exit_prefix} {question}".strip()

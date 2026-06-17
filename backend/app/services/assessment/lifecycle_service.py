@@ -84,6 +84,7 @@ class AssessmentService:
         company_size_label: str | None,
         region: str | None = None,
         prompt_profile: str | None = None,
+        language: str = "fr",
     ):
         async with self.uow:
             selected_profile = (prompt_profile or "consultant_guided").strip()
@@ -110,6 +111,7 @@ class AssessmentService:
                 status=ASSESSMENT_STATUS_IN_PROGRESS,
                 current_axis_id=first_axis.id if first_axis is not None else None,
                 prompt_profile=selected_profile,
+                language=language,
             )
             await self.assessments.initialize_scores(assessment.id)
             return assessment

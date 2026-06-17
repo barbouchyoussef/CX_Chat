@@ -9,7 +9,7 @@ import httpx
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import Settings
-from app.services.llm.prompts import REPORT_SYNTHESIS_SYSTEM_PROMPT, REPORT_SYNTHESIS_USER_TEMPLATE
+from app.services.llm.prompts import REPORT_SYNTHESIS_SYSTEM_PROMPT, REPORT_SYNTHESIS_USER_TEMPLATE, language_directive
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +106,7 @@ class ReportSynthesisService:
         axes: list[dict[str, Any]],
         strengths: list[dict[str, Any]],
         pain_points: list[dict[str, Any]],
+        language: str = "fr",
     ) -> dict[str, str | None]:
         fallback_summary = (
             f"{company_name} is currently at {overall_maturity_band} maturity "
@@ -137,7 +138,7 @@ class ReportSynthesisService:
         try:
             content = await self._chat_messages(
                 [
-                    {"role": "system", "content": REPORT_SYNTHESIS_SYSTEM_PROMPT},
+                    {"role": "system", "content": REPORT_SYNTHESIS_SYSTEM_PROMPT + language_directive(language)},
                     {"role": "user", "content": user},
                 ]
             )

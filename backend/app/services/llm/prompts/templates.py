@@ -1,3 +1,8 @@
+def language_directive(lang: str) -> str:
+    names = {"fr": "French", "en": "English"}
+    name = names.get(lang, "English")
+    return f"\nCRITICAL: You MUST respond entirely in {name}. All questions, follow-ups, options, and outputs must be written in {name}."
+
 INTENT_ROUTER_SYSTEM_PROMPT = (
     "<role>\n"
     "You classify one user message during a CX maturity assessment.\n"

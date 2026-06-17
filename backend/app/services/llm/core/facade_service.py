@@ -107,6 +107,7 @@ class LLMService:
         ask_evidence: bool = False,
         helper_mode: bool = False,
         prompt_profile: str = "consultant_guided",
+        language: str = "fr",
     ) -> tuple[str, list[str]]:
         return await self.question_composer.generate_question(
             axis=axis,
@@ -125,6 +126,7 @@ class LLMService:
             ask_evidence=ask_evidence,
             helper_mode=helper_mode,
             prompt_profile=prompt_profile,
+            language=language,
         )
 
     async def route_user_intent(self, text: str, previous_question: str | None = None) -> str:
@@ -158,6 +160,7 @@ class LLMService:
         missing_topic: str | None = None,
         history: list[ChatTurn] | None = None,
         concerned_question: str | None = None,
+        language: str = "fr",
     ) -> str:
         return await self.question_composer.generate_clarification_question(
             axis=axis,
@@ -168,6 +171,7 @@ class LLMService:
             missing_topic=missing_topic,
             history=history or [],
             concerned_question=concerned_question,
+            language=language,
         )
 
     async def update_axis_memory(
@@ -212,6 +216,7 @@ class LLMService:
         business_impact: str | None,
         tone_hint: str | None,
         supporting_notes: str | None = None,
+        language: str = "fr",
     ) -> str:
         return await self.recommendation_generator.generate_recommendation(
             axis=axis,
@@ -224,6 +229,7 @@ class LLMService:
             business_impact=business_impact,
             tone_hint=tone_hint,
             supporting_notes=supporting_notes,
+            language=language,
         )
 
     async def generate_recommendations_batch(
@@ -257,6 +263,7 @@ class LLMService:
         axes: list[dict[str, Any]],
         strengths: list[dict[str, Any]],
         pain_points: list[dict[str, Any]],
+        language: str = "fr",
     ) -> dict[str, str | None]:
         return await self.report_synthesis.generate_report_synthesis(
             company_name=company_name,
@@ -269,6 +276,7 @@ class LLMService:
             axes=axes,
             strengths=strengths,
             pain_points=pain_points,
+            language=language,
         )
 
     async def is_confusion_signal(self, answer: str) -> bool:

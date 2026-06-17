@@ -30,6 +30,7 @@ class Assessment(Base):
     conversation_stage: Mapped[str] = mapped_column(String(30), nullable=False, default="intro")
     clarification_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     prompt_profile: Mapped[str] = mapped_column(String(40), nullable=False, default="consultant_guided")
+    language: Mapped[str] = mapped_column(String(10), nullable=False, default="fr")
     executive_summary_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     priority_message_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     leaders_snapshot_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)

@@ -55,12 +55,14 @@ class AssessmentRepository:
         status: str,
         current_axis_id: int | None,
         prompt_profile: str = "consultant_guided",
+        language: str = "fr",
     ) -> Assessment:
         assessment = Assessment(
             company_id=company_id,
             status=status,
             current_axis_id=current_axis_id,
             prompt_profile=prompt_profile,
+            language=language,
         )
         self.db.add(assessment)
         await self.db.flush()

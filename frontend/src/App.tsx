@@ -14,6 +14,7 @@ import CustomizedTimeline from "./components/CustomizedTimeline";
 
 export default function App() {
   const [showChat, setShowChat] = useState(false);
+  const [language, setLanguage] = useState<string>("fr");
   const [adminView, setAdminView] = useState<"dashboard" | "details" | "report">("dashboard");
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | null>(null);
   const [pathname, setPathname] = useState(() => (typeof window === "undefined" ? "/" : window.location.pathname));
@@ -69,14 +70,14 @@ export default function App() {
   }
 
   if (showChat) {
-    return <AssessmentChatStatic onBack={() => setShowChat(false)} />;
+    return <AssessmentChatStatic onBack={() => setShowChat(false)} language={language} />;
   }
 
   return (
     <>
       <NavBar onStartConversation={() => setShowChat(true)} />
       <main style={{ paddingTop: "80px" }}>
-        <Hero onStartConversation={() => setShowChat(true)} />
+        <Hero onStartConversation={() => setShowChat(true)} language={language} onLanguageChange={setLanguage} />
         <HowItWorks />
         <Features />
         <CoreFeaturesShowcase />

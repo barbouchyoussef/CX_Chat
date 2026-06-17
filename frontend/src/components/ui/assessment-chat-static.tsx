@@ -19,14 +19,14 @@ type CompanyProfileForm = {
   companySize: string;
   region: string;
 };
-type Props = { onBack?: () => void };
+type Props = { onBack?: () => void; language?: string };
 type OnboardingStage = "await_company_name" | "await_sector_choice" | "await_size_choice" | "assessment_active" | "completed";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
 const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim().toUpperCase();
 
-export default function AssessmentChatStatic({ onBack }: Props) {
+export default function AssessmentChatStatic({ onBack, language = "fr" }: Props) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -152,7 +152,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
     const response = await fetch(`${API_BASE_URL}/assessments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, language }),
     });
     if (!response.ok) throw new Error(String(response.status));
     const data = await response.json();
@@ -164,7 +164,11 @@ export default function AssessmentChatStatic({ onBack }: Props) {
       setMessages([
         {
           id: crypto.randomUUID(),
-          text: `Thank you. I now have your company context. Let's begin the assessment. ${result.question}`,
+          text: `${
+            language === "fr"
+              ? "Merci. J'ai bien noté le contexte de votre entreprise. Commençons l'évaluation."
+              : "Thank you. I now have your company context. Let's begin the assessment."
+          } ${result.question}`,
           isUser: false,
         },
       ]);

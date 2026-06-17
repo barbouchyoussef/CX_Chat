@@ -16,6 +16,7 @@ from app.services.llm.prompts import (
     CLARIFICATION_SYSTEM_PROMPT,
     QUESTION_SYSTEM_PROMPT_GUIDED,
     QUESTION_USER_TEMPLATE,
+    language_directive,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,7 @@ class QuestionComposerService:
         ask_evidence: bool = False,
         helper_mode: bool = False,
         prompt_profile: str = "consultant_guided",
+        language: str = "fr",
     ) -> tuple[str, list[str]]:
         topic = transition_topic or (missing[0] if missing else "this axis")
         fallback = self._fallback_question(
@@ -84,6 +86,7 @@ class QuestionComposerService:
             ask_evidence=ask_evidence,
             helper_mode=helper_mode,
             prompt_profile=prompt_profile,
+            language=language,
         )
         try:
             text = await self._chat_messages(messages)
@@ -125,6 +128,7 @@ class QuestionComposerService:
         missing_topic: str | None = None,
         history: list[Any] | None = None,
         concerned_question: str | None = None,
+        language: str = "fr",
     ) -> str:
         fallback = "Could you say in one sentence how this works today?"
 
@@ -141,6 +145,7 @@ class QuestionComposerService:
             topic=(missing_topic or "this area").strip(),
             history=history or [],
             concerned_question=concerned_question,
+            language=language,
         )
         try:
             text = await self._chat_messages(messages)
@@ -172,6 +177,7 @@ class QuestionComposerService:
         ask_evidence: bool = False,
         helper_mode: bool = False,
         prompt_profile: str = "consultant_guided",
+        language: str = "fr",
     ) -> list[dict[str, str]]:
         readable_missing = [self._display_topic_label(item) for item in missing[:12]]
         readable_related = [self._display_topic_label(item) for item in (related_topics or [])[:4]]
@@ -208,7 +214,7 @@ class QuestionComposerService:
                 else ""
             ),
         )
-        system_prompt = self._question_system_prompt(prompt_profile)
+        system_prompt = self._question_system_prompt(prompt_profile) + language_directive(language)
         messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
         messages.extend(self._history_to_messages(history))
         messages.append({"role": "user", "content": user})
@@ -227,6 +233,7 @@ class QuestionComposerService:
         topic: str,
         history: list[Any],
         concerned_question: str | None = None,
+        language: str = "fr",
     ) -> list[dict[str, str]]:
         recent_assistant = [
             str(getattr(turn, "content", ""))
@@ -248,7 +255,8 @@ class QuestionComposerService:
             "</clarification_context>\n"
             "<instruction>Write the next clarification message now.</instruction>"
         )
-        return [{"role": "system", "content": CLARIFICATION_SYSTEM_PROMPT}, {"role": "user", "content": user}]
+        system_content = CLARIFICATION_SYSTEM_PROMPT + language_directive(language)
+        return [{"role": "system", "content": system_content}, {"role": "user", "content": user}]
 
     def _build_anchor_block(
         self,

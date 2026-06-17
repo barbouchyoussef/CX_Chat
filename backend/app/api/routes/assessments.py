@@ -69,6 +69,7 @@ async def start_assessment(
             company_size_label=req.size,
             region=req.region,
             prompt_profile=req.prompt_profile,
+            language=req.language,
         )
         return StartAssessmentResponse(assessment_id=assessment.id)
     except (ValueError, RuntimeError) as e:

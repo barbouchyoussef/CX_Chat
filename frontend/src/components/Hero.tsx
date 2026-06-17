@@ -4,6 +4,8 @@ import { Spotlight } from "./ui/spotlight";
 
 type HeroProps = {
   onStartConversation?: () => void;
+  language?: string;
+  onLanguageChange?: (lang: string) => void;
 };
 
 const SplineScene = lazy(() => import("./ui/splite").then((module) => ({ default: module.SplineScene })));
@@ -17,7 +19,7 @@ function HeroRobotFallback() {
   );
 }
 
-export default function Hero({ onStartConversation }: HeroProps) {
+export default function Hero({ onStartConversation, language = "fr", onLanguageChange }: HeroProps) {
   return (
     <section
       id="start"
@@ -61,6 +63,26 @@ export default function Hero({ onStartConversation }: HeroProps) {
                   <path d="M12 5l7 7-7 7" />
                 </svg>
               </button>
+              <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur">
+                <button
+                  type="button"
+                  onClick={() => onLanguageChange?.("fr")}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                    language === "fr" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  FR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onLanguageChange?.("en")}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                    language === "en" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  EN
+                </button>
+              </div>
             </div>
           </FadeUp>
         </div>

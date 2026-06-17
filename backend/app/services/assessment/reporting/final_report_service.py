@@ -50,6 +50,7 @@ from app.services.assessment.reporting.benchmark_service import (
 from app.services.assessment.reporting.telecom_discovery_leaders_service import TelecomDiscoveryLeadersService
 from app.services.assessment.reporting.semantic_leaders_service import SemanticLeadersService
 from app.services.llm.core.facade_service import LLMService, build_llm_service
+from app.services.llm.prompts.templates import language_directive
 from app.services.llm.utils import extract_json
 from app.services.platform import AsyncUnitOfWork
 
@@ -359,6 +360,7 @@ class ReportBuilderService:
         )
         quick_wins_timeline = await self._build_quick_wins_timeline(
             assessment_id=assessment_id,
+            assessment=assessment,
             capability_rows=capability_rows,
             capabilities=capabilities,
             maturity_number_by_id=maturity_number_by_id,
@@ -748,6 +750,7 @@ class ReportBuilderService:
         self,
         *,
         assessment_id: int,
+        assessment: Any,
         capability_rows: list[dict[str, Any]],
         capabilities: list[FinalReportCapabilityItem],
         maturity_number_by_id: dict[int, int],
@@ -860,7 +863,10 @@ class ReportBuilderService:
                 }
             )
 
-        items = await self._shape_quick_wins_with_llm(llm_candidates)
+        items = await self._shape_quick_wins_with_llm(
+            candidates=llm_candidates,
+            language=getattr(assessment, "language", "fr"),
+        )
         return FinalReportQuickWinsTimeline(items=items[:4]) if items else None
 
     def _select_quick_win_candidates(
@@ -950,7 +956,7 @@ class ReportBuilderService:
                 break
         return selected[:4]
 
-    async def _shape_quick_wins_with_llm(self, candidates: list[dict[str, Any]]) -> list[FinalReportQuickWinItem]:
+    async def _shape_quick_wins_with_llm(self, candidates: list[dict[str, Any]], language: str = "fr") -> list[FinalReportQuickWinItem]:
         fallback = [self._fallback_quick_win_item(candidate) for candidate in candidates[:4]]
         if not candidates or not self.settings.mistral_api_key:
             return fallback
@@ -963,7 +969,7 @@ class ReportBuilderService:
             "You write section-4 quick wins for a CX maturity report. "
             "Return JSON only with an object containing an `items` array. "
             "No markdown. No benchmark references. No consultant filler."
-        )
+        ) + language_directive(language)
         user_prompt = (
             "Transform the following capability-level inputs into exactly one quick win per item.\n"
             "Rules:\n"
@@ -1411,6 +1417,7 @@ class ReportBuilderService:
                     }
                     for item in pain_points
                 ],
+                language=getattr(assessment, "language", "fr"),
             )
         except Exception as exc:
             logger.error(
