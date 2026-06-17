@@ -60,6 +60,7 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   const [submittedAnswersCount, setSubmittedAnswersCount] = useState(0);
   const [questionOptions, setQuestionOptions] = useState<string[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
+  const activeQuestionRef = useRef<HTMLDivElement>(null);
 
   const progressStats = useMemo(() => {
     const rows = assessment?.progress ?? [];
@@ -392,8 +393,12 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   }, [stage]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    if (stage === "assessment_active" && activeQuestionRef.current) {
+      activeQuestionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isTyping, stage]);
 
   useEffect(() => {
     if (!showGeneratingPage) return;
@@ -599,10 +604,6 @@ export default function AssessmentChatStatic({ onBack }: Props) {
   }
 
   const lastAssistantMsgIndex = messages.map((m) => m.isUser).lastIndexOf(false);
-  const displayedMessages =
-    stage === "assessment_active" && lastAssistantMsgIndex >= 0
-      ? messages.slice(lastAssistantMsgIndex)
-      : messages;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.12),transparent_45%),linear-gradient(180deg,#ffffff,#f8fafc)] px-3 py-3 sm:px-4 sm:py-4">
@@ -705,9 +706,15 @@ export default function AssessmentChatStatic({ onBack }: Props) {
             {stage !== "completed" ? (
               <>
                 <div className="flex-1 overflow-y-auto bg-white px-4 py-4 sm:px-5">
-                  <div className="space-y-4">
-                    {displayedMessages.map((msg) => (
-                      <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}>
+                  <div className="space-y-4 pb-[50vh]">
+                    {messages.map((msg, idx) => {
+                      const isLatestAssistant = !msg.isUser && idx === lastAssistantMsgIndex;
+                      return (
+                      <div 
+                        key={msg.id} 
+                        ref={isLatestAssistant ? activeQuestionRef : null}
+                        className={`flex ${msg.isUser ? "justify-end" : "justify-start"} scroll-mt-6`}
+                      >
                         {!msg.isUser ? (
                           <div className="mr-2 mt-1 shrink-0">
                             <Avatar chatbot size={30} alt="CX Assistant avatar" />
@@ -726,7 +733,8 @@ export default function AssessmentChatStatic({ onBack }: Props) {
                           {msg.text}
                         </motion.div>
                       </div>
-                    ))}
+                      );
+                    })}
 
                     {isTyping ? (
                       <div className="flex justify-start">
