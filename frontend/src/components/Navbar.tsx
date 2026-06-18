@@ -3,11 +3,30 @@ import "./Navbar.css";
 
 type NavbarProps = {
   onStartConversation?: () => void;
+  language?: string;
 };
 
-export default function Navbar({ onStartConversation }: NavbarProps) {
+const TRANSLATIONS = {
+  fr: {
+    brandTitle: "Évaluation gratuite",
+    howItWorks: "Comment ORION pense",
+    analysis: "Analyse",
+    synthesis: "Synthèse",
+    cta: "Commencer la conversation",
+  },
+  en: {
+    brandTitle: "Free Audit",
+    howItWorks: "How ORION thinks",
+    analysis: "Analysis",
+    synthesis: "Synthesis",
+    cta: "Start the conversation",
+  },
+};
+
+export default function Navbar({ onStartConversation, language = "en" }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const logoSrc = `${import.meta.env.BASE_URL}ey_logo.svg`;
+  const t = TRANSLATIONS[language as "fr" | "en"] || TRANSLATIONS.en;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,21 +43,21 @@ export default function Navbar({ onStartConversation }: NavbarProps) {
         <div className="nav__brand">
           <img src={logoSrc} alt="EY Studio+" className="nav__logo" />
           <span className="nav__separator">|</span>
-          <span className="nav__title">Free CX Audit</span>
+          <span className="nav__title">{t.brandTitle}</span>
         </div>
 
         <div className="nav__links">
           <a href="#methodology" className="nav__link">
-            Methodologie
+            {t.howItWorks}
           </a>
           <a href="#screens" className="nav__link">
-            Analyse
+            {t.analysis}
           </a>
           <a href="#summary" className="nav__link">
-            Synthese
+            {t.synthesis}
           </a>
           <button type="button" className="nav__cta" onClick={onStartConversation}>
-            Start the conversation
+            {t.cta}
           </button>
         </div>
       </div>

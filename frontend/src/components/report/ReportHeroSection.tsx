@@ -15,18 +15,18 @@ const axisLabel = (value?: string | null) =>
 
 const DEFINITIONS = {
   en: {
-    basic: "This designates initial, ad-hoc practices with limited structure or consistency.",
-    established: "This designates defined practices with partial adoption and growing consistency.",
-    advanced: "This designates systematic, embedded practices with clear ownership and continuous improvement.",
+    basic: "Things happen, but informally, without a defined process or clear ownership.",
+    established: "A defined process exists with some accountability and tooling, but it isn't fully optimized or consistently applied everywhere.",
+    advanced: "The practice is mature, consistently executed, and continuously improved as part of how the organization works.",
     listen: "This axis designates the deployment of voice of customer programs, feedback channels, data collection, and metric tracking.",
     manage: "This axis defines the organizational mechanisms that make customer experience accountable: leadership attention, ownership, governance routines, decision rights, culture, and day-to-day reinforcement.",
     analyze: "This axis designates how the organization listens to customers and turns feedback into usable understanding: feedback capture, journey visibility, cross-channel consistency, pattern recognition, and issue prioritization.",
     improve: "This axis defines how the organization acts on customer pain points and measures improvement over time: execution discipline, action ownership, metric review, validation of fixes, and continuous improvement loops."
   },
   fr: {
-    basic: "Ceci désigne des pratiques initiales et ad-hoc avec une structure ou une cohérence limitée.",
-    established: "Ceci désigne des pratiques définies avec une adoption partielle et une cohérence croissante.",
-    advanced: "Ceci désigne des pratiques systématiques et intégrées avec une responsabilité claire et une amélioration continue.",
+    basic: "Les choses se font, mais de manière informelle, sans processus défini ni responsabilité claire.",
+    established: "Un processus défini existe avec une certaine responsabilité et des outils, mais il n'est pas pleinement optimisé ni appliqué de manière cohérente partout.",
+    advanced: "La pratique est mature, exécutée de manière cohérente et améliorée en continu dans le cadre du fonctionnement de l'organisation.",
     listen: "Cet axe désigne le déploiement des canaux d'écoute client, la collecte continue des feedbacks et le suivi des indicateurs de performance clés.",
     manage: "Cet axe définit les mécanismes organisationnels qui responsabilisent la gestion de l'expérience client : attention de la direction, gouvernance, processus de décision, culture et valorisation de l'impact client au quotidien.",
     analyze: "Cet axe désigne la manière dont l'organisation écoute ses clients et transforme les retours en compréhension exploitable : collecte des feedbacks, vision des parcours, cohérence multicanale, analyse des causes racines et priorisation.",
@@ -95,7 +95,7 @@ function PriorityIcon() {
 export default function ReportHeroSection({ report, companyName, onBack }: Props) {
   const hero = report.hero;
   const summary = report.summary;
-  const resolvedCompany = companyName || hero.company_name || "Executive Report";
+  const resolvedCompany = (companyName || hero.company_name || "Executive Report").toUpperCase();
   const overview =
     hero.hero_message?.trim() ||
     summary.executive_summary_text?.trim() ||

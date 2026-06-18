@@ -26,12 +26,33 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000
 const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
 const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim().toUpperCase();
 
+const getAxisProgressSubtitle = (axis: string, lang: string) => {
+  if (axis === "MANAGE") {
+    return lang === "fr"
+      ? "Comment votre organisation s'approprie l'expérience"
+      : "How your organization owns the experience";
+  }
+  if (axis === "ANALYZE") {
+    return lang === "fr"
+      ? "Comment vous transformez les signaux clients en décisions"
+      : "How you turn customer signals into decisions";
+  }
+  if (axis === "IMPROVE") {
+    return lang === "fr"
+      ? "Comment vous agissez, vous adaptez et avancez"
+      : "How you act, adapt, and move forward";
+  }
+  return "";
+};
+
 export default function AssessmentChatStatic({ onBack, language = "fr" }: Props) {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: crypto.randomUUID(),
-      text: "Welcome. I am Orion, EY's CX maturity assessment assistant. Please complete the company profile so I can tailor the assessment context.",
+      text: language === "fr"
+        ? "Bonjour, je suis ORION. Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose. C'est là que j'interviens. Parlez-moi un peu de votre organisation pour commencer."
+        : "Hello, I’m ORION. If you’re here, it means your organization is ready to take an honest look at the experience it delivers. That’s where I come in. Tell me a little about your organization to get us started.",
       isUser: false,
     },
   ]);
@@ -318,7 +339,11 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
       setSubmittedAnswersCount((prev) => prev + 1);
       if (snapshot.status === "completed") {
         setStage("completed");
-        appendAssistant("Thank you â€” we now have enough evidence to build your CX maturity report.");
+        appendAssistant(
+          language === "fr"
+            ? "Merci — nous avons maintenant assez d'éléments pour concevoir votre rapport de maturité de l'expérience client."
+            : "Thank you — we now have enough evidence to build your customer experience maturity report."
+        );
         return;
       }
 
@@ -370,7 +395,9 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
     setMessages([
       {
         id: crypto.randomUUID(),
-        text: "Welcome. I am Orion, EY's CX maturity assessment assistant. Please complete the company profile so I can tailor the assessment context.",
+        text: language === "fr"
+          ? "Bonjour, je suis ORION. Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose. C'est là que j'interviens. Parlez-moi un peu de votre organisation pour commencer."
+          : "Hello, I’m ORION. If you’re here, it means your organization is ready to take an honest look at the experience it delivers. That’s where I come in. Tell me a little about your organization to get us started.",
         isUser: false,
       },
     ]);
@@ -449,6 +476,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
   if (showGeneratingPage) {
     return (
       <AssessmentGeneratingPage
+        language={language}
         onDone={() => {
           setIsGeneratingMinDelayDone(true);
         }}
@@ -468,18 +496,24 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
           >
             <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-violet-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-700">
               <Sparkles className="h-4 w-4" />
-              Orion CX Assessment
+              {language === "fr" ? "Évaluation ORION" : "Orion Assessment"}
             </div>
             <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              Welcome. I am Orion, your EY CX maturity assessment assistant.
+              {language === "fr" ? "Bonjour, je suis ORION." : "Hello, I’m ORION."}
             </h1>
-            <p className="mt-5 text-base leading-7 text-slate-600">
-              Before we begin the interview, I need a short company profile. This helps me adapt the questions and benchmark examples to your business context.
+            <p className="mt-5 text-base leading-7 text-slate-600 whitespace-pre-line">
+              {language === "fr"
+                ? "Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose.\n\nC'est là que j'interviens.\n\nParlez-moi un peu de votre organisation pour commencer."
+                : "If you’re here, it means your organization is ready to take an honest look at the experience it delivers.\n\nThat’s where I come in.\n\nTell me a little about your organization to get us started."}
             </p>
             <div className="mt-7 grid gap-3 text-sm text-slate-700">
               <div className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <Building2 className="mt-0.5 h-5 w-5 text-violet-600" />
-                <span>Sector and company size are used as structured context, not guessed from the company name.</span>
+                <span>
+                  {language === "fr"
+                    ? "Le secteur et la taille de l'entreprise sont utilisés comme contexte structuré, et non devinés à partir du nom."
+                    : "Sector and company size are used as structured context, not guessed from the company name."}
+                </span>
               </div>
             </div>
           </motion.section>
@@ -622,8 +656,12 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
             <div className="mb-6 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-violet-500" />
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">CX Journey</h2>
-                <p className="text-xs text-slate-500">Guided interview</p>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  {language === "fr" ? "Parcours d'évaluation" : "Assessment Journey"}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {language === "fr" ? "Entretien guidé" : "Guided interview"}
+                </p>
               </div>
             </div>
             {assessment ? (
@@ -639,13 +677,20 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     const markerClass = completed ? "text-emerald-500" : current ? "text-violet-500" : "text-slate-300";
                     const textClass = completed ? "text-emerald-700" : current ? "text-violet-700" : "text-slate-500";
                     return (
-                      <div key={axis} className="flex items-center gap-3">
-                        {completed ? (
-                          <CheckCircle2 className={`h-4 w-4 ${markerClass}`} />
-                        ) : (
-                          <Circle className={`h-4 w-4 ${markerClass}`} />
-                        )}
-                        <span className={`text-sm font-medium ${textClass}`}>{axis}</span>
+                      <div key={axis} className="flex items-start gap-3">
+                        <div className="mt-0.5 shrink-0">
+                          {completed ? (
+                            <CheckCircle2 className={`h-4 w-4 ${markerClass}`} />
+                          ) : (
+                            <Circle className={`h-4 w-4 ${markerClass}`} />
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className={`text-xs font-bold uppercase tracking-wider ${textClass}`}>{axis}</span>
+                          <span className="text-[11px] text-slate-500 font-normal mt-0.5 leading-normal">
+                            {getAxisProgressSubtitle(axis, language)}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
@@ -672,7 +717,9 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
               ) : null}
               <Sparkles className="h-5 w-5 text-violet-500" />
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">CX Maturity Assessment Assistant</h2>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  {language === "fr" ? "Discuter avec Orion" : "Chat with Orion"}
+                </h2>
                 <p className="text-xs text-slate-500">
                   {assessment ? `Assessment #${assessment.id} - ${assessment.status}` : "Profiling in chat"}
                 </p>
@@ -721,7 +768,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                       >
                         {!msg.isUser ? (
                           <div className="mr-2 mt-1 shrink-0">
-                            <Avatar chatbot size={30} alt="CX Assistant avatar" />
+                            <Avatar chatbot size={30} alt="Orion Assistant avatar" />
                           </div>
                         ) : null}
 
@@ -743,7 +790,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     {isTyping ? (
                       <div className="flex justify-start">
                         <div className="mr-2 mt-1 shrink-0">
-                          <Avatar chatbot size={30} alt="CX Assistant avatar" />
+                          <Avatar chatbot size={30} alt="Orion Assistant avatar" />
                         </div>
                         <motion.div
                           initial={{ opacity: 0, y: 8 }}
@@ -841,9 +888,15 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-violet-600 shadow-sm">
                     <FileText className="h-7 w-7" />
                   </div>
-                  <p className="text-base font-semibold text-slate-900">Thank you — we now have enough evidence to build your CX maturity report.</p>
+                  <p className="text-base font-semibold text-slate-900">
+                    {language === "fr"
+                      ? "Merci — nous avons maintenant assez d'éléments pour concevoir votre rapport de maturité de l'expérience client."
+                      : "Thank you — we now have enough evidence to build your customer experience maturity report."}
+                  </p>
                   <p className="mt-2 text-sm text-slate-600">
-                    Your report will include strengths, pain points, maturity by axis, and targeted recommendations.
+                    {language === "fr"
+                      ? "Votre rapport comprendra vos points forts, vos axes d'amélioration, la maturité par axe et des recommandations ciblées."
+                      : "Your report will include strengths, pain points, maturity by axis, and targeted recommendations."}
                   </p>
                 </div>
               </div>

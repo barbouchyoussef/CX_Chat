@@ -1,21 +1,46 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
-const resultsLoadingSteps = [
-  "Consolidating evidence across your CX capabilities",
-  "Scoring maturity by axis and surfacing key strengths",
-  "Preparing your business-prioritized action plan",
-];
+
 
 type Props = {
   onDone?: () => void;
   mode?: "client" | "admin";
   onBack?: () => void;
+  language?: string;
 };
 
-export default function AssessmentGeneratingPage({ onDone, mode = "client", onBack }: Props) {
+const TRANSLATIONS = {
+  fr: {
+    loadingSteps: [
+      "Consolidation des preuves pour vos capacités",
+      "Évaluation de la maturité par axe et identification des points forts",
+      "Préparation de votre plan d'action prioritaire",
+    ],
+    synthesisProgress: "Synthèse de la maturité en cours",
+    generatingResults: "Génération de vos résultats de maturité...",
+    generatingDesc: "Nous transformons vos réponses en un rapport complet comprenant la maturité par axe, vos points forts, vos zones d'ombre et des actions prioritaires.",
+    executivePrep: "Préparation du rapport de synthèse",
+  },
+  en: {
+    loadingSteps: [
+      "Consolidating evidence across your capabilities",
+      "Scoring maturity by axis and surfacing key strengths",
+      "Preparing your business-prioritized action plan",
+    ],
+    synthesisProgress: "Maturity synthesis in progress",
+    generatingResults: "Generating your maturity results...",
+    generatingDesc: "We are turning your responses into a leadership-ready report with axis maturity, top strengths, pain points, and prioritized actions.",
+    executivePrep: "Executive report preparation",
+  },
+};
+
+export default function AssessmentGeneratingPage({ onDone, mode = "client", onBack, language = "en" }: Props) {
   const [progress, setProgress] = useState(20);
   const [stepIndex, setStepIndex] = useState(0);
+  const t = TRANSLATIONS[language as "fr" | "en"] || TRANSLATIONS.en;
+
+  const resultsLoadingSteps = t.loadingSteps;
 
   useEffect(() => {
     const progressTimer = window.setInterval(() => {
@@ -38,7 +63,7 @@ export default function AssessmentGeneratingPage({ onDone, mode = "client", onBa
       window.clearInterval(stepTimer);
       if (doneTimer !== null) window.clearTimeout(doneTimer);
     };
-  }, [onDone]);
+  }, [onDone, resultsLoadingSteps]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F8F8FA] px-6 py-12 text-[#111827]">
@@ -85,20 +110,20 @@ export default function AssessmentGeneratingPage({ onDone, mode = "client", onBa
         </div>
 
         <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#C5A04F]">
-          {mode === "admin" ? "Client report preview in progress" : "Maturity synthesis in progress"}
+          {mode === "admin" ? "Client report preview in progress" : t.synthesisProgress}
         </p>
         <h1 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-[#111827] md:text-6xl">
-          {mode === "admin" ? "Preparing client executive report..." : "Generating your CX maturity results..."}
+          {mode === "admin" ? "Preparing client executive report..." : t.generatingResults}
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#667085]">
           {mode === "admin"
             ? "We are assembling scored insights, benchmark signals, and recommendation priorities for consultant review."
-            : "We are turning your responses into a leadership-ready report with axis maturity, top strengths, pain points, and prioritized actions."}
+            : t.generatingDesc}
         </p>
 
         <div className="mx-auto mt-10 max-w-2xl text-left">
           <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-[#667085]">
-            <span>{mode === "admin" ? "Client report preparation" : "Executive report preparation"}</span>
+            <span>{mode === "admin" ? "Client report preparation" : t.executivePrep}</span>
             <span className="text-[#3858E9]">{progress}%</span>
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white shadow-inner">

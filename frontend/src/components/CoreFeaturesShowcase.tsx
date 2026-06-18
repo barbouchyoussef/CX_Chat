@@ -2,26 +2,66 @@ import { Sparkles, Wand2, ArrowUpRight, Bot, Cpu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import FadeUp from "./FadeUp";
 
-const features = [
-  {
-    step: "1",
-    title: "A maturity signal",
-    desc: "How your experience is currently managed",
-    bullets: []
+type CoreFeaturesShowcaseProps = {
+  language?: string;
+};
+
+const TRANSLATIONS = {
+  fr: {
+    headingPart1: "Vous ne repartez pas avec des réponses",
+    headingPart2: "Vous repartez avec de la clarté",
+    subHeadingPart1: "Vous ne repartez pas avec un score",
+    subHeadingPart2: "Vous repartez avec une stratégie",
+    lead: "À la fin de la conversation, ORION synthétise tout pour dresser un portrait structuré de la situation réelle de votre organisation.",
+    features: [
+      {
+        step: "1",
+        title: "Un signal de maturité",
+        subtitle: "Comment votre expérience est actuellement gérée",
+        desc: "Où vous vous situez aujourd'hui, dans toutes les dimensions essentielles.",
+      },
+      {
+        step: "2",
+        title: "Un diagnostic structurel",
+        subtitle: "Là où les données soutiennent ou limitent vos décisions",
+        desc: "Ce qui freine votre organisation, et pourquoi.",
+      },
+      {
+        step: "3",
+        title: "Des priorités claires, pas des conseils génériques",
+        subtitle: "Quels leviers peuvent créer un réel impact",
+        desc: "Les leviers exacts à activer en premier, en fonction de votre contexte spécifique.",
+      },
+    ],
   },
-  {
-    step: "2",
-    title: "A structural diagnosis",
-    desc: "Where data supports (or limits) your decisions",
-    bullets: []
+  en: {
+    headingPart1: "You don’t leave with answers",
+    headingPart2: "You leave with clarity",
+    subHeadingPart1: "You don’t leave with a score",
+    subHeadingPart2: "You leave with a strategy",
+    lead: "At the end of the conversation, ORION synthesizes everything into a structured picture of where your organization truly stands.",
+    features: [
+      {
+        step: "1",
+        title: "A maturity signal",
+        subtitle: "How your experience is currently managed",
+        desc: "Where you stand today, across every dimension that matters.",
+      },
+      {
+        step: "2",
+        title: "A structural diagnosis",
+        subtitle: "Where data supports or limits your decisions",
+        desc: "What’s holding your organization back, and why.",
+      },
+      {
+        step: "3",
+        title: "Clear priorities, not generic advice",
+        subtitle: "Which levers can create real impact",
+        desc: "The exact levers to pull first, based on your specific context.",
+      },
+    ],
   },
-  {
-    step: "3",
-    title: "Clear improvement directions",
-    desc: "Which levers can create real impact",
-    bullets: []
-  }
-];
+};
 
 const scoreRows = [
   ["Strategy & governance", "62%", "#C5A04F"],
@@ -30,9 +70,10 @@ const scoreRows = [
   ["Measurement", "68%", "#3858E9"],
 ];
 
-export default function CoreFeaturesShowcase() {
+export default function CoreFeaturesShowcase({ language = "en" }: CoreFeaturesShowcaseProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
+  const t = TRANSLATIONS[language as "fr" | "en"] || TRANSLATIONS.en;
 
   useEffect(() => {
     const node = sectionRef.current;
@@ -58,33 +99,29 @@ export default function CoreFeaturesShowcase() {
         <div className="grid gap-12 lg:grid-cols-2 items-center">
           {/* LEFT */}
           <div>
-            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight text-gray-900">
-              You don't leave with answers. You leave with clarity.
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-[1.15]">
+              {t.headingPart1} <span className="block text-slate-950">{t.headingPart2}</span>
             </h2>
-            <p className="text-lg text-gray-600 mb-8 mt-4">
-              At the end of the conversation, ORION synthesizes your inputs into a structured reading of your CX maturity.
+            <p className="mt-3 text-xl md:text-2xl font-semibold text-slate-500">
+              {t.subHeadingPart1} <span className="text-slate-500">{t.subHeadingPart2}</span>
+            </p>
+            <p className="text-base text-gray-600 mb-8 mt-4 leading-relaxed">
+              {t.lead}
             </p>
 
-            <div className="mt-10 space-y-10">
-              {features.map(item => (
+            <div className="mt-10 space-y-8">
+              {t.features.map(item => (
                 <div key={item.step} className="flex gap-5">
                   <div className="shrink-0">
-                    <div className="h-11 w-11 rounded-full bg-[#176BFF] text-white flex items-center justify-center font-semibold">
+                    <div className="h-11 w-11 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold">
                       {item.step}
                     </div>
                   </div>
 
                   <div className="min-w-0">
-                    <div className="text-lg font-semibold text-gray-900">{item.title}</div>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-xl">{item.desc}</p>
-
-                    {item.bullets.length > 0 ? (
-                      <ul className="mt-3 space-y-1 text-sm text-gray-600 list-disc pl-5">
-                        {item.bullets.map(b => (
-                          <li key={b}>{b}</li>
-                        ))}
-                      </ul>
-                    ) : null}
+                    <div className="text-lg font-bold text-gray-900 leading-none">{item.title}</div>
+                    <p className="mt-2 text-sm font-semibold text-slate-800 leading-snug">{item.subtitle}</p>
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500 max-w-xl font-normal">{item.desc}</p>
                   </div>
                 </div>
               ))}

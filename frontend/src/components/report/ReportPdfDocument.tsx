@@ -578,7 +578,7 @@ function renderCapability(item: FinalReportCapabilityItem) {
 export default function ReportPdfDocument({ report, companyName }: Props) {
   const hero = report.hero;
   const summary = report.summary;
-  const resolvedCompany = companyName || hero.company_name || "Assessment";
+  const resolvedCompany = (companyName || hero.company_name || "Assessment").toUpperCase();
   const leaders = report.leaders_snapshot?.leaders ?? [];
   const quickWins = report.quick_wins_timeline?.items ?? [];
   const capabilities = report.capabilities ?? [];

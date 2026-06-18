@@ -392,7 +392,7 @@ export default function ReportLeadersSection({ snapshot }: Props) {
               <div className="content-stage active" data-stage="leaders">
                 <div className="stage-meta">
                   <div className="stage-summary">
-                    <h3 className="stage-heading">These leaders run CX as a coordinated growth system, not a collection of good intentions.</h3>
+                    <h3 className="stage-heading">These leaders run customer experience as a coordinated growth system, not a collection of good intentions.</h3>
                   </div>
                 </div>
 

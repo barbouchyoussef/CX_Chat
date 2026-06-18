@@ -607,7 +607,7 @@ export default function ReportGoFurtherSection({ assessmentId }: Props) {
               <div className="studio-cta-block">
                 <div className="scta-text">
                   <div className="scta-label">Ready to start?</div>
-                  <h3 className="scta-heading">Book a free 30-minute strategy session with a sector specialist.</h3>
+                  <h3 className="scta-heading">Book a 30-minute strategy session with a sector specialist.</h3>
                   <div className="scta-sub">No proposal. No commitment. First value delivered in 4 weeks.</div>
                 </div>
                 <div className="scta-actions">
@@ -650,7 +650,7 @@ export default function ReportGoFurtherSection({ assessmentId }: Props) {
       {isModalOpen ? (
         <div className="consultation-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="consultation-title">
           <form className="consultation-modal" onSubmit={handleBookConsultation}>
-            <h3 id="consultation-title">Book a CX consultation</h3>
+            <h3 id="consultation-title">Book a customer experience consultation</h3>
             <p>Enter your name only. Gmail will open with a prepared message that you can review before sending.</p>
             <div className="consultation-field">
               <label htmlFor="consultation-client-name">Your name</label>

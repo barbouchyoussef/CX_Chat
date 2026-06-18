@@ -1,79 +1,92 @@
-import {
-  Zap,
-  FileSearch,
-  Users,
-  Clock,
-  Shield,
-  BarChart3,
-} from "lucide-react";
+import { Sparkles, BarChart3, Lightbulb } from "lucide-react";
 import FadeUp from "./FadeUp";
 
-export default function AuditFeatures() {
-  const features = [
-    {
-      icon: <Zap className="h-6 w-6 text-blue-600" />,
-      title: "Adaptive intelligence",
-      desc: "Upload documents and get instant compliance scoring with highlighted gaps",
-    },
-    {
-      icon: <FileSearch className="h-6 w-6 text-blue-600" />,
-      title: "Smart Evidence Matching",
-      desc: "AI automatically maps evidence to requirements across standards",
-    },
-    {
-      icon: <Users className="h-6 w-6 text-blue-600" />,
-      title: "Real-Time Collaboration",
-      desc: "Work seamlessly with team members, share findings, assign tasks",
-    },
-    {
-      icon: <Clock className="h-6 w-6 text-blue-600" />,
-      title: "Mobile Evidence Capture",
-      desc: "Capture photos, notes, and documents on-site with mobile apps",
-    },
-    {
-      icon: <Shield className="h-6 w-6 text-blue-600" />,
-      title: "Compliance Checklists",
-      desc: "Pre-built templates for ISO, IATF, SOC 2, and custom standards",
-    },
-    {
-      icon: <BarChart3 className="h-6 w-6 text-blue-600" />,
-      title: "Professional Reports",
-      desc: "Generate polished audit reports with charts, findings, and recommendations",
-    },
-  ];
+type FeaturesProps = {
+  language?: string;
+};
+
+const TRANSLATIONS = {
+  fr: {
+    heading: "Une évaluation d'un autre genre",
+    features: [
+      {
+        title: "Adaptatif par nature",
+        desc: "ORION écoute avant de poser des questions. Chaque conversation s'adapte à vos réponses, sans suivre un scénario prédéterminé.",
+      },
+      {
+        title: "Comparé à votre réalité",
+        desc: "Votre score de maturité est mesuré par rapport aux organisations de votre secteur, vous apportant du contexte, pas seulement un chiffre.",
+      },
+      {
+        title: "Des perspectives, pas seulement des résultats",
+        desc: "Ce que vous recevez n'est pas un simple rapport. C'est une vision priorisée de votre situation, de ce qui vous freine et des axes sur lesquels concentrer vos efforts.",
+      },
+    ],
+  },
+  en: {
+    heading: "A different kind of assessment",
+    features: [
+      {
+        title: "Adaptive by nature",
+        desc: "ORION listens before it asks. Every conversation follows your answers, not a predetermined script.",
+      },
+      {
+        title: "Benchmarked to your reality",
+        desc: "Your maturity score is measured against organizations in your industry giving you context, not just a number.",
+      },
+      {
+        title: "Insights, not just results",
+        desc: "What you receive isn’t a report. It’s a prioritized picture of where you stand, what’s holding you back, and where to focus next.",
+      },
+    ],
+  },
+};
+
+const ICONS = [
+  <Sparkles className="h-6 w-6 text-violet-600" />,
+  <BarChart3 className="h-6 w-6 text-violet-600" />,
+  <Lightbulb className="h-6 w-6 text-violet-600" />,
+];
+
+export default function AuditFeatures({ language = "en" }: FeaturesProps) {
+  const t = TRANSLATIONS[language as "fr" | "en"] || TRANSLATIONS.en;
+
+  const features = t.features.map((f, i) => ({
+    ...f,
+    icon: ICONS[i] || ICONS[0],
+  }));
 
   return (
-    <section id="screens" className="bg-gray-50 py-20 md:py-24">
+    <section id="screens" className="bg-slate-50/50 py-20 md:py-24 border-y border-slate-100">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* HEADER */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
           <FadeUp>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Built to understand how your experience really works.
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900">
+              {t.heading}
             </h2>
           </FadeUp>
         </div>
 
         {/* GRID */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {features.map((item, i) => (
             <FadeUp key={i} delay={i % 3 === 0 ? "" : i % 3 === 1 ? "delay-1" : "delay-2"}>
               <div
-                className="bg-white rounded-lg p-6 border border-gray-200 shadow-(--shadow-subtle-sm) hover:shadow-[var(--shadow-subtle-md)] transition"
+                className="bg-white/70 backdrop-blur-md rounded-3xl p-8 border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(15,23,42,0.05)] hover:border-violet-100/50 hover:-translate-y-1 transition-all duration-300"
               >
-                
                 {/* ICON */}
-                <div className="h-12 w-12 rounded-sm bg-blue-100 flex items-center justify-center mb-4">
+                <div className="h-12 w-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mb-6 border border-violet-100/30">
                   {item.icon}
                 </div>
 
                 {/* TEXT */}
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">
                   {item.title}
                 </h3>
 
-                <p className="text-sm text-gray-600">
+                <p className="text-[14px] leading-relaxed text-slate-500 font-normal">
                   {item.desc}
                 </p>
 

@@ -19,7 +19,26 @@ function HeroRobotFallback() {
   );
 }
 
-export default function Hero({ onStartConversation, language = "fr", onLanguageChange }: HeroProps) {
+const TRANSLATIONS = {
+  fr: {
+    bannerLabel: "Chaque interaction est décisive",
+    bannerDesc: "ORION révèle la maturité de votre organisation à transformer ces moments en fidélité, croissance et impact.",
+    heading: "Derrière chaque client fidèle se cache une organisation mature",
+    subtitle: "Découvrez où se situe la vôtre avec ORION  et apprenez ce qu'il faut pour passer au niveau supérieur.",
+    cta: "Demander à ORION où vous vous situez",
+  },
+  en: {
+    bannerLabel: "Every interaction is a make-or-break moment",
+    bannerDesc: "ORION reveals how mature your organization is at turning those moments into loyalty, growth, and impact.",
+    heading: "Behind every loyal customer is a mature organization",
+    subtitle: "Find out where yours stands with ORION  and discover what it takes to get to the next level.",
+    cta: "Ask ORION where you stand",
+  },
+};
+
+export default function Hero({ onStartConversation, language = "en", onLanguageChange }: HeroProps) {
+  const t = TRANSLATIONS[language as "fr" | "en"] || TRANSLATIONS.fr;
+
   return (
     <section
       id="start"
@@ -30,15 +49,14 @@ export default function Hero({ onStartConversation, language = "fr", onLanguageC
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-14 px-6 lg:grid-cols-[minmax(0,1.02fr)_minmax(480px,0.98fr)] lg:px-12">
         <div className="relative z-10 flex max-w-2xl flex-col items-center text-center lg:items-start lg:text-left">
           <FadeUp>
-            <h1 className="mb-6 max-w-[11ch] text-5xl font-medium leading-[0.92] tracking-[-0.06em] text-[#111827] md:text-8xl">
-              Understand your customer experience!
+            <h1 className="mb-6 text-4xl font-medium leading-[1.05] tracking-[-0.04em] text-[#111827] sm:text-5xl md:text-7xl max-w-2xl">
+              {t.heading}
             </h1>
           </FadeUp>
 
           <FadeUp delay="delay-1">
             <p className="max-w-xl text-lg font-light leading-8 text-[#374151] md:text-2xl md:leading-10">
-              ORION is an intelligent CX agent that analyzes how your customer experience is managed, measured, and
-              optimized through a dynamic conversation adapted to your organization maturity.
+              {t.subtitle}
             </p>
           </FadeUp>
 
@@ -49,7 +67,7 @@ export default function Hero({ onStartConversation, language = "fr", onLanguageC
                 onClick={onStartConversation}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#111827] px-8 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1f2937]"
               >
-                Start the conversation
+                {t.cta}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -67,18 +85,16 @@ export default function Hero({ onStartConversation, language = "fr", onLanguageC
                 <button
                   type="button"
                   onClick={() => onLanguageChange?.("fr")}
-                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
-                    language === "fr" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
-                  }`}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${language === "fr" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+                    }`}
                 >
                   FR
                 </button>
                 <button
                   type="button"
                   onClick={() => onLanguageChange?.("en")}
-                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
-                    language === "en" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
-                  }`}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${language === "en" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+                    }`}
                 >
                   EN
                 </button>

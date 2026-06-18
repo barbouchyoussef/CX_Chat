@@ -10,36 +10,36 @@ const MATURITY_CARDS = {
   en: {
     1: {
       title: "Basic",
-      desc: "Initial, loosely formalized practices. Processes are reactive and undocumented.",
-      tooltip: "This designates initial, ad-hoc practices with limited structure or consistency."
+      desc: "Things happen, but informally, without a defined process or clear ownership.",
+      tooltip: "Things happen, but informally, without a defined process or clear ownership."
     },
     2: {
       title: "Established",
-      desc: "Defined and partially standardized processes. Improvement is underway.",
-      tooltip: "This designates defined practices with partial adoption and growing consistency."
+      desc: "A defined process exists with some accountability and tooling, but it isn't fully optimized or consistently applied everywhere.",
+      tooltip: "A defined process exists with some accountability and tooling, but it isn't fully optimized or consistently applied everywhere."
     },
     3: {
       title: "Advanced",
-      desc: "Optimized, measured, and continuously improving practices.",
-      tooltip: "This designates systematic, embedded practices with clear ownership and continuous improvement."
+      desc: "The practice is mature, consistently executed, and continuously improved as part of how the organization works.",
+      tooltip: "The practice is mature, consistently executed, and continuously improved as part of how the organization works."
     },
     yourPosition: "Your position"
   },
   fr: {
     1: {
       title: "Basique",
-      desc: "Pratiques initiales, peu formalisées. Les processus sont réactifs et non documentés.",
-      tooltip: "Ceci désigne des pratiques initiales et ad-hoc avec une structure ou une cohérence limitée."
+      desc: "Les choses se font, mais de manière informelle, sans processus défini ni responsabilité claire.",
+      tooltip: "Les choses se font, mais de manière informelle, sans processus défini ni responsabilité claire."
     },
     2: {
       title: "Intermédiaire",
-      desc: "Processus définis et partiellement standardisés. Amélioration en cours.",
-      tooltip: "Ceci désigne des pratiques définies avec une adoption partielle et une cohérence croissante."
+      desc: "Un processus défini existe avec une certaine responsabilité et des outils, mais il n'est pas pleinement optimisé ni appliqué de manière cohérente partout.",
+      tooltip: "Un processus défini existe avec une certaine responsabilité et des outils, mais il n'est pas pleinement optimisé ni appliqué de manière cohérente partout."
     },
     3: {
       title: "Avancé",
-      desc: "Pratiques optimisées, mesurées et en amélioration continue.",
-      tooltip: "Ceci désigne des pratiques systématiques et intégrées avec une responsabilité claire et une amélioration continue."
+      desc: "La pratique est mature, exécutée de manière cohérente et améliorée en continu dans le cadre du fonctionnement de l'organisation.",
+      tooltip: "La pratique est mature, exécutée de manière cohérente et améliorée en continu dans le cadre du fonctionnement de l'organisation."
     },
     yourPosition: "Votre position"
   }
@@ -80,7 +80,7 @@ function CompetitorChip({
     >
       <div className="flex items-center justify-between gap-3">
         <p className="m-0 text-[1.12rem] font-bold leading-tight tracking-[-0.02em] text-white">
-          {competitor.company_name}
+          {competitor.is_you ? competitor.company_name.toUpperCase() : competitor.company_name}
         </p>
       </div>
       {competitor.is_you && (
@@ -356,7 +356,7 @@ export default function CompetitiveLandscapeSection({ competitiveLandscape }: Pr
               stageLevel={currentStageIndex}
               competitors={currentStage.competitors.map((c) => ({
                 key: c.key,
-                company_name: c.company_name,
+                company_name: c.is_you ? c.company_name.toUpperCase() : c.company_name,
                 note: c.note,
               }))}
               selectedCompetitorKey={selectedCompetitorKey}

@@ -17,89 +17,40 @@ const MATURITY_CARDS = {
   en: {
     1: {
       title: "Basic",
-      desc: "Initial, loosely formalized practices. Processes are reactive and undocumented.",
-      tooltip: "This designates initial, ad-hoc practices with limited structure or consistency."
+      desc: "Things happen, but informally, without a defined process or clear ownership.",
+      tooltip: ""
     },
     2: {
       title: "Established",
-      desc: "Defined and partially standardized processes. Improvement is underway.",
-      tooltip: "This designates defined practices with partial adoption and growing consistency."
+      desc: "A defined process exists with some accountability and tooling, but it isn't fully optimized or consistently applied everywhere.",
+      tooltip: ""
     },
     3: {
       title: "Advanced",
-      desc: "Optimized, measured, and continuously improving practices.",
-      tooltip: "This designates systematic, embedded practices with clear ownership and continuous improvement."
+      desc: "The practice is mature, consistently executed, and continuously improved as part of how the organization works.",
+      tooltip: ""
     },
     yourPosition: "Your position"
   },
   fr: {
     1: {
       title: "Basique",
-      desc: "Pratiques initiales, peu formalisées. Les processus sont réactifs et non documentés.",
-      tooltip: "Ceci désigne des pratiques initiales et ad-hoc avec une structure ou une cohérence limitée."
+      desc: "Les choses se font, mais de manière informelle, sans processus défini ni responsabilité claire.",
+      tooltip: ""
     },
     2: {
       title: "Intermédiaire",
-      desc: "Processus définis et partiellement standardisés. Amélioration en cours.",
-      tooltip: "Ceci désigne des pratiques définies avec une adoption partielle et une cohérence croissante."
+      desc: "Un processus défini existe avec une certaine responsabilité et des outils, mais il n'est pas pleinement optimisé ni appliqué de manière cohérente partout.",
+      tooltip: ""
     },
     3: {
       title: "Avancé",
-      desc: "Pratiques optimisées, mesurées et en amélioration continue.",
-      tooltip: "Ceci désigne des pratiques systématiques et intégrées avec une responsabilité claire et une amélioration continue."
+      desc: "La pratique est mature, exécutée de manière cohérente et améliorée en continu dans le cadre du fonctionnement de l'organisation.",
+      tooltip: ""
     },
     yourPosition: "Votre position"
   }
 };
-
-function InfoTooltip({ explanation, stage }: { explanation: string; stage: number }) {
-  if (!explanation) return null;
-
-  let accentBorder = "border-white/15";
-  let arrowBorder = "border-r border-b border-white/15";
-  let shadowGlow = "shadow-[0_12px_36px_rgba(0,0,0,0.6)]";
-
-  if (stage === 1) {
-    accentBorder = "border-amber-400/40";
-    arrowBorder = "border-r border-b border-amber-400/40";
-    shadowGlow = "shadow-[0_12px_36px_rgba(255,212,71,0.15),0_4px_16px_rgba(0,0,0,0.6)]";
-  } else if (stage === 2) {
-    accentBorder = "border-cyan-400/45";
-    arrowBorder = "border-r border-b border-cyan-400/45";
-    shadowGlow = "shadow-[0_12px_36px_rgba(0,212,255,0.15),0_4px_16px_rgba(0,0,0,0.6)]";
-  } else if (stage === 3) {
-    accentBorder = "border-violet-400/40";
-    arrowBorder = "border-r border-b border-violet-400/40";
-    shadowGlow = "shadow-[0_12px_36px_rgba(124,92,255,0.15),0_4px_16px_rgba(0,0,0,0.6)]";
-  }
-
-  return (
-    <span className="relative group/info inline-flex items-center print:hidden select-none">
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[21px] w-[21px] text-white/50 hover:text-white transition-colors duration-150 cursor-help"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 16v-4" />
-        <path d="M12 8h.01" />
-      </svg>
-      
-      {/* Tooltip Card */}
-      <span className={`absolute bottom-full left-1/2 z-50 mb-3.5 w-80 -translate-x-1/2 scale-95 rounded-xl border ${accentBorder} bg-[#131622]/99 p-4.5 ${shadowGlow} backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100`}>
-        <span className="block text-left font-sans text-[0.92rem] leading-relaxed text-white font-normal normal-case tracking-wide">
-          {explanation}
-        </span>
-        {/* Arrow */}
-        <span className={`absolute top-full left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-[5px] rotate-45 ${arrowBorder} bg-[#131622]/99`} />
-      </span>
-    </span>
-  );
-}
 
 const SECTION_STYLES = `
   .report-orbit-shell {
@@ -840,7 +791,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                 const stageData = labels[stage as 1 | 2 | 3];
                 
                 // Staircase heights
-                const heightClass = stage === 1 ? "min-h-[130px]" : stage === 2 ? "min-h-[190px]" : "min-h-[250px]";
+                const heightClass = stage === 1 ? "min-h-[160px]" : stage === 2 ? "min-h-[215px]" : "min-h-[270px]";
                 
                 // Color configuration matching EY theme gradients
                 let topBarGradient = "bg-white/10";
@@ -850,6 +801,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                 let activeBorderClass = "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005))] hover:border-white/20 hover:bg-white/[0.03]";
                 let titleColor = "text-white/80 group-hover:text-white font-medium";
                 let subtitleColor = "text-white/40 group-hover:text-white/60";
+                let descColor = "text-white/45 group-hover:text-white/60";
                 
                 if (stage === 1) {
                   topBarGradient = "bg-[linear-gradient(90deg,#ffd447,#c8973f)]";
@@ -860,6 +812,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                     activeBorderClass = "border-amber-400/40 bg-[linear-gradient(180deg,rgba(255,212,71,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(255,212,71,0.12),0_0_24px_rgba(255,212,71,0.06)]";
                     titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
                     subtitleColor = "text-amber-400 font-bold drop-shadow-[0_2px_4px_rgba(251,191,36,0.2)]";
+                    descColor = "text-white/85 font-normal";
                   }
                 } else if (stage === 2) {
                   topBarGradient = "bg-[linear-gradient(90deg,#85eaff,#00d4ff)]";
@@ -870,6 +823,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                     activeBorderClass = "border-cyan-400/40 bg-[linear-gradient(180deg,rgba(0,212,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(0,212,255,0.12),0_0_24px_rgba(0,212,255,0.06)]";
                     titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
                     subtitleColor = "text-cyan-400 font-bold drop-shadow-[0_2px_4px_rgba(34,211,238,0.2)]";
+                    descColor = "text-white/85 font-normal";
                   }
                 } else {
                   topBarGradient = "bg-[linear-gradient(90deg,#9f93ff,#4d22df)]";
@@ -880,6 +834,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                     activeBorderClass = "border-violet-400/40 bg-[linear-gradient(180deg,rgba(124,92,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(124,92,255,0.12),0_0_24px_rgba(124,92,255,0.06)]";
                     titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
                     subtitleColor = "text-violet-400 font-bold drop-shadow-[0_2px_4px_rgba(167,139,250,0.2)]";
+                    descColor = "text-white/85 font-normal";
                   }
                 }
                 
@@ -911,18 +866,16 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                       {/* Top Color Accent Line */}
                       <div className={`absolute top-0 left-0 right-0 h-1.5 rounded-t-[20px] ${topBarGradient}`} />
                       
-                      {/* Encircled Info Tooltip (Top Right) */}
-                      <div className="absolute top-3 right-3 print:hidden z-20">
-                        <InfoTooltip explanation={stageData.tooltip} stage={stage} />
-                      </div>
-
                       {/* Box Typography */}
-                      <div className="text-center px-3">
+                      <div className="text-center px-4 flex flex-col items-center">
                         <h3 className={`font-sans text-[1.2rem] tracking-wide m-0 transition-colors duration-200 ${titleColor}`}>
                           {stageData.title}
                         </h3>
-                        <p className={`font-mono text-[0.82rem] m-0 mt-2.5 uppercase tracking-[0.15em] transition-colors duration-200 ${subtitleColor}`}>
+                        <p className={`font-mono text-[0.78rem] m-0 mt-1.5 uppercase tracking-[0.15em] transition-colors duration-200 ${subtitleColor}`}>
                           {isFrench ? `Niveau ${stage}` : `Level ${stage}`}
+                        </p>
+                        <p className={`font-sans text-[0.78rem] leading-relaxed m-0 mt-3.5 transition-colors duration-200 ${descColor} max-w-[190px]`}>
+                          {stageData.desc}
                         </p>
                       </div>
                     </div>

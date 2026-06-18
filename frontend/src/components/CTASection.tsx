@@ -1,39 +1,52 @@
 import React from "react";
 
 type CTASectionProps = {
-  title?: string;
-  subtitle?: string;
   onStartConversation?: () => void;
+  language?: string;
+};
+
+const TRANSLATIONS = {
+  fr: {
+    title: "Prêt à voir où se situe réellement votre organisation ?",
+    subtitle: "Une conversation avec ORION. Une clarté qui transforme votre façon de diriger.",
+    cta: "Parler à ORION",
+  },
+  en: {
+    title: "Ready to see where your organization really stands?",
+    subtitle: "One conversation with ORION. A clarity that changes how you lead.",
+    cta: "Talk to ORION",
+  },
 };
 
 const CTASection: React.FC<CTASectionProps> = ({
-  title = "Ready to Transform Your Audit Process?",
-  subtitle = "Join thousands of auditors who save hours on every audit with AIAuditor",
   onStartConversation,
+  language = "en",
 }) => {
+  const t = TRANSLATIONS[language as "fr" | "en"] || TRANSLATIONS.en;
+
   return (
-    <section id="cta" className="py-16 sm:py-20 md:py-24 bg-gradient-to-r from-blue-600 to-purple-600">
+    <section id="cta" className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 border-t border-slate-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         <div className="text-center">
           
           {/* TITLE */}
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white">
-            {title}
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white tracking-tight">
+            {t.title}
           </h2>
 
           {/* SUBTITLE */}
-          <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-3xl mx-auto text-blue-100">
-            {subtitle}
+          <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-3xl mx-auto text-indigo-200 font-light leading-relaxed">
+            {t.subtitle}
           </p>
 
           <div className="flex justify-center items-center">
             <button
               type="button"
               onClick={onStartConversation}
-              className="inline-flex items-center justify-center gap-2 px-8 h-12 rounded-lg text-sm sm:text-base font-medium bg-white text-blue-600 hover:bg-gray-100 shadow-lg hover:shadow-xl transition"
+              className="inline-flex items-center justify-center gap-2 px-8 h-12 rounded-full text-sm sm:text-base font-semibold bg-white text-indigo-950 hover:bg-slate-50 shadow-lg hover:shadow-xl transition hover:-translate-y-0.5"
             >
-              Start the conversation
+              {t.cta}
               
               <svg
                 xmlns="http://www.w3.org/2000/svg"
