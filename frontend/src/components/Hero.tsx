@@ -85,7 +85,7 @@ export default function Hero({ onStartConversation, language = "en", onLanguageC
                 <button
                   type="button"
                   onClick={() => onLanguageChange?.("fr")}
-                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${language === "fr" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${language === "fr" ? "bg-[#111827] text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
                     }`}
                 >
                   FR
@@ -93,7 +93,7 @@ export default function Hero({ onStartConversation, language = "en", onLanguageC
                 <button
                   type="button"
                   onClick={() => onLanguageChange?.("en")}
-                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${language === "en" ? "bg-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${language === "en" ? "bg-[#111827] text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
                     }`}
                 >
                   EN

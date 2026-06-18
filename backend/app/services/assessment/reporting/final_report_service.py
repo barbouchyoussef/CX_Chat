@@ -247,7 +247,7 @@ class ReportBuilderService:
                     capability_id=capability_id,
                     maturity_level_number=maturity_level_number,
                     axis=str(row["axis"]),
-                    capability=str(row["label"]),
+                    capability=self._translate_capability_name(str(row["label"]), getattr(assessment, "language", "fr")),
                     maturity_band=self._band_from_level(maturity_level_number, assessment_status),
                     assessment_status=assessment_status,
                     confidence=confidence_value,
@@ -296,6 +296,7 @@ class ReportBuilderService:
             rubrics_by_capability=await self.capabilities.get_rubrics_for_capabilities(
                 capability_ids=[int(row["id"]) for row in capability_rows if row.get("id") is not None]
             ),
+            language=getattr(assessment, "language", "fr"),
         )
 
         synthesis = await self._get_or_generate_report_synthesis(
@@ -375,6 +376,7 @@ class ReportBuilderService:
             priority_axis=priority.axis,
             axis_maturity_content=axis_maturity_content,
             rubric_content_by_capability_id=rubric_content_by_capability_id,
+            language=getattr(assessment, "language", "fr"),
         )
 
         return FinalReportResponse(
@@ -1605,9 +1607,14 @@ class ReportBuilderService:
         priority_axis: str,
         axis_maturity_content: dict[tuple[str, int], dict[str, str | None]],
         rubric_content_by_capability_id: dict[int, dict[str, str | None]],
+        language: str | None = None,
     ) -> list[FinalReportWorkingMissingAxis]:
         axis_order = ("manage", "analyze", "improve")
-        label_map = {"manage": "Manage", "analyze": "Analyze", "improve": "Improve"}
+        is_french = (language or "").lower().startswith("fr")
+        if is_french:
+            label_map = {"manage": "Gérer", "analyze": "Analyser", "improve": "Améliorer"}
+        else:
+            label_map = {"manage": "Manage", "analyze": "Analyze", "improve": "Improve"}
         axis_lookup = {
             self._normalize_axis_key(item.axis): item
             for item in axes
@@ -1664,6 +1671,7 @@ class ReportBuilderService:
                 strongest_axis=strongest_axis,
                 priority_axis=priority_axis,
                 axis_maturity_content=axis_maturity_content,
+                language=language,
             )
             result.append(
                 FinalReportWorkingMissingAxis(
@@ -1758,6 +1766,7 @@ class ReportBuilderService:
         *,
         capability_rows: list[dict[str, Any]],
         rubrics_by_capability: dict[int, list[dict]],
+        language: str | None = None,
     ) -> dict[int, dict[str, str | None]]:
         result: dict[int, dict[str, str | None]] = {}
         for row in capability_rows:
@@ -1769,8 +1778,12 @@ class ReportBuilderService:
                 if int(rubric.get("maturity_level_id") or 0) != int(maturity_level_id):
                     continue
                 result[int(capability_id)] = {
-                    "description": normalize_text(str(rubric.get("description") or "")).strip() or None,
-                    "card_summary": normalize_text(str(rubric.get("card_summary") or "")).strip() or None,
+                    "description": self._translate_rubric_description(
+                        normalize_text(str(rubric.get("description") or "")).strip(), language
+                    ) or None,
+                    "card_summary": self._translate_rubric_description(
+                        normalize_text(str(rubric.get("card_summary") or "")).strip(), language
+                    ) or None,
                 }
                 break
         return result
@@ -1799,6 +1812,7 @@ class ReportBuilderService:
         strongest_axis: str,
         priority_axis: str,
         axis_maturity_content: dict[tuple[str, int], dict[str, str | None]],
+        language: str = "fr",
     ) -> tuple[str, str, str]:
         strongest_key = self._normalize_axis_key(strongest_axis)
         priority_key = self._normalize_axis_key(priority_axis)
@@ -1808,43 +1822,80 @@ class ReportBuilderService:
             else None
         ) or {}
 
+        is_french = (language or "").lower().startswith("fr")
+        band_norm = (maturity_band or "").lower().strip()
+        is_advanced = "adv" in band_norm or "avan" in band_norm
+        is_established = "est" in band_norm or "étab" in band_norm or "interm" in band_norm
+        is_basic = "bas" in band_norm
+
         subtitle = content.get("axis_description")
         if not subtitle:
-            if maturity_band == "Advanced":
-                subtitle = f"{axis_label} is operating as a reliable system, not just a good intention."
-            elif maturity_band == "Established":
-                subtitle = f"{axis_label} shows visible discipline, but execution is not fully systematic yet."
-            elif maturity_band == "Basic":
-                subtitle = f"{axis_label} shows early signals, but the operating model is still fragile."
+            if is_french:
+                if is_advanced:
+                    subtitle = f"L'axe {axis_label} fonctionne comme un système fiable, et non pas seulement comme une bonne intention."
+                elif is_established:
+                    subtitle = f"L'axe {axis_label} fait preuve d'une discipline visible, mais l'exécution n'est pas encore pleinement systématique."
+                elif is_basic:
+                    subtitle = f"L'axe {axis_label} montre des signaux précoces, mais le modèle opérationnel reste fragile."
+                else:
+                    subtitle = f"L'axe {axis_label} ne présente pas encore assez de preuves pour démontrer un modèle opérationnel stable."
             else:
-                subtitle = f"{axis_label} does not yet have enough evidence to show a stable operating model."
+                if is_advanced:
+                    subtitle = f"{axis_label} is operating as a reliable system, not just a good intention."
+                elif is_established:
+                    subtitle = f"{axis_label} shows visible discipline, but execution is not fully systematic yet."
+                elif is_basic:
+                    subtitle = f"{axis_label} shows early signals, but the operating model is still fragile."
+                else:
+                    subtitle = f"{axis_label} does not yet have enough evidence to show a stable operating model."
 
         intro = content.get("axis_panel_copy")
         if not intro and axis_key == strongest_key:
-            intro = (
-                f"{axis_label} is currently the strongest part of the respondent profile. "
-                f"It already shows the clearest operating evidence in the assessment."
-            )
-            stat_note = "This is the most mature axis in the current report and the best foundation to build on."
+            if is_french:
+                intro = (
+                    f"L'axe {axis_label} est actuellement le point fort du profil. "
+                    f"Il présente les preuves opérationnelles les plus claires de l'évaluation."
+                )
+                stat_note = "Il s'agit de l'axe le plus mature dans le rapport actuel et de la meilleure base sur laquelle s'appuyer."
+            else:
+                intro = (
+                    f"{axis_label} is currently the strongest part of the respondent profile. "
+                    f"It already shows the clearest operating evidence in the assessment."
+                )
+                stat_note = "This is the most mature axis in the current report and the best foundation to build on."
         elif not intro and axis_key == priority_key:
-            intro = (
-                f"{axis_label} is the main priority axis right now. "
-                f"It needs stronger routines, shared visibility, and more repeatable follow-through."
-            )
-            stat_note = "This is the axis where the next maturity gain is most likely to come from."
+            if is_french:
+                intro = (
+                    f"L'axe {axis_label} est la priorité absolue actuellement. "
+                    f"Il nécessite des routines plus solides, une visibilité partagée et un suivi plus systématique."
+                )
+                stat_note = "C'est l'axe sur lequel le prochain gain de maturité est le plus susceptible d'être réalisé."
+            else:
+                intro = (
+                    f"{axis_label} is the main priority axis right now. "
+                    f"It needs stronger routines, shared visibility, and more repeatable follow-through."
+                )
+                stat_note = "This is the axis where the next maturity gain is most likely to come from."
         elif not intro:
-            intro = (
-                f"{axis_label} sits between current strengths and current gaps. "
-                f"The focus here is to keep what is working and make the weaker routines more consistent."
-            )
-            stat_note = "This axis has meaningful signals, but it still needs stronger consistency and proof."
+            if is_french:
+                intro = (
+                    f"L'axe {axis_label} se situe entre les forces actuelles et les écarts à combler. "
+                    f"L'objectif est de maintenir ce qui fonctionne et de rendre les routines plus cohérentes."
+                )
+                stat_note = "Cet axe présente des signaux significatifs, mais nécessite encore plus de cohérence et de preuves."
+            else:
+                intro = (
+                    f"{axis_label} sits between current strengths and current gaps. "
+                    f"The focus here is to keep what is working and make the weaker routines more consistent."
+                )
+                stat_note = "This axis has meaningful signals, but it still needs stronger consistency and proof."
         else:
             if axis_key == strongest_key:
-                stat_note = "This is the most mature axis in the current report and the best foundation to build on."
+                stat_note = "Il s'agit de l'axe le plus mature dans le rapport actuel et de la meilleure base sur laquelle s'appuyer." if is_french else "This is the most mature axis in the current report and the best foundation to build on."
             elif axis_key == priority_key:
-                stat_note = "This is the axis where the next maturity gain is most likely to come from."
+                stat_note = "C'est l'axe sur lequel le prochain gain de maturité est le plus susceptible d'être réalisé." if is_french else "This is the axis where the next maturity gain is most likely to come from."
             else:
-                stat_note = "This axis has meaningful signals, but it still needs stronger consistency and proof."
+                stat_note = "Cet axe présente des signaux significatifs, mais nécessite encore plus de cohérence et de preuves." if is_french else "This axis has meaningful signals, but it still needs stronger consistency and proof."
         return subtitle, intro, stat_note
 
     @staticmethod
@@ -2029,5 +2080,84 @@ class ReportBuilderService:
         ):
             return "medium"
         return "low"
+
+    def _translate_capability_name(self, capability: str, language: str | None) -> str:
+        if not self._is_french(language):
+            return capability
+        key = normalize_text(capability).lower().strip()
+        labels = {
+            "cx culture": "Culture CX",
+            "decision-making": "Prise de décision",
+            "ownership and governance": "Ownership et gouvernance",
+            "feedback collection": "Collecte des retours clients",
+            "use of insights": "Exploitation des insights",
+            "channel consistency": "Cohérence des canaux",
+            "journey visibility": "Visibilité des parcours",
+            "measurement and continuous improvement": "Mesure et amélioration continue",
+            "acting on pain points": "Traitement des irritants",
+        }
+        return labels.get(key, capability)
+
+    def _translate_rubric_description(self, description: str | None, language: str | None) -> str | None:
+        if not description or not self._is_french(language):
+            return description
+        key = normalize_text(description).lower().strip()
+        translations = {
+            "customer-focused behaviours are ad hoc, weakly reinforced, and largely dependent on individual managers or frontline goodwill.":
+                "Les comportements orientés client sont ponctuels, peu encouragés et dépendent largement de la bonne volonté des managers ou des équipes terrain.",
+            "some coaching, training, service standards, or recognition exist, but adoption is partial and not yet fully embedded in routines.":
+                "Des actions de coaching, de formation, des standards de service ou de la reconnaissance existent, mais leur adoption reste partielle et non ancrée dans le quotidien.",
+            "customer-focused behaviours are actively reinforced through leadership routines, coaching, recognition, practical standards, and quality feedback.":
+                "Les comportements orientés client sont activement renforcés par des routines managériales, du coaching, de la reconnaissance, des standards pratiques et des retours qualité.",
+            "accountability is informal or fragmented, with no consistent owner, governance routine, or follow-up discipline for customer issues.":
+                "La responsabilisation est informelle ou fragmentée, sans responsable désigné, routine de gouvernance ou processus de suivi structuré pour les problèmes clients.",
+            "a named owner or central team exists, and some governance routines are in place, but coordination and follow-through are not yet fully reliable.":
+                "Un responsable ou une équipe centrale existe et des routines de gouvernance sont en place, mais la coordination et le suivi ne sont pas encore totalement fiables.",
+            "customer issues are managed through recurring governance, clear owners, escalation paths, action logs, and visible cross-functional accountability.":
+                "Les problèmes clients sont gérés à travers une gouvernance récurrente, des responsables clairs, des circuits d'escalade, des registres d'actions et une responsabilité transverse visible.",
+            "customer evidence rarely changes decisions; priorities are mostly internal, reactive, or driven by individual judgement.":
+                "Les retours clients influencent rarement les décisions ; les priorités sont principalement internes, réactives ou basées sur des jugements individuels.",
+            "customer evidence influences some decisions, but the practice is partial, siloed, or inconsistent across teams.":
+                "Les retours clients influence certaines décisions, mais cette pratique reste partielle, cloisonnée ou incohérente selon les équipes.",
+            "customer evidence systematically shapes decisions through governance, named owners, documented trade-offs, and follow-up.":
+                "Les retours clients façonnent systématiquement les décisions via la gouvernance, des responsables désignés, des arbitrages documentés et un suivi rigoureux.",
+            "feedback is collected inconsistently or through a few isolated channels, with weak logging, ownership, and review rhythm.":
+                "Les retours sont collectés de manière incohérente ou via quelques canaux isolés, avec un suivi, une attribution et un rythme de revue insuffisants.",
+            "feedback is captured through some defined channels or tools, but coverage, ownership, tagging, and review cadence are inconsistent.":
+                "Les retours sont recueillis via des canaux ou outils définis, mais la couverture, l'attribution, la catégorisation et le rythme de revue restent irréguliers.",
+            "feedback is captured across key touchpoints through structured channels with clear ownership, tagging, and regular review.":
+                "Les retours sont captés sur les principaux points de contact via des canaux structurés avec des responsabilités claires, une catégorisation précise et des revues régulières.",
+            "feedback is observed informally, with little evidence of theme review, root-cause analysis, or explicit prioritization logic.":
+                "Les retours clients sont observés de manière informelle, sans réelle analyse des thématiques, recherche des causes racines ou logique claire de priorisation.",
+            "some theme review or prioritization exists, but the process is inconsistent and not yet decision-ready.":
+                "Une certaine analyse thématique ou priorisation existe, mais le processus reste irrégulier et n'est pas encore prêt à guider les décisions.",
+            "feedback is translated into actionable insight through pattern analysis, root-cause work, and clear prioritization criteria.":
+                "Les retours sont traduits en actions concrètes grâce à l'analyse des tendances, la recherche des causes racines et des critères clairs de priorisation.",
+            "channels operate separately, with inconsistent standards, weak handoffs, and limited shared customer context.":
+                "Les canaux fonctionnent séparément, avec des standards incohérents, des transitions fluides limitées et peu de partage du contexte client.",
+            "some shared standards or handoff practices exist, but consistency is uneven across the experience.":
+                "Certains standards communs ou pratiques de transition existent, mais la cohérence reste inégale d'un canal à l'autre.",
+            "channels are managed with shared context, consistent standards, and active monitoring for consistency issues.":
+                "Les canaux sont gérés avec un contexte client partagé, des standards cohérents et un suivi actif pour corriger les écarts de cohérence.",
+            "journey visibility is weak or absent; teams mainly see isolated touchpoints rather than the full customer path.":
+                "La visibilité sur les parcours est faible ou inexistante ; les équipes se concentrent sur des points de contact isolés plutôt que sur l'ensemble du parcours.",
+            "some journeys are mapped or discussed, but ownership, updates, and pain-point tracking remain inconsistent.":
+                "Certains parcours sont cartographiés ou discutés, mais leur mise à jour, l'attribution des responsabilités et le suivi des irritants restent irréguliers.",
+            "key journeys are owned, documented, and reviewed cross-functionally to guide prioritization and improvements.":
+                "Les parcours clés sont documentés, attribués à des responsables et revus de manière transverse pour guider les priorités et les améliorations.",
+            "measures are limited or disconnected from action, with little evidence of a regular improvement loop.":
+                "Les indicateurs de mesure sont limités ou déconnectés des actions, sans processus régulier d'amélioration continue.",
+            "measures are tracked and reviewed, but ownership, targets, and business linkage are incomplete.":
+                "Les indicateurs sont suivis et analysés, mais l'attribution des responsabilités, la définition des objectifs et le lien avec la performance globale restent incomplets.",
+            "measures are tied to targets, owners, business outcomes, experiments, and systematic improvement loops.":
+                "Les indicateurs sont directement reliés à des objectifs, des responsables, des résultats opérationnels, des tests et des boucles d'amélioration continue.",
+            "pain points are handled reactively with little backlog, ownership, closure discipline, or validation.":
+                "Le traitement des irritants est réactif, sans gestion de backlog, responsabilité claire, discipline de clôture ou validation de l'efficacité.",
+            "some backlog or owner process exists, but prioritization and closure discipline are inconsistent.":
+                "Un backlog ou processus de suivi existe, mais la priorisation et la rigueur dans la résolution finale restent irrégulières.",
+            "pain points are managed through a repeatable improvement loop with prioritization, owners, closure checks, and validation.":
+                "Les irritants sont gérés via une boucle d'amélioration continue répétable comprenant une priorisation, des responsables dédiés, un contrôle des clôtures et une validation.",
+        }
+        return translations.get(key, description)
 
 

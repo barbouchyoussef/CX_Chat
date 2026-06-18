@@ -11,8 +11,14 @@ type Props = {
 
 const ORBIT_IMAGE_SRC = "/1b428a9545ed4c55816d6fd0bd7115df485a185c.png";
 
-const axisLabel = (value?: string | null) =>
-  value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "Unknown";
+const axisLabel = (value?: string | null, isFr?: boolean) => {
+  if (!value) return "Unknown";
+  const key = value.toLowerCase().trim();
+  if (key.includes("manage") || key.includes("gérer")) return isFr ? "Gérer" : "Manage";
+  if (key.includes("analyze") || key.includes("analyser")) return isFr ? "Analyser" : "Analyze";
+  if (key.includes("improve") || key.includes("améliorer")) return isFr ? "Améliorer" : "Improve";
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+};
 
 const getMaturityBandDisplayName = (band?: string | null, isFr?: boolean) => {
   if (!band) return "";
@@ -117,7 +123,9 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
     summary.executive_summary_text?.trim() ||
     `${resolvedCompany} is currently at ${hero.overall_maturity_band} maturity. ${axisLabel(hero.strongest_axis)} is the strongest area today, while ${axisLabel(hero.priority_axis)} needs the most attention next.`;
 
-  const isFrench = (language ?? "").toLowerCase().startsWith("fr") || overview.toLowerCase().includes("démontre") || overview.toLowerCase().includes("est") || overview.toLowerCase().includes("les");
+  const isFrench = language
+    ? language.toLowerCase().startsWith("fr")
+    : (overview.toLowerCase().includes("démontre") || /\b(est|les|le|la|un|une|des|en|pour|dans|sur)\b/i.test(overview.toLowerCase()));
 
   // Explanations for the tooltips
   const bandKey = (hero.overall_maturity_band || "").toLowerCase().trim();
@@ -312,7 +320,7 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
             </div>
             <div className="min-h-[84px]">
               <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
-                <span>{axisLabel(hero.strongest_axis)}</span>
+                <span>{axisLabel(hero.strongest_axis, isFrench)}</span>
                 <InfoTooltip explanation={strongestExplanation} />
               </p>
               <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{strongestLabelText}</p>
@@ -330,7 +338,7 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
             </div>
             <div className="min-h-[84px]">
               <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-[#ffe4eb] print:text-black flex items-center">
-                <span>{axisLabel(hero.priority_axis)}</span>
+                <span>{axisLabel(hero.priority_axis, isFrench)}</span>
                 <InfoTooltip explanation={priorityExplanation} />
               </p>
               <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{priorityLabelText}</p>

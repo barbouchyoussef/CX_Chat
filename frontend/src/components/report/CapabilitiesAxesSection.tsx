@@ -681,13 +681,14 @@ function levelToStep(level?: number | null) {
 }
 
 export default function CapabilitiesAxesSection({ hero, axes, language }: Props) {
-  const isFrench = (language ?? "").toLowerCase().startsWith("fr") ||
-                   (hero.overall_maturity_band || "").toLowerCase().includes("établi") || 
-                   (hero.overall_maturity_band || "").toLowerCase().includes("basique") || 
-                   (hero.overall_maturity_band || "").toLowerCase().includes("avancé") || 
-                   (hero.overall_maturity_band || "").toLowerCase().includes("intermédiaire") ||
-                   (hero.report_title || "").toLowerCase().includes("rapport") ||
-                   (hero.report_title || "").toLowerCase().includes("maturité");
+  const isFrench = language
+    ? language.toLowerCase().startsWith("fr")
+    : ((hero.overall_maturity_band || "").toLowerCase().includes("établi") || 
+       (hero.overall_maturity_band || "").toLowerCase().includes("basique") || 
+       (hero.overall_maturity_band || "").toLowerCase().includes("avancé") || 
+       (hero.overall_maturity_band || "").toLowerCase().includes("intermédiaire") ||
+       (hero.report_title || "").toLowerCase().includes("rapport") ||
+       (hero.report_title || "").toLowerCase().includes("maturité"));
 
   const labels = isFrench ? MATURITY_CARDS.fr : MATURITY_CARDS.en;
 
