@@ -36,6 +36,7 @@ class QuestionComposerService:
         "channel consistency": "la coherence multicanale",
         "journey visibility": "la visibilite des parcours",
         "measurement and continuous improvement": "la mesure et l'amelioration continue",
+        "acting on pain points": "le traitement des points de douleur",
         "cx culture": "la culture CX",
     }
 

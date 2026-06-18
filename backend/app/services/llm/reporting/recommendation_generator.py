@@ -64,11 +64,14 @@ class RecommendationGeneratorService:
         supporting_notes: str | None = None,
         language: str = "fr",
     ) -> str:
+        is_french = (language or "").lower().startswith("fr")
+        fallback_msg = "Aucune recommandation disponible pour le moment." if is_french else "No recommendation available yet."
         fallback_parts = [
             (recommendation_guideline or "").strip(),
             (business_impact or "").strip(),
         ]
-        fallback = " ".join(part for part in fallback_parts if part).strip() or "No recommendation available yet."
+        fallback = " ".join(part for part in fallback_parts if part).strip() or fallback_msg
+
 
         if not self.settings.mistral_api_key:
             logger.error("Cannot generate recommendation because MISTRAL_API_KEY is not set.")

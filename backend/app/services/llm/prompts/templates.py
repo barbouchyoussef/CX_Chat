@@ -1,7 +1,21 @@
 def language_directive(lang: str) -> str:
     names = {"fr": "French", "en": "English"}
     name = names.get(lang, "English")
-    return f"\nCRITICAL: You MUST respond entirely in {name}. All questions, follow-ups, options, and outputs must be written in {name}."
+    if name == "French":
+        return (
+            "\nCRITICAL LANGUAGE CONSTRAINT:\n"
+            "You MUST speak, write, and respond strictly and entirely in French.\n"
+            "All questions, follow-ups, multi-choice options, executive summaries, priority messages, recommendations, titles, and report text MUST be in French.\n"
+            "Never output English. If input contains English, translate it to French in your response."
+        )
+    else:
+        return (
+            "\nCRITICAL LANGUAGE CONSTRAINT:\n"
+            "You MUST speak, write, and respond strictly and entirely in English.\n"
+            "All questions, follow-ups, multi-choice options, executive summaries, priority messages, recommendations, titles, and report text MUST be in English.\n"
+            "Never output French."
+        )
+
 
 INTENT_ROUTER_SYSTEM_PROMPT = (
     "<role>\n"

@@ -93,7 +93,9 @@ class RecommendationService:
             maturity_label_by_id=maturity_label_by_id,
             excluded_capability_ids=set(persisted_by_capability),
         )
-        generated_text_by_capability.update(await self._generate_recommendation_texts(generated_jobs))
+        language = getattr(assessment, "language", "en")
+        generated_text_by_capability.update(await self._generate_recommendation_texts(generated_jobs, language=language))
+
 
         items: list[AssessmentRecommendationItem] = []
         for row in rows:
@@ -196,6 +198,7 @@ class RecommendationService:
                     clarification_question=self._build_clarification_question(
                         capability_name=str(item.get("capability_name") or "this capability"),
                         axis=str(item.get("axis") or ""),
+                        language=language,
                     ),
                     evidence_used=evidence[:2],
                 )
@@ -220,7 +223,8 @@ class RecommendationService:
             for item in llm_items
             if int(item["capability_id"]) not in pre_gated and not generated.get(int(item["capability_id"]))
         }
-        fallback_text_by_capability = await self._generate_recommendation_texts(fallback_jobs)
+        fallback_text_by_capability = await self._generate_recommendation_texts(fallback_jobs, language=language)
+
 
         results: list[BatchRecommendationResult] = []
         output_rows: list[dict] = []
@@ -267,7 +271,11 @@ class RecommendationService:
                             status="needs_clarification",
                             recommendation_text=None,
                             clarification_question=ai.get("clarification_question")
-                            or "Can you share one concrete recent example?",
+                            or (
+                                "Pourriez-vous partager un exemple concret et récent ?"
+                                if (language or "").lower().startswith("fr")
+                                else "Can you share one concrete recent example?"
+                            ),
                             evidence_used=ai.get("evidence_used") or [],
                         )
                     )
@@ -363,7 +371,7 @@ class RecommendationService:
             rows=assessed_rows,
             maturity_label_by_id=maturity_label_by_id,
         )
-        recommendation_text_by_capability = await self._generate_recommendation_texts(recommendation_jobs)
+        recommendation_text_by_capability = await self._generate_recommendation_texts(recommendation_jobs, language=assessment.language)
         for row in assessed_rows:
             maturity_level_id = row.get("maturity_level_id")
             capability_id = int(row["capability_id"])
@@ -376,11 +384,13 @@ class RecommendationService:
                         self._fallback_recommendation_text(
                             recommendation_guideline=row.get("recommendation_guideline"),
                             business_impact=row.get("business_impact"),
+                            language=assessment.language,
                         ),
                     ),
                     "priority": row.get("priority_hint"),
                 }
             )
+
 
         await self.assessments.replace_recommendation_outputs(assessment_id=assessment_id, items=output_rows)
         overall_level_id, overall_band = await self.scoring.compute_overall_maturity_band(level_numbers=level_numbers)
@@ -436,8 +446,42 @@ class RecommendationService:
             mapping[int(row["capability_id"])] = int(maturity_level_id) if maturity_level_id is not None else None
         return mapping
 
-    def _build_clarification_question(self, capability_name: str, axis: str) -> str:
+    def _build_clarification_question(self, capability_name: str, axis: str, language: str = "en") -> str:
         normalized_axis = axis.strip().upper()
+        is_french = (language or "").lower().startswith("fr")
+        if is_french:
+            cap_key = normalize_text(capability_name).lower().strip()
+            labels = {
+                "decision-making": "la prise de décision",
+                "ownership and governance": "l'ownership et la gouvernance",
+                "feedback collection": "la collecte des retours clients",
+                "use of insights": "l'exploitation des insights",
+                "channel consistency": "la cohérence multicanale",
+                "journey visibility": "la visibilité des parcours",
+                "measurement and continuous improvement": "la mesure et l'amélioration continue",
+                "acting on pain points": "le traitement des points de douleur",
+                "cx culture": "la culture CX",
+            }
+            fr_cap = labels.get(cap_key, capability_name)
+            templates = {
+                "MANAGE": (
+                    f"Pour mieux évaluer '{fr_cap}', pourriez-vous partager un exemple récent indiquant qui était responsable, "
+                    "quel processus a été suivi et quel résultat a été obtenu ?"
+                ),
+                "ANALYZE": (
+                    f"Pour mieux évaluer '{fr_cap}', pourriez-vous décrire un cas précis où les retours clients "
+                    "ont été collectés, analysés et traduits en action ?"
+                ),
+                "IMPROVE": (
+                    f"Pour mieux évaluer '{fr_cap}', pourriez-vous partager un cas concret où un point de douleur "
+                    "a été identifié, priorisé et amélioré ?"
+                ),
+            }
+            return templates.get(
+                normalized_axis,
+                f"Pourriez-vous partager un exemple concret et récent concernant '{fr_cap}' avec le responsable, l'action et le résultat ?",
+            )
+
         templates = {
             "MANAGE": (
                 f"To better assess {capability_name}, could you share one recent example of who was responsible, "
@@ -552,12 +596,13 @@ class RecommendationService:
             "supporting_notes": row.get("supporting_notes"),
         }
 
-    async def _generate_recommendation_texts(self, jobs: dict[int, RecommendationArgs]) -> dict[int, str]:
+    async def _generate_recommendation_texts(self, jobs: dict[int, RecommendationArgs], language: str = "en") -> dict[int, str]:
         if not jobs:
             return {}
 
         async def run_job(capability_id: int, payload: RecommendationArgs) -> tuple[int, str]:
-            return capability_id, await self._generate_recommendation_safe(**payload)
+            return capability_id, await self._generate_recommendation_safe(**payload, language=language)
+
 
         task_results = await asyncio.gather(
             *(run_job(capability_id, payload) for capability_id, payload in jobs.items()),
@@ -589,6 +634,7 @@ class RecommendationService:
         business_impact: str | None,
         tone_hint: str | None,
         supporting_notes: str | None,
+        language: str = "en",
     ) -> str:
         safe_justification = self._sanitize_recommendation_evidence(justification)
         try:
@@ -603,17 +649,21 @@ class RecommendationService:
                 business_impact=business_impact,
                 tone_hint=tone_hint,
                 supporting_notes=supporting_notes,
+                language=language,
             )
             return normalize_text(recommendation) or self._fallback_recommendation_text(
                 recommendation_guideline=recommendation_guideline,
                 business_impact=business_impact,
+                language=language,
             )
         except Exception as exc:
             logger.error("Recommendation generation failed for %s: %s", capability, exc, exc_info=True)
             return self._fallback_recommendation_text(
                 recommendation_guideline=recommendation_guideline,
                 business_impact=business_impact,
-        )
+                language=language,
+            )
+
 
     def _evidence_only_justification(self, row: dict) -> str | None:
         parts = [
@@ -661,15 +711,19 @@ class RecommendationService:
         self,
         recommendation_guideline: str | None,
         business_impact: str | None,
+        language: str = "en",
     ) -> str:
+        is_french = (language or "").lower().startswith("fr")
+        default_guide = "La génération de recommandation est temporairement indisponible" if is_french else "Recommendation generation is temporarily unavailable"
         return normalize_text(
             self._safe_concat(
                 [
-                    recommendation_guideline or "Recommendation generation is temporarily unavailable",
+                    recommendation_guideline or default_guide,
                     business_impact,
                 ]
             )
         )
+
 
     def _safe_concat(self, parts: list[str | None]) -> str:
         safe_parts = []

@@ -452,51 +452,22 @@ class ReportBuilderService:
             except Exception as exc:
                 logger.warning("Invalid cached leaders snapshot for assessment=%s: %s", assessment_id, exc)
 
-        logger.warning("leaders_snapshot cache miss for assessment=%s", assessment_id)
-        if refresh_snapshot:
-            await self._schedule_leaders_snapshot_job(assessment_id=assessment_id, force_refresh=True)
-            if cached_payload:
-                try:
-                    return FinalReportLeadersSnapshot(**cached_payload)
-                except Exception:
-                    pass
-            pending_snapshot = self._pending_leaders_snapshot(assessment=assessment)
-            await self._persist_leaders_snapshot_cache(
-                assessment=assessment,
-                snapshot=pending_snapshot,
-                status=LEADERS_SNAPSHOT_STATUS_PENDING,
-                generated_at=None,
-                error_message=None,
-            )
-            return pending_snapshot
-
-        if snapshot_status in {LEADERS_SNAPSHOT_STATUS_PENDING, LEADERS_SNAPSHOT_STATUS_RUNNING}:
-            await self._schedule_leaders_snapshot_job(assessment_id=assessment_id, force_refresh=False)
-            if cached_payload:
-                try:
-                    return FinalReportLeadersSnapshot(**cached_payload)
-                except Exception as exc:
-                    logger.warning("Invalid pending leaders snapshot payload for assessment=%s: %s", assessment_id, exc)
-            return self._pending_leaders_snapshot(assessment=assessment)
-
-        if snapshot_status == LEADERS_SNAPSHOT_STATUS_FAILED:
-            if cached_payload:
-                try:
-                    return FinalReportLeadersSnapshot(**cached_payload)
-                except Exception as exc:
-                    logger.warning("Invalid failed leaders snapshot payload for assessment=%s: %s", assessment_id, exc)
-            return self._failed_leaders_snapshot(assessment=assessment)
-
-        pending_snapshot = self._pending_leaders_snapshot(assessment=assessment)
-        await self._persist_leaders_snapshot_cache(
-            assessment=assessment,
-            snapshot=pending_snapshot,
-            status=LEADERS_SNAPSHOT_STATUS_PENDING,
-            generated_at=None,
-            error_message=None,
+        logger.warning("leaders_snapshot generating synchronously for assessment=%s", assessment_id)
+        await self._generate_and_persist_leaders_snapshot_job(
+            assessment_id=assessment_id,
+            force_refresh=True,
         )
-        await self._schedule_leaders_snapshot_job(assessment_id=assessment_id, force_refresh=False)
-        return pending_snapshot
+        
+        # Re-fetch assessment to get the newly generated payload
+        assessment = await self.assessments.get_by_id(assessment_id)
+        cached_payload = getattr(assessment, "leaders_snapshot_payload", None)
+        if cached_payload:
+            try:
+                return FinalReportLeadersSnapshot(**cached_payload)
+            except Exception as exc:
+                logger.warning("Invalid generated leaders snapshot for assessment=%s: %s", assessment_id, exc)
+        return self._failed_leaders_snapshot(assessment=assessment)
+
 
     async def prepare_leaders_snapshot_generation(
         self,
@@ -509,15 +480,8 @@ class ReportBuilderService:
         snapshot_status = str(getattr(assessment, "leaders_snapshot_status", "") or "").strip().lower()
         if snapshot_status == LEADERS_SNAPSHOT_STATUS_COMPLETED and getattr(assessment, "leaders_snapshot_payload", None):
             return
-        pending_snapshot = self._pending_leaders_snapshot(assessment=assessment)
-        await self._persist_leaders_snapshot_cache(
-            assessment=assessment,
-            snapshot=pending_snapshot,
-            status=LEADERS_SNAPSHOT_STATUS_PENDING,
-            generated_at=None,
-            error_message=None,
-        )
-        await self._schedule_leaders_snapshot_job(assessment_id=assessment_id, force_refresh=False)
+        await self._generate_and_persist_leaders_snapshot_job(assessment_id=assessment_id, force_refresh=False)
+
 
     async def _schedule_leaders_snapshot_job(
         self,
@@ -674,6 +638,7 @@ class ReportBuilderService:
                 respondent_company_name=respondent_company_name,
                 pain_points=pain_points,
                 generation_mode=generation_mode,
+                language=getattr(assessment, "language", "fr"),
             )
         except Exception as exc:
             logger.warning("Leaders snapshot generation failed for assessment=%s: %s", assessment_id, exc)
@@ -1543,7 +1508,7 @@ class ReportBuilderService:
         if cached_summary and cached_priority and not refresh_synthesis:
             return {"executive_summary": cached_summary, "priority_message": cached_priority}
 
-        degraded = self._degraded_report_synthesis(priority_axis=priority_axis)
+        degraded = self._degraded_report_synthesis(priority_axis=priority_axis, language=getattr(assessment, "language", "fr"))
         try:
             synthesis = await self.llm.generate_report_synthesis(
                 company_name=getattr(assessment.company, "name", "This company"),
@@ -1600,7 +1565,24 @@ class ReportBuilderService:
                 logger.error("Could not persist report synthesis cache: %s", exc, exc_info=True)
         return {"executive_summary": executive_summary, "priority_message": priority_message}
 
-    def _degraded_report_synthesis(self, priority_axis: str) -> dict[str, str]:
+    def _degraded_report_synthesis(self, priority_axis: str, language: str = "fr") -> dict[str, str]:
+        is_french = (language or "").lower().startswith("fr")
+        if is_french:
+            axis_mapping = {
+                "manage": "Gérer",
+                "analyze": "Analyser",
+                "improve": "Améliorer",
+            }
+            axis_fr = axis_mapping.get(str(priority_axis).lower().strip(), priority_axis)
+            return {
+                "executive_summary": (
+                    "La synthèse du rapport est temporairement indisponible. "
+                    "Veuillez vous référer aux résultats détaillés ci-dessous."
+                ),
+                "priority_message": (
+                    f"La prochaine étape consiste à examiner les résultats pour l'axe '{axis_fr}' et à prioriser les éléments ayant la maturité la plus faible."
+                ),
+            }
         return {
             "executive_summary": (
                 "Report synthesis is temporarily unavailable. "
@@ -1610,6 +1592,7 @@ class ReportBuilderService:
                 f"The next step is to review the {priority_axis} findings and prioritize the lowest maturity items."
             ),
         }
+
 
     def _build_working_missing_section(
         self,

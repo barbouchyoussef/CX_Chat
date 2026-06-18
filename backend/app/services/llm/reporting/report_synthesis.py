@@ -108,12 +108,25 @@ class ReportSynthesisService:
         pain_points: list[dict[str, Any]],
         language: str = "fr",
     ) -> dict[str, str | None]:
-        fallback_summary = (
-            f"{company_name} is currently at {overall_maturity_band} maturity "
-            f"({round(overall_score_percent)}%). {strongest_axis} is the strongest axis today, "
-            f"while {priority_axis} represents the main improvement priority."
-        )
-        fallback_priority = f"The next step is to strengthen execution in {priority_axis} with a focused improvement plan."
+        is_french = (language or "").lower().startswith("fr")
+        if is_french:
+            axis_strongest_fr = self._fr_axis_label(strongest_axis)
+            axis_priority_fr = self._fr_axis_label(priority_axis)
+            maturity_band_fr = self._fr_maturity_band_label(overall_maturity_band)
+            fallback_summary = (
+                f"{company_name} est actuellement au niveau de maturité {maturity_band_fr} "
+                f"({round(overall_score_percent)}%). L'axe {axis_strongest_fr} est le plus fort aujourd'hui, "
+                f"tandis que l'axe {axis_priority_fr} représente la principale priorité d'amélioration."
+            )
+            fallback_priority = f"La prochaine étape consiste à renforcer l'exécution dans l'axe {axis_priority_fr} avec un plan d'amélioration ciblé."
+        else:
+            fallback_summary = (
+                f"{company_name} is currently at {overall_maturity_band} maturity "
+                f"({round(overall_score_percent)}%). {strongest_axis} is the strongest axis today, "
+                f"while {priority_axis} represents the main improvement priority."
+            )
+            fallback_priority = f"The next step is to strengthen execution in {priority_axis} with a focused improvement plan."
+
 
         if not self.settings.mistral_api_key:
             raise RuntimeError("Cannot generate report synthesis because MISTRAL_API_KEY is not set.")
@@ -241,6 +254,27 @@ class ReportSynthesisService:
             for item in items
         ]
         return "\n".join(lines) or "- none"
+
+    def _fr_axis_label(self, axis: str) -> str:
+        key = str(axis).lower().strip()
+        mapping = {
+            "manage": "Gérer",
+            "analyze": "Analyser",
+            "improve": "Améliorer",
+        }
+        return mapping.get(key, axis)
+
+    def _fr_maturity_band_label(self, band: str) -> str:
+        key = str(band).lower().strip()
+        mapping = {
+            "basic": "Basique",
+            "established": "Établi",
+            "advanced": "Avancé",
+            "in progress": "En cours",
+            "not scored": "Non évalué",
+        }
+        return mapping.get(key, band)
+
 
 
 def build_report_synthesis_service(

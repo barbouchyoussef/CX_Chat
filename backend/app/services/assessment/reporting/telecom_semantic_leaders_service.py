@@ -17,6 +17,8 @@ from app.services.assessment.reporting.sector_leader_candidates import (
     get_capability_retrieval_phrases,
 )
 
+from app.services.llm.prompts import language_directive
+
 if TYPE_CHECKING:
     from app.services.llm.core.facade_service import LLMService
 
@@ -52,6 +54,7 @@ class SemanticLeadersService:
         respondent_company_name: str,
         pain_points: list[dict[str, str | None]],
         generation_mode: str = "initial",
+        language: str = "fr",
     ) -> dict:
         return await self._build_snapshot(
             sector=sector,
@@ -59,6 +62,7 @@ class SemanticLeadersService:
             pain_points=pain_points,
             include_debug=False,
             generation_mode=generation_mode,
+            language=language,
         )
 
     async def debug_leaders_snapshot(
@@ -67,6 +71,7 @@ class SemanticLeadersService:
         sector: str,
         respondent_company_name: str,
         pain_points: list[dict[str, str | None]],
+        language: str = "fr",
     ) -> dict:
         return await self._build_snapshot(
             sector=sector,
@@ -74,6 +79,7 @@ class SemanticLeadersService:
             pain_points=pain_points,
             include_debug=True,
             generation_mode="debug",
+            language=language,
         )
 
     async def _build_snapshot(
@@ -84,6 +90,7 @@ class SemanticLeadersService:
         pain_points: list[dict[str, str | None]],
         include_debug: bool,
         generation_mode: str,
+        language: str = "fr",
     ) -> dict:
         sector_key = self._resolve_sector_key(sector)
         if sector_key is None:
@@ -173,6 +180,7 @@ class SemanticLeadersService:
                 sector=sector,
                 pain_points=pain_points,
                 allow_llm=use_mistral,
+                language=language,
             )
             if curated:
                 curated_pool.append(curated)
@@ -802,8 +810,12 @@ class SemanticLeadersService:
             "healthcare": "healthcare",
             "hospitality travel": "hospitality_travel",
             "hospitality and travel": "hospitality_travel",
-            "travel": "travel",
+            "travel and hospitality": "travel",
+            "travel hospitality": "travel",
             "technology": "technology",
+            "saas software": "technology",
+            "saas": "technology",
+            "software": "technology",
             "public services": "public_services",
             "public sector": "public_sector",
         }
@@ -876,6 +888,7 @@ class SemanticLeadersService:
         sector: str,
         pain_points: list[dict[str, str | None]],
         allow_llm: bool,
+        language: str = "fr",
     ) -> dict | None:
         raw_links = list(item.get("_raw_links") or [])
         if not raw_links:
@@ -887,6 +900,7 @@ class SemanticLeadersService:
             pain_points=pain_points,
             raw_links=raw_links,
             allow_llm=allow_llm,
+            language=language,
         )
         evidence_links = curated.get("links") or []
         if not evidence_links:
@@ -921,9 +935,10 @@ class SemanticLeadersService:
         pain_points: list[dict[str, str | None]],
         raw_links: list[dict[str, str | None]],
         allow_llm: bool,
+        language: str = "fr",
     ) -> dict[str, object]:
-        fallback_links = self._fallback_links(raw_links=raw_links, pain_points=pain_points)
-        fallback_summary = self._fallback_leader_summary(company_name=company_name, links=fallback_links)
+        fallback_links = self._fallback_links(raw_links=raw_links, pain_points=pain_points, language=language)
+        fallback_summary = self._fallback_leader_summary(company_name=company_name, links=fallback_links, language=language)
         if not raw_links:
             return {
                 "leader_summary": fallback_summary,
@@ -1020,11 +1035,14 @@ class SemanticLeadersService:
                 min(len(raw_links), 5),
                 sector,
             )
+            system_content = "You are a precise benchmark curator. Output JSON only."
+            if (language or "").lower().startswith("fr"):
+                system_content += "\nCRITICAL: All generated text values (like 'leader_summary', 'why_relevant', 'rewrite_label') MUST be written entirely in French. Do NOT translate JSON keys, URLs, or company names."
             content = await self.llm.gateway.chat_messages(
                 [
                     {
                         "role": "system",
-                        "content": "You are a precise benchmark curator. Output JSON only.",
+                        "content": system_content,
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -1049,7 +1067,7 @@ class SemanticLeadersService:
         self._metrics["documents_rejected_indirect"] = self._metrics.get("documents_rejected_indirect", 0) + sum(
             1 for assessment in scored_assessments if assessment.get("rejection_reason") == "indirectness_risk"
         )
-        curated_links = self._select_curated_links(scored_assessments)
+        curated_links = self._select_curated_links(scored_assessments, language=language)
         rejected_evidence = [
             {
                 "index": assessment.get("index"),
@@ -1071,6 +1089,7 @@ class SemanticLeadersService:
                 company_name=company_name,
                 requested_summary=normalize_text(str((parsed or {}).get("leader_summary") or "")).strip(),
                 selected_links=curated_links,
+                language=language,
             )
             or fallback_summary
         )
@@ -1089,17 +1108,18 @@ class SemanticLeadersService:
         *,
         raw_links: list[dict[str, str | None]],
         pain_points: list[dict[str, str | None]],
+        language: str = "fr",
     ) -> list[dict[str, str | None]]:
         return [
             {
-                "label": self._fallback_evidence_label(link),
+                "label": self._fallback_evidence_label(link, language=language),
                 "url": str(link.get("url") or ""),
                 "source_title": self._clean_source_title(
                     raw_title=str(link.get("source_title") or link.get("title") or ""),
                     url=str(link.get("url") or ""),
                 ),
                 "mapped_capability": self._best_matching_capability(link=link, pain_points=pain_points),
-                "why_relevant": self._fallback_relevance_reason(link=link, pain_points=pain_points),
+                "why_relevant": self._fallback_relevance_reason(link=link, pain_points=pain_points, language=language),
             }
             for link in raw_links[:3]
             if str(link.get("url") or "").strip()
@@ -1309,7 +1329,7 @@ class SemanticLeadersService:
             return True
         return False
 
-    def _select_curated_links(self, assessments: list[dict[str, object]]) -> list[dict[str, str | None]]:
+    def _select_curated_links(self, assessments: list[dict[str, object]], language: str = "fr") -> list[dict[str, str | None]]:
         selected: list[dict[str, object]] = []
         covered_capabilities: set[str] = set()
         remaining = [item for item in assessments if item.get("rejection_reason") is None]
@@ -1340,7 +1360,8 @@ class SemanticLeadersService:
                         "summary": str(assessment.get("summary") or ""),
                         "mapped_capability": str(assessment.get("matched_capability") or ""),
                         "source_title": str(assessment.get("source_title") or ""),
-                    }
+                    },
+                    language=language,
                 ),
                 "url": str(assessment.get("url") or ""),
                 "source_title": self._clean_source_title(
@@ -1349,8 +1370,14 @@ class SemanticLeadersService:
                 ),
                 "mapped_capability": self._clean_evidence_text(str(assessment.get("matched_capability") or "")) or None,
                 "why_relevant": self._clean_evidence_text(str(assessment.get("why_relevant") or ""))
-                or self._clean_evidence_text(
-                    f"This evidence supports {assessment.get('matched_capability') or 'the respondent gap'} through {assessment.get('summary') or 'concrete public proof'}"
+                or (
+                    self._clean_evidence_text(
+                        f"Cet element de reference soutient {self._fr_capability_label(str(assessment.get('matched_capability') or 'le besoin identifie'))} grace a {assessment.get('summary') or 'des preuves publiques concretes'}"
+                    )
+                    if (language or "").lower().startswith("fr")
+                    else self._clean_evidence_text(
+                        f"This evidence supports {assessment.get('matched_capability') or 'the respondent gap'} through {assessment.get('summary') or 'concrete public proof'}"
+                    )
                 ),
             }
             for assessment in selected
@@ -1489,14 +1516,22 @@ class SemanticLeadersService:
         company_name: str,
         requested_summary: str,
         selected_links: list[dict[str, str | None]],
+        language: str = "fr",
     ) -> str | None:
         supported_capabilities = self._link_capability_coverage(selected_links)
         if requested_summary and supported_capabilities and not self._summary_looks_incomplete(requested_summary):
-            supported_tokens = {cap.lower() for cap in supported_capabilities}
-            if any(token in requested_summary.lower() for token in supported_tokens) and len(requested_summary) <= 100:
+            if 15 <= len(requested_summary) <= 160:
                 return requested_summary
         if not supported_capabilities:
             return requested_summary or None
+        
+        is_french = (language or "").lower().startswith("fr")
+        if is_french:
+            cap_labels = [self._fr_capability_label(cap) for cap in supported_capabilities]
+            if len(cap_labels) == 1:
+                return f"{company_name} se distingue sur {cap_labels[0]} grace a des pratiques de reference."
+            return f"{company_name} se distingue sur {cap_labels[0]} et {cap_labels[1]} grace a des pratiques de reference."
+
         if len(supported_capabilities) == 1:
             return f"{company_name} shows concrete {supported_capabilities[0].lower()} through public benchmark evidence"
         return (
@@ -1504,16 +1539,22 @@ class SemanticLeadersService:
             f"{supported_capabilities[1].lower()} through public benchmark evidence"
         )
 
-    def _summary_looks_incomplete(self, text: str) -> bool:
-        cleaned = self._clean_evidence_text(text)
-        if not cleaned:
-            return True
-        lowered = cleaned.lower()
-        if lowered.endswith((" and", " via", " through", " with", " including", " like", " such as")):
-            return True
-        if cleaned.endswith(("'", "\"", "/", "-", ":", ";", ",")):
-            return True
-        return False
+    def _fr_capability_label(self, capability: str) -> str:
+        key = normalize_text(capability).lower().strip()
+        labels = {
+            "decision-making": "la prise de decision",
+            "ownership and governance": "l'ownership et la gouvernance",
+            "feedback collection": "la collecte des retours clients",
+            "use of insights": "l'exploitation des insights",
+            "channel consistency": "la coherence multicanale",
+            "journey visibility": "la visibilite des parcours",
+            "measurement and continuous improvement": "la mesure et l'amelioration continue",
+            "acting on pain points": "le traitement des points de douleur",
+            "cx culture": "la culture CX",
+        }
+        return labels.get(key, capability)
+
+
 
     def _select_final_leaders(
         self,
@@ -1575,11 +1616,38 @@ class SemanticLeadersService:
         duplicate_penalty = 0.04 if capabilities and not new_capabilities else 0.0
         return target_bonus + breadth_bonus - duplicate_penalty
 
-    def _fallback_leader_summary(self, *, company_name: str, links: list[dict[str, str | None]]) -> str | None:
+    def _fallback_leader_summary(self, *, company_name: str, links: list[dict[str, str | None]], language: str = "fr") -> str | None:
+        is_french = (language or "").lower().startswith("fr")
         source_title = self._clean_evidence_text(str((links[0] or {}).get("source_title") or "")) if links else ""
         if source_title:
+            if is_french:
+                return self._trim_leader_summary(f"{company_name} présente des éléments de référence via {source_title}.")
             return self._trim_leader_summary(f"{company_name} shows benchmark evidence through {source_title}.")
+        if is_french:
+            return self._trim_leader_summary(f"{company_name} présente des éléments de référence publics pour les pratiques CX.")
         return self._trim_leader_summary(f"{company_name} shows public benchmark evidence for CX practices.")
+
+
+    def _summary_looks_incomplete(self, text: str) -> bool:
+        cleaned = self._clean_evidence_text(text)
+        if not cleaned:
+            return True
+        lowered = cleaned.lower()
+        # English and French incomplete ending words
+        incomplete_words = {
+            "and", "via", "through", "with", "including", "like", "such", "as",
+            "de", "des", "le", "la", "et", "à", "a", "grâce", "grace", "par",
+            "pour", "sur", "avec", "dans", "comme", "du", "au", "aux", "en"
+        }
+        tokens = [t.strip() for t in re.split(r"[^a-zA-Z0-9àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]+", lowered) if t.strip()]
+        if not tokens:
+            return True
+        last_word = tokens[-1]
+        if last_word in incomplete_words:
+            return True
+        if cleaned.endswith(("'", "\"", "/", "-", ":", ";", ",")):
+            return True
+        return False
 
     def _trim_leader_summary(self, text: str | None) -> str | None:
         summary = self._clean_evidence_text(text or "")
@@ -1587,16 +1655,17 @@ class SemanticLeadersService:
             return None
         first_sentence = next((sentence for sentence in self._summary_sentences(summary) if sentence), summary)
         normalized = self._clean_evidence_text(first_sentence)
-        if len(normalized) <= 110:
+        if len(normalized) <= 160:
             return normalized
-        shortened = normalized[:110].rsplit(" ", 1)[0].strip(" ,;:-")
-        shortened = shortened or normalized[:110].strip(" ,;:-")
+        shortened = normalized[:160].rsplit(" ", 1)[0].strip(" ,;:-")
+        shortened = shortened or normalized[:160].strip(" ,;:-")
         while shortened and self._summary_looks_incomplete(shortened):
             candidate = shortened.rsplit(" ", 1)[0].strip(" ,;:-")
             if not candidate or candidate == shortened:
                 break
             shortened = candidate
-        return shortened or normalized[:110].strip(" ,;:-")
+        return shortened or normalized[:160].strip(" ,;:-")
+
 
     def _parse_json_object(self, content: str | None) -> dict[str, object]:
         text = normalize_text(content or "").strip()
@@ -1611,7 +1680,7 @@ class SemanticLeadersService:
             text = text[start : end + 1]
         return json.loads(text)
 
-    def _fallback_evidence_label(self, link: dict[str, str | None]) -> str:
+    def _fallback_evidence_label(self, link: dict[str, str | None], language: str = "fr") -> str:
         title = self._clean_evidence_text(str(link.get("title") or link.get("source_title") or ""))
         summary = self._clean_evidence_text(str(link.get("summary") or ""))
         capability = self._clean_evidence_text(str(link.get("mapped_capability") or ""))
@@ -1619,6 +1688,8 @@ class SemanticLeadersService:
             return self._clean_evidence_text(f"{capability}: {summary}")
         if title and summary:
             return self._clean_evidence_text(f"{title}: {summary}")
+        if (language or "").lower().startswith("fr"):
+            return summary or title or "Des elements de reference publics ont ete identifies."
         return summary or title or "Public benchmark evidence was identified."
 
     def _best_matching_capability(
@@ -1656,14 +1727,21 @@ class SemanticLeadersService:
         *,
         link: dict[str, str | None],
         pain_points: list[dict[str, str | None]],
+        language: str = "fr",
     ) -> str | None:
+        is_french = (language or "").lower().startswith("fr")
         capability = self._best_matching_capability(link=link, pain_points=pain_points)
         summary = self._clean_evidence_text(str(link.get("summary") or ""))
         if capability and summary:
+            if is_french:
+                return self._clean_evidence_text(f"Cette référence soutient {self._fr_capability_label(capability)} via {summary}")
             return self._clean_evidence_text(f"This evidence supports {capability} through {summary}")
         if capability:
+            if is_french:
+                return self._clean_evidence_text(f"Cette référence est très pertinente pour {self._fr_capability_label(capability)}.")
             return self._clean_evidence_text(f"This evidence is most relevant to {capability}.")
         return None
+
 
     def _resolve_mapped_capability(
         self,

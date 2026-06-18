@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import type { FinalReportQuickWinItem, FinalReportQuickWinsTimeline } from "../../types/final-report";
 
@@ -456,7 +456,7 @@ function fallbackTitle(item: FinalReportQuickWinItem) {
 }
 
 export default function ReportQuickWinsTimeline({ timeline }: Props) {
-  const items = timeline?.items?.slice(0, 4) ?? [];
+  const items = useMemo(() => timeline?.items?.slice(0, 4) ?? [], [timeline?.items]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const isFrench = (timeline?.language ?? "").toLowerCase().startsWith("fr");
@@ -467,12 +467,6 @@ export default function ReportQuickWinsTimeline({ timeline }: Props) {
     close: isFrench ? "Fermer le quick win" : "Close quick win",
     open: isFrench ? "Ouvrir le quick win" : "Open quick win",
   };
-
-  useEffect(() => {
-    if (items.length > 0) {
-      setActiveIndex(0);
-    }
-  }, [items]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
