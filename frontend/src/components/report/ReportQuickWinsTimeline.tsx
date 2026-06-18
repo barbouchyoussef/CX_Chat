@@ -457,12 +457,20 @@ function fallbackTitle(item: FinalReportQuickWinItem) {
 
 export default function ReportQuickWinsTimeline({ timeline }: Props) {
   const items = timeline?.items?.slice(0, 4) ?? [];
-  const [activeStep, setActiveStep] = useState<number>(items[0]?.step ?? 1);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const isFrench = (timeline?.language ?? "").toLowerCase().startsWith("fr");
+  const labels = {
+    owner: isFrench ? "Responsable" : "Owner",
+    today: isFrench ? "Aujourd'hui" : "Today",
+    after: isFrench ? "Apres cette action" : "After this",
+    close: isFrench ? "Fermer le quick win" : "Close quick win",
+    open: isFrench ? "Ouvrir le quick win" : "Open quick win",
+  };
 
   useEffect(() => {
     if (items.length > 0) {
-      setActiveStep(items[0].step);
+      setActiveIndex(0);
     }
   }, [items]);
 
@@ -480,7 +488,7 @@ export default function ReportQuickWinsTimeline({ timeline }: Props) {
     return null;
   }
 
-  const activeItem = items.find((item) => item.step === activeStep) ?? items[0];
+  const activeItem = items[activeIndex] ?? items[0];
 
   return (
     <section className="report-quick-wins-shell relative overflow-hidden px-3 py-4 text-white sm:px-6 sm:py-6 lg:px-10 lg:py-8 print:px-0 print:py-0">
@@ -510,18 +518,18 @@ export default function ReportQuickWinsTimeline({ timeline }: Props) {
             {items.map((item, index) => {
               const side = index % 2 === 0 ? "left" : "right";
               return (
-                <div key={item.step} className={`timeline-node step-${index + 1}`} data-side={side}>
+                <div key={`${item.step}-${index}`} className={`timeline-node step-${index + 1}`} data-side={side}>
                   <div className="label-box">
                     <div className="label-time">{item.timeline_label}</div>
                     <div className="label-title">{fallbackTitle(item)}</div>
                   </div>
                   <div className="dot-wrap">
                     <button
-                      className={`timeline-dot ${activeStep === item.step ? "is-active" : ""}`}
+                      className={`timeline-dot ${activeIndex === index ? "is-active" : ""}`}
                       type="button"
-                      aria-label={`Open quick win ${item.step}`}
+                      aria-label={`${labels.open} ${item.step}`}
                       onClick={() => {
-                        setActiveStep(item.step);
+                        setActiveIndex(index);
                         setIsOpen(true);
                       }}
                     >
@@ -538,14 +546,14 @@ export default function ReportQuickWinsTimeline({ timeline }: Props) {
               <article key={`print-qw-${item.step}`} className="print-quick-win-card">
                 <div className="label-time">{item.timeline_label}</div>
                 <h3 className="qw-title mt-2">{fallbackTitle(item)}</h3>
-                <div className="qw-owner-chip mt-3">Owner | {item.owner}</div>
+                <div className="qw-owner-chip mt-3">{labels.owner} | {item.owner}</div>
                 <div className="ba-grid mt-4">
                   <div className="ba-cell before">
-                    <div className="ba-label">Today</div>
+                    <div className="ba-label">{labels.today}</div>
                     <div className="ba-text">{item.today_text}</div>
                   </div>
                   <div className="ba-cell after">
-                    <div className="ba-label">After this</div>
+                    <div className="ba-label">{labels.after}</div>
                     <div className="ba-text">{item.after_text}</div>
                   </div>
                 </div>
@@ -572,20 +580,20 @@ export default function ReportQuickWinsTimeline({ timeline }: Props) {
                     <h3 className="qw-title" id="quick-win-title">
                       {fallbackTitle(activeItem)}
                     </h3>
-                    <div className="qw-owner-chip">Owner | {activeItem.owner}</div>
+                    <div className="qw-owner-chip">{labels.owner} | {activeItem.owner}</div>
                   </div>
-                  <button className="qw-close" type="button" aria-label="Close quick win" onClick={() => setIsOpen(false)}>
+                  <button className="qw-close" type="button" aria-label={labels.close} onClick={() => setIsOpen(false)}>
                     X
                   </button>
                 </div>
                 <div className="qw-body">
                   <div className="ba-grid">
                     <div className="ba-cell before">
-                      <div className="ba-label">Today</div>
+                      <div className="ba-label">{labels.today}</div>
                       <div className="ba-text">{activeItem.today_text}</div>
                     </div>
                     <div className="ba-cell after">
-                      <div className="ba-label">After this</div>
+                      <div className="ba-label">{labels.after}</div>
                       <div className="ba-text">{activeItem.after_text}</div>
                     </div>
                   </div>

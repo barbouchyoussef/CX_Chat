@@ -25,6 +25,20 @@ logger = logging.getLogger(__name__)
 class QuestionComposerService:
     """Question and clarification generation with formatting safety guards."""
 
+    _FR_TOPIC_LABELS = {
+        "manage": "gerer",
+        "analyze": "analyser",
+        "improve": "ameliorer",
+        "decision-making": "la prise de decision",
+        "ownership and governance": "l'ownership et la gouvernance",
+        "feedback collection": "la collecte des retours clients",
+        "use of insights": "l'utilisation des insights",
+        "channel consistency": "la coherence multicanale",
+        "journey visibility": "la visibilite des parcours",
+        "measurement and continuous improvement": "la mesure et l'amelioration continue",
+        "cx culture": "la culture CX",
+    }
+
     def __init__(
         self,
         settings: Settings,
@@ -63,6 +77,7 @@ class QuestionComposerService:
             topic=topic,
             question_guidelines=question_guidelines,
             maturity_rubrics=maturity_rubrics,
+            language=language,
         )
 
         if not self.settings.mistral_api_key:
@@ -130,7 +145,11 @@ class QuestionComposerService:
         concerned_question: str | None = None,
         language: str = "fr",
     ) -> str:
-        fallback = "Could you say in one sentence how this works today?"
+        topic_label = self._display_topic_label(missing_topic or axis, language=language)
+        if self._normalize_language(language) == "fr":
+            fallback = f"Pour {topic_label}, pouvez-vous preciser en une phrase comment cela fonctionne aujourd'hui ?"
+        else:
+            fallback = "Could you say in one sentence how this works today?"
 
         if not self.settings.mistral_api_key:
             logger.error("Cannot generate clarification question because MISTRAL_API_KEY is not set.")
@@ -179,9 +198,12 @@ class QuestionComposerService:
         prompt_profile: str = "consultant_guided",
         language: str = "fr",
     ) -> list[dict[str, str]]:
-        readable_missing = [self._display_topic_label(item) for item in missing[:12]]
-        readable_related = [self._display_topic_label(item) for item in (related_topics or [])[:4]]
-        readable_transition_topic = self._display_topic_label(transition_topic or (missing[0] if missing else axis))
+        readable_missing = [self._display_topic_label(item, language=language) for item in missing[:12]]
+        readable_related = [self._display_topic_label(item, language=language) for item in (related_topics or [])[:4]]
+        readable_transition_topic = self._display_topic_label(
+            transition_topic or (missing[0] if missing else axis),
+            language=language,
+        )
         guidelines = [item.strip() for item in (question_guidelines or []) if item and item.strip()]
 
         user = QUESTION_USER_TEMPLATE.format(
@@ -559,8 +581,11 @@ class QuestionComposerService:
         topic: str,
         question_guidelines: list[str] | None = None,
         maturity_rubrics: list[dict] | None = None,
+        language: str = "fr",
     ) -> str:
-        displayed_topic = self._display_topic_label(topic or axis)
+        displayed_topic = self._display_topic_label(topic or axis, language=language)
+        if self._normalize_language(language) == "fr":
+            return f"Pour {displayed_topic}, pouvez-vous preciser comment cela fonctionne aujourd'hui dans votre organisation ?"
         focus_phrase = self._fallback_focus_phrase(question_guidelines)
         if focus_phrase:
             return f"For {displayed_topic}, how does {focus_phrase} work today?"
@@ -568,6 +593,12 @@ class QuestionComposerService:
         if rubric_focus:
             return f"For {displayed_topic}, how does {rubric_focus} work today?"
         return f"How does {displayed_topic} work today?"
+
+    def _normalize_language(self, value: str | None) -> str:
+        normalized = self._clean_text(value or "").strip().lower()
+        if normalized.startswith("fr"):
+            return "fr"
+        return "en"
 
     def _fallback_rubric_focus(self, maturity_rubrics: list[dict]) -> str:
         if not maturity_rubrics:
@@ -658,8 +689,23 @@ class QuestionComposerService:
         first_sentence = first_sentence[:140].rstrip(" ,;:")
         return first_sentence[:1].lower() + first_sentence[1:] if first_sentence else ""
 
-    def _display_topic_label(self, topic: str | None) -> str:
-        return self._clean_text(str(topic or "").replace("_", " ")) or "this topic"
+    def _display_topic_label(self, topic: str | None, language: str = "en") -> str:
+        normalized = self._clean_text(str(topic or "").replace("_", " ")).strip()
+        if not normalized:
+            return "ce sujet" if self._normalize_language(language) == "fr" else "this topic"
+
+        if self._normalize_language(language) == "fr":
+            key = self._normalize_topic_key(normalized)
+            translated = self._FR_TOPIC_LABELS.get(key)
+            if translated:
+                return translated
+        return normalized
+
+    def _normalize_topic_key(self, value: str | None) -> str:
+        normalized = self._clean_text(value or "").lower()
+        normalized = normalized.replace("&", "and")
+        normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+        return re.sub(r"\s+", " ", normalized).strip()
 
     def _shape_consultative_text(self, text: str) -> str:
         candidate = self._clean_text(text)

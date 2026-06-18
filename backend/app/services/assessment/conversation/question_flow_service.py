@@ -17,6 +17,20 @@ from app.services.llm.core.facade_service import ChatTurn, LLMService
 class QuestionFlowService:
     """Owns question-generation flow for the active assessment axis."""
 
+    _FR_TOPIC_LABELS = {
+        "manage": "la gestion",
+        "analyze": "l'analyse",
+        "improve": "l'amelioration continue",
+        "decision-making": "la prise de decision",
+        "ownership and governance": "l'ownership et la gouvernance",
+        "feedback collection": "la collecte des retours clients",
+        "use of insights": "l'utilisation des insights",
+        "channel consistency": "la coherence multicanale",
+        "journey visibility": "la visibilite des parcours",
+        "measurement and continuous improvement": "la mesure et l'amelioration continue",
+        "cx culture": "la culture CX",
+    }
+
     def __init__(
         self,
         assessments: AssessmentRepository,
@@ -118,7 +132,7 @@ class QuestionFlowService:
                 low_quality_exit_prefix = (
                     "I still cannot interpret that answer, so I will move on and continue the assessment."
                     if getattr(assessment, "language", "fr") == "en"
-                    else "Je n'arrive toujours pas à interpréter cette réponse, je vais donc passer à la suite de l'évaluation."
+                    else "Je n'arrive toujours pas a interpreter cette reponse, je vais donc passer a la suite de l'evaluation."
                 )
             elif await self.should_reset_followup(
                 latest_user_answer=latest_user_answer,
@@ -137,6 +151,7 @@ class QuestionFlowService:
                     related_topics=[],
                     hint=pending_hint,
                     axis=axis,
+                    language=getattr(assessment, "language", "fr"),
                 )
                 question = await self.llm.generate_clarification_question(
                     axis=axis,
@@ -208,7 +223,14 @@ class QuestionFlowService:
         assessment.pending_followup_hint = None
         assessment.pending_focus_capability_id = focus.get("primary_capability_id")
         
-        options = generated_options if generated_options and len(generated_options) >= 2 else self._derive_options_from_rubrics(maturity_rubrics)
+        options = (
+            generated_options
+            if generated_options and len(generated_options) >= 2
+            else self._derive_options_from_rubrics(
+                maturity_rubrics,
+                language=getattr(assessment, "language", "fr"),
+            )
+        )
         assessment.pending_options = options
         
         return NextQuestionResponse(status=assessment.status, axis=axis, question=question, options=options)
@@ -234,6 +256,7 @@ class QuestionFlowService:
             related_topics=[],
             hint=hint,
             axis=axis,
+            language=getattr(assessment, "language", "fr"),
         )
         return await self.llm.generate_clarification_question(
             axis=axis,
@@ -658,42 +681,69 @@ class QuestionFlowService:
         related_topics: list[str],
         hint: str,
         axis: str,
+        language: str = "fr",
     ) -> str:
-        topic = self.display_topic_label(primary_topic or axis)
+        topic = self.display_topic_label(primary_topic or axis, language=language)
         base_hint = self.extract_followup_hint(hint) or hint
         if base_hint in {"needs explanation", "insufficient_evidence", "maturity_confirmation", "process_meta_signal"}:
             return topic
         compact_related = [item.strip() for item in related_topics if item and item.strip()]
         if not compact_related:
             return topic
-        return ", ".join(([topic] + [self.display_topic_label(item) for item in compact_related])[:2])
+        return ", ".join(([topic] + [self.display_topic_label(item, language=language) for item in compact_related])[:2])
 
-    def display_topic_label(self, topic: str | None) -> str:
-        return normalize_text(str(topic or "").replace("_", " ")).strip() or "this topic"
+    def display_topic_label(self, topic: str | None, language: str = "fr") -> str:
+        normalized = normalize_text(str(topic or "").replace("_", " ")).strip()
+        if not normalized:
+            return "ce sujet" if str(language or "").lower().startswith("fr") else "this topic"
+        if str(language or "").lower().startswith("fr"):
+            key = self._normalize_topic_key(normalized)
+            translated = self._FR_TOPIC_LABELS.get(key)
+            if translated:
+                return translated
+        return normalized
+
+    def _normalize_topic_key(self, value: str | None) -> str:
+        normalized = normalize_text(value or "").lower()
+        normalized = normalized.replace("&", "and")
+        normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+        return re.sub(r"\s+", " ", normalized).strip()
 
     @staticmethod
-    def _derive_options_from_rubrics(rubrics: list[dict]) -> list[str]:
+    def _derive_options_from_rubrics(rubrics: list[dict], language: str = "fr") -> list[str]:
         """Convert maturity rubric descriptions into concise user-facing answer options."""
         if not rubrics:
             return []
         sorted_rubrics = sorted(rubrics, key=lambda r: int(r.get("maturity_level_number", 0)))
         options: list[str] = []
+        normalized_language = normalize_text(str(language or "")).strip().lower()
+        is_french = normalized_language.startswith("fr")
         for rubric in sorted_rubrics:
             text = str(rubric.get("card_summary") or rubric.get("description") or "").strip()
+            try:
+                level = int(rubric.get("maturity_level_number", 0))
+            except Exception:
+                level = 0
+
+            if is_french:
+                if level == 1:
+                    options.append("C'est surtout informel ou reactif.")
+                elif level == 2:
+                    options.append("C'est partiellement structure mais encore inconstant.")
+                elif level == 3:
+                    options.append("C'est systematique, pilote et revu entre equipes.")
+                continue
+
             if not text:
                 continue
-            # Strip the "Level N / Label:" prefix if present
-            for prefix_pattern in ("Level 1 / ", "Level 2 / ", "Level 3 / ",
-                                    "Level 1: ", "Level 2: ", "Level 3: "):
+            for prefix_pattern in ("Level 1 / ", "Level 2 / ", "Level 3 / ", "Level 1: ", "Level 2: ", "Level 3: "):
                 if text.startswith(prefix_pattern):
                     text = text[len(prefix_pattern):]
                     break
-            # Also strip sub-labels like "Basic Reactive: " or "Established: " or "Advanced: "
             for sub_label in ("Basic Reactive: ", "Basic / Reactive: ", "Established: ", "Advanced: "):
                 if text.startswith(sub_label):
                     text = text[len(sub_label):]
                     break
-            # Take the first sentence only to keep it concise
             first_sentence = text.split(". ")[0].strip()
             if first_sentence and not first_sentence.endswith("."):
                 first_sentence += "."
@@ -733,3 +783,4 @@ def build_question_flow_service(
         max_clarifications_per_focus=max_clarifications_per_focus,
         max_insufficient_evidence_retries=max_insufficient_evidence_retries,
     )
+

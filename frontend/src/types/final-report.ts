@@ -166,6 +166,7 @@ export type FinalReportQuickWinItem = {
 
 export type FinalReportQuickWinsTimeline = {
   section_title: string;
+  language?: string | null;
   items: FinalReportQuickWinItem[];
 };
 

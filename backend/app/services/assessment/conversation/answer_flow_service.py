@@ -91,6 +91,8 @@ class AnswerFlowService:
             answer,
             previous_question=(assessment.pending_question or "").strip() or None,
         )
+        if intent != "VALID_ANSWER" and self._matches_pending_option_answer(assessment, answer):
+            intent = "VALID_ANSWER"
 
         if intent == "VALID_ANSWER":
             return await self.process_valid_answer(
@@ -591,6 +593,23 @@ class AnswerFlowService:
 
     def next_clarification_count(self, assessment: Any, intent: str) -> int:
         return int(assessment.clarification_count or 0) + 1
+
+    def _matches_pending_option_answer(self, assessment: Any, answer: str) -> bool:
+        pending_options = getattr(assessment, "pending_options", None) or []
+        if not pending_options:
+            return False
+
+        normalized_answer = self._normalize_option_text(answer)
+        if not normalized_answer:
+            return False
+
+        for option in pending_options:
+            if normalized_answer == self._normalize_option_text(option):
+                return True
+        return False
+
+    def _normalize_option_text(self, value: Any) -> str:
+        return normalize_text(str(value or "")).strip().lower()
 
     def _should_exit_repeated_low_quality(self, assessment: Any) -> bool:
         threshold = 3

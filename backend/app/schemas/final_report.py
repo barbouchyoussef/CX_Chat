@@ -169,6 +169,7 @@ class FinalReportQuickWinItem(BaseModel):
 
 class FinalReportQuickWinsTimeline(BaseModel):
     section_title: str = "Your Quick Wins, In Order"
+    language: str | None = None
     items: list[FinalReportQuickWinItem] = []
 
 

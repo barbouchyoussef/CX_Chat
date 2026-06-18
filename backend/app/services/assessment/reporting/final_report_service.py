@@ -65,6 +65,7 @@ _leaders_snapshot_tasks: dict[int, asyncio.Task[None]] = {}
 _leaders_snapshot_tasks_lock = asyncio.Lock()
 _leaders_snapshot_job_semaphore: asyncio.Semaphore | None = None
 QUICK_WIN_TIMELINE_LABELS = ("Week 1", "Month 1", "Month 2", "Month 3-4")
+QUICK_WIN_TIMELINE_LABELS_FR = ("Semaine 1", "Mois 1", "Mois 2", "Mois 3-4")
 
 
 def _get_leaders_snapshot_job_semaphore(settings: Settings) -> asyncio.Semaphore:
@@ -845,11 +846,13 @@ class ReportBuilderService:
                 insights_by_capability.setdefault(int(capability_id), []).append(combined)
 
         llm_candidates: list[dict[str, Any]] = []
+        language = getattr(assessment, "language", "fr")
+        timeline_labels = self._quick_win_timeline_labels(language)
         for step, item in enumerate(selected, start=1):
             llm_candidates.append(
                 {
                     "step": step,
-                    "timeline_label": QUICK_WIN_TIMELINE_LABELS[step - 1],
+                    "timeline_label": timeline_labels[step - 1],
                     "axis": item["axis"],
                     "capability": item["capability"],
                     "maturity_band": item["maturity_band"],
@@ -865,9 +868,17 @@ class ReportBuilderService:
 
         items = await self._shape_quick_wins_with_llm(
             candidates=llm_candidates,
-            language=getattr(assessment, "language", "fr"),
+            language=language,
         )
-        return FinalReportQuickWinsTimeline(items=items[:4]) if items else None
+        return (
+            FinalReportQuickWinsTimeline(
+                section_title=self._quick_win_section_title(language),
+                language=self._normalize_report_language(language),
+                items=items[:4],
+            )
+            if items
+            else None
+        )
 
     def _select_quick_win_candidates(
         self,
@@ -957,12 +968,12 @@ class ReportBuilderService:
         return selected[:4]
 
     async def _shape_quick_wins_with_llm(self, candidates: list[dict[str, Any]], language: str = "fr") -> list[FinalReportQuickWinItem]:
-        fallback = [self._fallback_quick_win_item(candidate) for candidate in candidates[:4]]
+        fallback = [self._fallback_quick_win_item(candidate, language=language) for candidate in candidates[:4]]
         if not candidates or not self.settings.mistral_api_key:
             return fallback
 
         payload = {
-            "timeline_labels": list(QUICK_WIN_TIMELINE_LABELS[: len(candidates)]),
+            "timeline_labels": list(self._quick_win_timeline_labels(language)[: len(candidates)]),
             "items": candidates[:4],
         }
         system_prompt = (
@@ -977,7 +988,7 @@ class ReportBuilderService:
             "- Write a short action title of 5 to 10 words, suitable for the timeline label and popup.\n"
             "- Prefer owners explicitly mentioned in respondent answers or insights; otherwise infer the most plausible concise owner role.\n"
             "- `today_text` must summarize the respondent's current weakness in plain language.\n"
-            "- Do not rewrite or embellish `after_text`; the backend derives that separately from the quick-win template.\n"
+            "- Do not generate `after_text`; the backend derives and localizes that separately from the quick-win template.\n"
             "- Use only the provided inputs.\n"
             "- Never mention competitors, benchmarks, or sources.\n"
             "- Keep owner concise, like 'CX Lead' or 'Operations Manager'.\n"
@@ -1000,19 +1011,31 @@ class ReportBuilderService:
             for index, raw in enumerate(raw_items[: len(candidates)]):
                 if not isinstance(raw, dict):
                     continue
-                parsed.append(self._finalize_quick_win_item(raw=raw, candidate=candidates[index], fallback=fallback[index]))
+                parsed.append(
+                    self._finalize_quick_win_item(
+                        raw=raw,
+                        candidate=candidates[index],
+                        fallback=fallback[index],
+                        language=language,
+                    )
+                )
             if len(parsed) != len(candidates[:4]):
                 return fallback
-            return self._post_process_quick_win_items(parsed=parsed, candidates=candidates[:4], fallback=fallback)
+            return self._post_process_quick_win_items(
+                parsed=parsed,
+                candidates=candidates[:4],
+                fallback=fallback,
+                language=language,
+            )
         except Exception as exc:
             logger.error("Quick wins timeline shaping failed: %s", exc, exc_info=True)
             return fallback
 
-    def _fallback_quick_win_item(self, candidate: dict[str, Any]) -> FinalReportQuickWinItem:
+    def _fallback_quick_win_item(self, candidate: dict[str, Any], language: str = "fr") -> FinalReportQuickWinItem:
         step = int(candidate["step"])
-        title = self._fallback_quick_win_title(candidate)
-        today_text = self._fallback_quick_win_today_text(candidate)
-        after_text = self._quick_win_after_text(candidate)
+        title = self._fallback_quick_win_title(candidate, language=language)
+        today_text = self._fallback_quick_win_today_text(candidate, language=language)
+        after_text = self._quick_win_after_text(candidate, language=language)
         owner = self._normalize_quick_win_owner_label(
             raw_owner=str(candidate.get("owner_hint") or ""),
             axis=str(candidate.get("axis") or ""),
@@ -1020,16 +1043,21 @@ class ReportBuilderService:
         )
         return FinalReportQuickWinItem(
             step=step,
-            timeline_label=self._normalize_quick_win_label(candidate.get("timeline_label"), QUICK_WIN_TIMELINE_LABELS[step - 1]),
+            timeline_label=self._normalize_quick_win_label(
+                candidate.get("timeline_label"),
+                self._quick_win_timeline_labels(language)[step - 1],
+                language=language,
+            ),
             title=title,
             owner=owner,
             today_text=today_text,
             after_text=after_text,
         )
 
-    def _normalize_quick_win_label(self, value: Any, fallback: str) -> str:
+    def _normalize_quick_win_label(self, value: Any, fallback: str, language: str = "fr") -> str:
         normalized = normalize_text(str(value or "")).strip()
-        if normalized in QUICK_WIN_TIMELINE_LABELS:
+        allowed_labels = set(QUICK_WIN_TIMELINE_LABELS) | set(QUICK_WIN_TIMELINE_LABELS_FR)
+        if normalized in allowed_labels:
             return normalized
         return fallback
 
@@ -1044,6 +1072,113 @@ class ReportBuilderService:
         if normalized == "later operationalization":
             return 3
         return 2
+
+    def _normalize_report_language(self, language: str | None) -> str:
+        return "fr" if normalize_text(language).lower().startswith("fr") else "en"
+
+    def _is_french(self, language: str | None) -> bool:
+        return self._normalize_report_language(language) == "fr"
+
+    def _quick_win_timeline_labels(self, language: str | None) -> tuple[str, str, str, str]:
+        return QUICK_WIN_TIMELINE_LABELS_FR if self._is_french(language) else QUICK_WIN_TIMELINE_LABELS
+
+    def _quick_win_section_title(self, language: str | None) -> str:
+        return "Vos quick wins, dans l'ordre" if self._is_french(language) else "Your Quick Wins, In Order"
+
+    def _fr_capability_label(self, capability: str) -> str:
+        key = normalize_text(capability).lower().strip()
+        labels = {
+            "decision-making": "la prise de decision",
+            "ownership and governance": "l'ownership et la gouvernance",
+            "feedback collection": "la collecte des retours clients",
+            "use of insights": "l'exploitation des insights",
+            "channel consistency": "la coherence multicanale",
+            "journey visibility": "la visibilite des parcours",
+            "measurement and continuous improvement": "la mesure et l'amelioration continue",
+            "acting on pain points": "le traitement des points de douleur",
+            "cx culture": "la culture CX",
+        }
+        return labels.get(key, capability)
+
+    def _fr_quick_win_title_map(self) -> dict[str, str]:
+        return {
+            "decision-making": "Lancer une revue decisionnelle client",
+            "ownership and governance": "Formaliser les revues CX transverses",
+            "feedback collection": "Structurer la revue des retours clients",
+            "use of insights": "Prioriser les irritants par impact client",
+            "channel consistency": "Corriger les principaux ecarts multicanaux",
+            "journey visibility": "Cartographier les parcours et nommer les owners",
+            "measurement and continuous improvement": "Nommer les owners des indicateurs CX",
+            "acting on pain points": "Ajouter une verification des causes racines",
+            "cx culture": "Coacher les equipes sur les moments CX",
+        }
+
+    def _fr_quick_win_today_map(self) -> dict[str, str]:
+        return {
+            "decision-making": "Les retours clients sont suivis, mais ils influencent encore rarement les decisions et les priorites de maniere structuree.",
+            "ownership and governance": "Un responsable existe, mais les routines transverses et les escalades restent encore inegales.",
+            "feedback collection": "Les retours sont collectes, mais la couverture et les routines de revue restent incompletes.",
+            "use of insights": "Les informations clients existent, mais les themes, causes et impacts ne sont pas revus de maniere reguliere.",
+            "channel consistency": "Les clients peuvent encore rencontrer des reponses ou des passages de relais inegaux selon les canaux.",
+            "journey visibility": "Les equipes ameliorent des points de contact isoles, sans vision partagee du parcours.",
+            "measurement and continuous improvement": "Des indicateurs existent, mais ils ne sont pas encore relies a des owners, decisions ou plans de suivi.",
+            "acting on pain points": "Les irritants sont traites de facon reactive, sans backlog, owner ou discipline de cloture suffisamment stable.",
+            "cx culture": "Les attentes CX ne sont pas encore renforcees par des habitudes, du coaching ou des routines communes.",
+        }
+
+    def _localize_quick_win_after_text(self, after_text: str, candidate: dict[str, Any]) -> str:
+        key = normalize_text(after_text).lower().strip()
+        exact_map = {
+            "customer-facing teams get a shared service baseline, reducing inconsistent behaviors and making cx expectations easier to coach.": "Les equipes en contact client disposent d'un socle de service commun, ce qui reduit les comportements incoherents et facilite le coaching CX.",
+            "customer-focused behaviors become more repeatable through team routines, qa feedback, and visible reinforcement.": "Les comportements orientes client deviennent plus repetables grace aux routines d'equipe, aux retours qualite et au renforcement visible.",
+            "teams can connect daily behaviors to measurable customer outcomes, strengthening accountability and cultural consistency.": "Les equipes relient les comportements quotidiens a des resultats client mesurables, ce qui renforce la responsabilisation et la coherence culturelle.",
+            "customer issues stop depending only on informal follow-up because ownership, escalation, and next actions become visible.": "Les problemes clients ne dependent plus seulement du suivi informel, car les owners, escalades et prochaines actions deviennent visibles.",
+            "cross-functional teams gain a clearer operating rhythm for customer issues, reducing dropped actions and fragmented accountability.": "Les equipes transverses gagnent un rythme de pilotage plus clair des problemes clients, ce qui reduit les actions oubliees et la responsabilite fragmentee.",
+            "cx governance becomes a decision mechanism that connects ownership, investment choices, and measurable customer outcomes.": "La gouvernance CX devient un mecanisme de decision reliant ownership, choix d'investissement et resultats client mesurables.",
+            "customer evidence gets a defined place in operational decisions, reducing purely reactive or internally driven prioritization.": "Les preuves client trouvent une place claire dans les decisions operationnelles, ce qui reduit les priorites purement reactives ou internes.",
+            "customer feedback becomes more actionable because decisions are connected to owners, next steps, and visible follow-up.": "Les retours clients deviennent plus actionnables, car les decisions sont reliees a des owners, des prochaines etapes et un suivi visible.",
+            "customer evidence has a stronger path into planning, helping teams prioritize resources around the highest-impact experience gaps.": "Les preuves client alimentent mieux la planification et aident les equipes a prioriser les ressources sur les ecarts d'experience les plus critiques.",
+            "feedback capture becomes less ad hoc, giving teams a repeatable source of customer signals to review and act on.": "La collecte des retours devient moins ad hoc et donne aux equipes une source repetable de signaux client a analyser et traiter.",
+            "teams gain broader and more comparable feedback coverage, improving visibility across the main customer touchpoints.": "Les equipes obtiennent une couverture de feedback plus large et comparable, ce qui ameliore la visibilite sur les principaux points de contact.",
+            "feedback becomes a normal input into service management, improving continuity between listening, decisions, and action.": "Le feedback devient une entree normale du pilotage du service, ce qui renforce la continuite entre ecoute, decision et action.",
+            "customer comments become easier to interpret because repeated issues are grouped into themes instead of handled only case by case.": "Les commentaires clients deviennent plus faciles a interpreter, car les problemes recurrents sont regroupes par themes plutot que traites au cas par cas.",
+            "insight reviews become more decision-ready by connecting repeated themes to causes, impact, and prioritization logic.": "Les revues d'insights deviennent plus utiles pour la decision en reliant themes recurrents, causes, impact et logique de priorisation.",
+            "customer insight becomes a stronger management input, helping teams focus improvement effort where it can shift outcomes.": "L'insight client devient un intrant de management plus fort et aide les equipes a concentrer les efforts la ou ils peuvent changer les resultats.",
+            "customers receive more consistent information and handoffs because teams have a shared baseline for channel behaviour.": "Les clients recoivent des informations et passages de relais plus coherents, car les equipes disposent d'un socle commun de comportement par canal.",
+            "cross-channel friction becomes easier to spot and resolve, reducing repeat contacts and inconsistent customer experiences.": "Les frictions multicanales deviennent plus faciles a reperer et corriger, ce qui reduit les contacts repetes et les experiences incoherentes.",
+            "channel management shifts from local fixes to a more joined-up experience with clearer standards and monitoring.": "Le pilotage des canaux passe de corrections locales a une experience plus coherente, avec des standards et un suivi plus clairs.",
+            "teams gain a shared view of the most important journeys, making pain points easier to locate and discuss together.": "Les equipes disposent d'une vision partagee des parcours les plus importants, ce qui facilite l'identification et la discussion des irritants.",
+            "journey visibility becomes more operational because teams regularly review touchpoints, friction, and ownership.": "La visibilite parcours devient plus operationnelle, car les equipes revoient regulierement points de contact, frictions et ownership.",
+            "journey architecture becomes a practical planning tool, helping leaders connect improvement decisions to customer moments.": "L'architecture des parcours devient un outil de planification concret, reliant les decisions d'amelioration aux moments client.",
+            "teams gain a basic improvement rhythm by tracking a focused set of cx measures and discussing what changed.": "Les equipes installent un premier rythme d'amelioration en suivant quelques mesures CX ciblees et en discutant ce qui evolue.",
+            "measurement becomes more useful because metric movement triggers ownership, action review, and follow-up.": "La mesure devient plus utile, car l'evolution des indicateurs declenche ownership, revue d'action et suivi.",
+            "improvement activity becomes easier to prioritize and govern through connected cx, operational, and business outcomes.": "Les actions d'amelioration deviennent plus faciles a prioriser et piloter grace au lien entre resultats CX, operationnels et business.",
+            "recurring pain points are less likely to be closed superficially because teams check causes before moving on.": "Les irritants recurrents risquent moins d'etre clos superficiellement, car les equipes verifient les causes avant de passer a la suite.",
+            "pain-point handling becomes more structured through review routines, owners, and clearer action follow-through.": "Le traitement des irritants devient plus structure grace aux routines de revue, aux owners et a un meilleur suivi des actions.",
+            "teams move from reactive fixes toward earlier detection and more systematic prevention of recurring customer issues.": "Les equipes passent de corrections reactives a une detection plus precoce et une prevention plus systematique des problemes clients recurrents.",
+        }
+        if key in exact_map:
+            return exact_map[key]
+        capability = self._fr_capability_label(str(candidate.get("capability") or ""))
+        return f"{capability} devient plus clair, plus regulier et plus facile a piloter."
+
+    def _looks_like_english_quick_win_text(self, text: str) -> bool:
+        lowered = normalize_text(text).lower()
+        english_markers = (
+            "customer",
+            "feedback",
+            "decision",
+            "owner",
+            "journey",
+            "channel",
+            "review",
+            "formalize",
+            "launch",
+            "assign",
+            "metrics",
+        )
+        french_markers = (" client", " clients", " equipe", " equipes", "decision", "retour", "retours", "amelior")
+        return any(marker in lowered for marker in english_markers) and not any(marker in lowered for marker in french_markers)
 
     def _quick_win_rank_score(
         self,
@@ -1100,9 +1235,9 @@ class ReportBuilderService:
             return "CX Lead" if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability)
         return "CX Lead" if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability)
 
-    def _fallback_quick_win_title(self, candidate: dict[str, Any]) -> str:
+    def _fallback_quick_win_title(self, candidate: dict[str, Any], language: str = "fr") -> str:
         capability_text = normalize_text(str(candidate.get("capability") or "")).lower()
-        title_map = {
+        title_map = self._fr_quick_win_title_map() if self._is_french(language) else {
             "decision-making": "Launch monthly customer decision review",
             "ownership and governance": "Formalize cross-functional CX reviews",
             "feedback collection": "Set weekly CRM feedback review",
@@ -1118,12 +1253,16 @@ class ReportBuilderService:
         title_source = normalize_text(str(candidate.get("quick_win_guideline") or "")).strip()
         title = title_source.split(".")[0].strip() if title_source else ""
         if not title or len(title) > 90:
-            title = f"Strengthen {candidate['capability']}"
+            title = (
+                f"Renforcer {self._fr_capability_label(str(candidate['capability']))}"
+                if self._is_french(language)
+                else f"Strengthen {candidate['capability']}"
+            )
         return title
 
-    def _fallback_quick_win_today_text(self, candidate: dict[str, Any]) -> str:
+    def _fallback_quick_win_today_text(self, candidate: dict[str, Any], language: str = "fr") -> str:
         capability_text = normalize_text(str(candidate.get("capability") or "")).lower()
-        today_map = {
+        today_map = self._fr_quick_win_today_map() if self._is_french(language) else {
             "decision-making": "Customer feedback is monitored, but it rarely shapes decisions, priorities, or roadmap choices in a structured way.",
             "ownership and governance": "A named owner exists, but cross-functional routines and escalation paths are still inconsistent.",
             "feedback collection": "Feedback is captured, but review routines and coverage across touchpoints are still incomplete.",
@@ -1139,12 +1278,18 @@ class ReportBuilderService:
         rationale = normalize_text(str(candidate.get("current_rationale") or "")).strip()
         if rationale:
             return rationale
+        if self._is_french(language):
+            return f"{self._fr_capability_label(str(candidate['capability']))} reste inegal et depend encore de pratiques informelles."
         return f"{candidate['capability']} is still inconsistent and relies on informal habits instead of a repeatable routine."
 
-    def _quick_win_after_text(self, candidate: dict[str, Any]) -> str:
+    def _quick_win_after_text(self, candidate: dict[str, Any], language: str = "fr") -> str:
         after_text = normalize_text(str(candidate.get("after_text") or "")).strip()
         if after_text:
+            if self._is_french(language):
+                return self._localize_quick_win_after_text(after_text, candidate)
             return after_text
+        if self._is_french(language):
+            return f"{self._fr_capability_label(str(candidate['capability']))} devient plus clair, plus regulier et plus facile a piloter."
         return f"{candidate['capability']} becomes clearer, more repeatable, and easier for the team to sustain."
 
     def _finalize_quick_win_item(
@@ -1153,6 +1298,7 @@ class ReportBuilderService:
         raw: dict[str, Any],
         candidate: dict[str, Any],
         fallback: FinalReportQuickWinItem,
+        language: str = "fr",
     ) -> FinalReportQuickWinItem:
         title = normalize_text(str(raw.get("title") or "")).strip() or fallback.title
         today_text = normalize_text(str(raw.get("today_text") or "")).strip() or fallback.today_text
@@ -1162,6 +1308,10 @@ class ReportBuilderService:
             capability=str(candidate.get("capability") or ""),
         )
 
+        if self._is_french(language) and self._looks_like_english_quick_win_text(title):
+            title = fallback.title
+        if self._is_french(language) and self._looks_like_english_quick_win_text(today_text):
+            today_text = fallback.today_text
         if not self._quick_win_title_matches_context(title=title, candidate=candidate, today_text=today_text):
             title = fallback.title
         if not self._quick_win_today_matches_context(today_text=today_text, candidate=candidate, title=title):
@@ -1169,11 +1319,11 @@ class ReportBuilderService:
 
         return FinalReportQuickWinItem(
             step=int(raw.get("step") or fallback.step),
-            timeline_label=self._normalize_quick_win_label(raw.get("timeline_label"), fallback.timeline_label),
+            timeline_label=self._normalize_quick_win_label(raw.get("timeline_label"), fallback.timeline_label, language=language),
             title=title,
             owner=owner,
             today_text=today_text,
-            after_text=self._quick_win_after_text(candidate),
+            after_text=self._quick_win_after_text(candidate, language=language),
         )
 
     def _post_process_quick_win_items(
@@ -1182,6 +1332,7 @@ class ReportBuilderService:
         parsed: list[FinalReportQuickWinItem],
         candidates: list[dict[str, Any]],
         fallback: list[FinalReportQuickWinItem],
+        language: str = "fr",
     ) -> list[FinalReportQuickWinItem]:
         finalized: list[FinalReportQuickWinItem] = []
         seen_after_keys: set[str] = set()
@@ -1201,7 +1352,9 @@ class ReportBuilderService:
                         capability=str(candidates[index].get("capability") or ""),
                     ),
                     today_text=item.today_text,
-                    after_text=after_text,
+                    after_text=self._localize_quick_win_after_text(after_text, candidates[index])
+                    if self._is_french(language)
+                    else after_text,
                 )
             )
         return finalized
