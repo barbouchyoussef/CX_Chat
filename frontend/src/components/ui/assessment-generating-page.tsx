@@ -94,7 +94,7 @@ export default function AssessmentGeneratingPage({ onDone, mode = "client", onBa
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur hover:bg-white"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to history
+              {language === "fr" ? "Retour à l'historique" : "Back to history"}
             </button>
           </div>
         ) : null}
@@ -110,20 +110,22 @@ export default function AssessmentGeneratingPage({ onDone, mode = "client", onBa
         </div>
 
         <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#C5A04F]">
-          {mode === "admin" ? "Client report preview in progress" : t.synthesisProgress}
+          {mode === "admin" ? (language === "fr" ? "Aperçu du rapport client en cours" : "Client report preview in progress") : t.synthesisProgress}
         </p>
         <h1 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-[#111827] md:text-6xl">
-          {mode === "admin" ? "Preparing client executive report..." : t.generatingResults}
+          {mode === "admin" ? (language === "fr" ? "Préparation du rapport exécutif client..." : "Preparing client executive report...") : t.generatingResults}
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#667085]">
           {mode === "admin"
-            ? "We are assembling scored insights, benchmark signals, and recommendation priorities for consultant review."
+            ? (language === "fr"
+                ? "Nous assemblons les insights scorés, les signaux de benchmark et les priorités de recommandation pour la revue du consultant."
+                : "We are assembling scored insights, benchmark signals, and recommendation priorities for consultant review.")
             : t.generatingDesc}
         </p>
 
         <div className="mx-auto mt-10 max-w-2xl text-left">
           <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.22em] text-[#667085]">
-            <span>{mode === "admin" ? "Client report preparation" : t.executivePrep}</span>
+            <span>{mode === "admin" ? (language === "fr" ? "Préparation du rapport client" : "Client report preparation") : t.executivePrep}</span>
             <span className="text-[#3858E9]">{progress}%</span>
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white shadow-inner">

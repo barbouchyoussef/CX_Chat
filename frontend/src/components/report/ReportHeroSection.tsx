@@ -6,12 +6,28 @@ type Props = {
   report: FinalReport;
   companyName?: string | null;
   onBack?: () => void;
+  language?: string | null;
 };
 
 const ORBIT_IMAGE_SRC = "/1b428a9545ed4c55816d6fd0bd7115df485a185c.png";
 
 const axisLabel = (value?: string | null) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "Unknown";
+
+const getMaturityBandDisplayName = (band?: string | null, isFr?: boolean) => {
+  if (!band) return "";
+  const key = band.toLowerCase().trim();
+  if (isFr) {
+    if (key.includes("basic") || key.includes("basique")) return "Basique";
+    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Établi";
+    if (key.includes("advanced") || key.includes("avancé")) return "Avancé";
+  } else {
+    if (key.includes("basic") || key.includes("basique")) return "Basic";
+    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Established";
+    if (key.includes("advanced") || key.includes("avancé")) return "Advanced";
+  }
+  return band;
+};
 
 const DEFINITIONS = {
   en: {
@@ -92,7 +108,7 @@ function PriorityIcon() {
   );
 }
 
-export default function ReportHeroSection({ report, companyName, onBack }: Props) {
+export default function ReportHeroSection({ report, companyName, onBack, language }: Props) {
   const hero = report.hero;
   const summary = report.summary;
   const resolvedCompany = (companyName || hero.company_name || "Executive Report").toUpperCase();
@@ -101,7 +117,7 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
     summary.executive_summary_text?.trim() ||
     `${resolvedCompany} is currently at ${hero.overall_maturity_band} maturity. ${axisLabel(hero.strongest_axis)} is the strongest area today, while ${axisLabel(hero.priority_axis)} needs the most attention next.`;
 
-  const isFrench = overview.toLowerCase().includes("démontre") || overview.toLowerCase().includes("est") || overview.toLowerCase().includes("les");
+  const isFrench = (language ?? "").toLowerCase().startsWith("fr") || overview.toLowerCase().includes("démontre") || overview.toLowerCase().includes("est") || overview.toLowerCase().includes("les");
 
   // Explanations for the tooltips
   const bandKey = (hero.overall_maturity_band || "").toLowerCase().trim();
@@ -134,7 +150,7 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
   const priorityExplanation = getAxisExplanation(hero.priority_axis);
 
   const overallLevelNum = hero.overall_level || 2;
-  const overallMaturityBandLower = (hero.overall_maturity_band || "Established").toLowerCase();
+  const overallMaturityBandLower = getMaturityBandDisplayName(hero.overall_maturity_band || "Established", isFrench).toLowerCase();
   
   const stageLabelText = isFrench
     ? `Sur l'échelle de 3 niveaux de maturité, vous êtes au niveau ${overallLevelNum} ${overallMaturityBandLower}`
@@ -169,7 +185,7 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
                 className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/8 px-4 py-3 text-sm font-semibold text-white/92 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/12"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                {isFrench ? "Retour" : "Back"}
               </button>
             ) : null}
             <button
@@ -178,7 +194,7 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
               className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#ffd447,rgba(255,255,255,0.94))] px-[18px] py-[13px] text-sm font-bold text-[#111318] shadow-[0_16px_28px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:brightness-105"
             >
               <Download className="h-4 w-4" />
-              Download PDF
+              {isFrench ? "Télécharger le PDF" : "Download PDF"}
             </button>
           </div>
 
@@ -272,11 +288,13 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#ffd447_0%,#c8973f_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
                 <StageIcon />
               </div>
-              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">Actual Stage</p>
+              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">
+                {isFrench ? "Niveau Actuel" : "Actual Stage"}
+              </p>
             </div>
             <div className="min-h-[84px]">
               <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
-                <span>{hero.overall_maturity_band}</span>
+                <span>{getMaturityBandDisplayName(hero.overall_maturity_band, isFrench)}</span>
                 <InfoTooltip explanation={maturityExplanation} />
               </p>
               <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{stageLabelText}</p>
@@ -288,7 +306,9 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#85eaff_0%,#00d4ff_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
                 <StrongestIcon />
               </div>
-              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">Strongest Axis</p>
+              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">
+                {isFrench ? "Axe le plus Fort" : "Strongest Axis"}
+              </p>
             </div>
             <div className="min-h-[84px]">
               <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
@@ -304,7 +324,9 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#7c5cff_0%,#4d22df_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
                 <PriorityIcon />
               </div>
-              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">Priority Axis</p>
+              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">
+                {isFrench ? "Axe Prioritaire" : "Priority Axis"}
+              </p>
             </div>
             <div className="min-h-[84px]">
               <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-[#ffe4eb] print:text-black flex items-center">

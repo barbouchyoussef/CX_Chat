@@ -5,6 +5,7 @@ import { capabilityLinks } from "../../config/capabilityLinks";
 type Props = {
   hero: FinalReportHero;
   axes: FinalReportWorkingMissingAxis[];
+  language?: string | null;
 };
 
 type ModalState = {
@@ -50,6 +51,16 @@ const MATURITY_CARDS = {
     },
     yourPosition: "Votre position"
   }
+};
+
+const getMaturityBandDisplayName = (band?: string | null, isFr?: boolean) => {
+  if (!band) return "";
+  if (!isFr) return band;
+  const key = band.toLowerCase().trim();
+  if (key === "basic") return "Basique";
+  if (key === "established") return "Établi";
+  if (key === "advanced") return "Avancé";
+  return band;
 };
 
 const SECTION_STYLES = `
@@ -669,8 +680,9 @@ function levelToStep(level?: number | null) {
   return 1;
 }
 
-export default function CapabilitiesAxesSection({ hero, axes }: Props) {
-  const isFrench = (hero.overall_maturity_band || "").toLowerCase().includes("établi") || 
+export default function CapabilitiesAxesSection({ hero, axes, language }: Props) {
+  const isFrench = (language ?? "").toLowerCase().startsWith("fr") ||
+                   (hero.overall_maturity_band || "").toLowerCase().includes("établi") || 
                    (hero.overall_maturity_band || "").toLowerCase().includes("basique") || 
                    (hero.overall_maturity_band || "").toLowerCase().includes("avancé") || 
                    (hero.overall_maturity_band || "").toLowerCase().includes("intermédiaire") ||
@@ -766,7 +778,9 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
 
         <div className="section-head">
           <span className="section-number">02</span>
-          <h2 className="section-title">Where You Stand — Competitive Landscape</h2>
+          <h2 className="section-title">
+            {isFrench ? "Votre position — Paysage concurrentiel" : "Where You Stand — Competitive Landscape"}
+          </h2>
         </div>
 
         <div className="panel-inner print:hidden">
@@ -894,7 +908,9 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
 
         <div className="section-head">
           <span className="section-number">03</span>
-          <h2 className="section-title">What's Working &amp; What's Missing</h2>
+          <h2 className="section-title">
+            {isFrench ? "Ce qui fonctionne et ce qui manque" : "What's Working & What's Missing"}
+          </h2>
         </div>
 
         <div className="panel">
@@ -908,12 +924,14 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                   type="button"
                   onClick={() => setActiveAxis(axis.axis)}
                 >
-                  <div className="axis-kicker">Axis {String(index + 1).padStart(2, "0")}</div>
+                  <div className="axis-kicker">
+                    {isFrench ? "Axe " : "Axis "}{String(index + 1).padStart(2, "0")}
+                  </div>
                   <h2 className="axis-name">{axis.label}</h2>
                   <p className="axis-mini">{axis.subtitle}</p>
                   <div className="axis-score-row">
                     <div className="axis-score">{levelToStep(axis.axis_level)}/3</div>
-                    <div className="axis-band">{axis.maturity_band}</div>
+                    <div className="axis-band">{getMaturityBandDisplayName(axis.maturity_band, isFrench)}</div>
                   </div>
                 </button>
               ))}
@@ -928,7 +946,9 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                 >
                   <div className="axis-panel-head">
                     <div>
-                      <h3 className="axis-panel-title">{axis.label}: what's real today</h3>
+                      <h3 className="axis-panel-title">
+                        {axis.label}{isFrench ? " : la réalité aujourd'hui" : ": what's real today"}
+                      </h3>
                       <p className="axis-panel-copy">{axis.intro}</p>
                     </div>
                   </div>
@@ -939,9 +959,13 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                         <div>
                           <div className="cap-title-row">
                             <span className="status-icon working" aria-hidden="true">&#10003;</span>
-                            <h4 className="cap-col-title">Working</h4>
+                            <h4 className="cap-col-title">{isFrench ? "Ce qui fonctionne" : "Working"}</h4>
                           </div>
-                          <p className="cap-col-sub">Capabilities already showing credible operating evidence.</p>
+                          <p className="cap-col-sub">
+                            {isFrench
+                              ? "Capacités démontrant déjà des preuves opérationnelles crédibles."
+                              : "Capabilities already showing credible operating evidence."}
+                          </p>
                         </div>
                         <div className="cap-count">{axis.working.length}</div>
                       </div>
@@ -953,6 +977,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                             status="working"
                             axisLabel={axis.label}
                             onOpen={setModalState}
+                            isFrench={isFrench}
                           />
                         ))}
                       </div>
@@ -963,9 +988,13 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                         <div>
                           <div className="cap-title-row">
                             <span className="status-icon missing" aria-hidden="true">!</span>
-                            <h4 className="cap-col-title">Missing</h4>
+                            <h4 className="cap-col-title">{isFrench ? "Ce qui manque" : "Missing"}</h4>
                           </div>
-                          <p className="cap-col-sub">Capabilities that still lack enough evidence to feel systematic.</p>
+                          <p className="cap-col-sub">
+                            {isFrench
+                              ? "Capacités qui manquent encore de preuves pour être considérées comme systématiques."
+                              : "Capabilities that still lack enough evidence to feel systematic."}
+                          </p>
                         </div>
                         <div className="cap-count">{axis.missing.length}</div>
                       </div>
@@ -977,6 +1006,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                             status="missing"
                             axisLabel={axis.label}
                             onOpen={setModalState}
+                            isFrench={isFrench}
                           />
                         ))}
                       </div>
@@ -989,7 +1019,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
             <div className="print-axis-list hidden">
               {normalizedAxes.map((axis) => (
                 <section key={`print-${axis.axis}`} className="print-axis-card">
-                  <div className="axis-kicker">Axis</div>
+                  <div className="axis-kicker">{isFrench ? "Axe" : "Axis"}</div>
                   <h3 className="axis-panel-title">{axis.label}</h3>
                   <p className="print-axis-copy">{axis.intro}</p>
                   <div className="print-axis-grid">
@@ -998,9 +1028,13 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                         <div>
                           <div className="cap-title-row">
                             <span className="status-icon working" aria-hidden="true">&#10003;</span>
-                            <h4 className="cap-col-title">Working</h4>
+                            <h4 className="cap-col-title">{isFrench ? "Ce qui fonctionne" : "Working"}</h4>
                           </div>
-                          <p className="cap-col-sub">Capabilities already showing credible operating evidence.</p>
+                          <p className="cap-col-sub">
+                            {isFrench
+                              ? "Capacités démontrant déjà des preuves opérationnelles crédibles."
+                              : "Capabilities already showing credible operating evidence."}
+                          </p>
                         </div>
                       </div>
                       <div className="cap-list">
@@ -1008,7 +1042,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                           <div key={`print-${axis.axis}-working-${item.capability}`} className="cap-pill">
                             <div className="cap-pill-top">
                               <p className="cap-pill-name">{item.capability}</p>
-                              <span className="cap-tag positive">{item.maturity_band}</span>
+                              <span className="cap-tag positive">{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
                             </div>
                             <p className="cap-pill-summary">{item.summary}</p>
                           </div>
@@ -1021,9 +1055,13 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                         <div>
                           <div className="cap-title-row">
                             <span className="status-icon missing" aria-hidden="true">!</span>
-                            <h4 className="cap-col-title">Missing</h4>
+                            <h4 className="cap-col-title">{isFrench ? "Ce qui manque" : "Missing"}</h4>
                           </div>
-                          <p className="cap-col-sub">Capabilities that still lack enough evidence to feel systematic.</p>
+                          <p className="cap-col-sub">
+                            {isFrench
+                              ? "Capacités qui manquent encore de preuves pour être considérées comme systématiques."
+                              : "Capabilities that still lack enough evidence to feel systematic."}
+                          </p>
                         </div>
                       </div>
                       <div className="cap-list">
@@ -1031,7 +1069,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                           <div key={`print-${axis.axis}-missing-${item.capability}`} className="cap-pill">
                             <div className="cap-pill-top">
                               <p className="cap-pill-name">{item.capability}</p>
-                              <span className="cap-tag negative">{item.maturity_band}</span>
+                              <span className="cap-tag negative">{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
                             </div>
                             <p className="cap-pill-summary">{item.summary}</p>
                           </div>
@@ -1056,7 +1094,11 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
           <div className="modal-head">
             <div>
               <div className="modal-overline" id="modal-overline">
-                {modalState ? `${modalState.axisLabel} axis | ${modalState.status === "working" ? "Working" : "Missing"}` : ""}
+                {modalState
+                  ? isFrench
+                    ? `Axe ${modalState.axisLabel} | ${modalState.status === "working" ? "Ce qui fonctionne" : "Ce qui manque"}`
+                    : `${modalState.axisLabel} axis | ${modalState.status === "working" ? "Working" : "Missing"}`
+                  : ""}
               </div>
               <h2 className="modal-title" id="modal-title">
                 {modalState?.item.capability ?? ""}
@@ -1080,7 +1122,7 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
                       rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
                     >
-                      View Reference Guide
+                      {isFrench ? "Voir le guide de référence" : "View Reference Guide"}
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     </a>
                   </div>
@@ -1101,11 +1143,13 @@ function CapabilityButton({
   status,
   axisLabel,
   onOpen,
+  isFrench,
 }: {
   item: FinalReportWorkingMissingItem;
   status: "working" | "missing";
   axisLabel: string;
   onOpen: (state: ModalState) => void;
+  isFrench?: boolean;
 }) {
   return (
     <div 
@@ -1116,7 +1160,7 @@ function CapabilityButton({
     >
       <div className="cap-pill-top">
         <p className="cap-pill-name">{item.capability}</p>
-        <span className={`cap-tag ${status === "working" ? "positive" : "negative"}`}>{item.maturity_band}</span>
+        <span className={`cap-tag ${status === "working" ? "positive" : "negative"}`}>{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
       </div>
       <p className="cap-pill-summary">{item.summary}</p>
       
@@ -1129,7 +1173,7 @@ function CapabilityButton({
             onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-violet-400 transition hover:text-violet-300"
           >
-            Reference Guide
+            {isFrench ? "Guide de référence" : "Reference Guide"}
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           </a>
         </div>

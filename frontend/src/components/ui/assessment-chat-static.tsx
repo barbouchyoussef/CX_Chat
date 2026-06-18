@@ -26,6 +26,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000
 const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
 const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim().toUpperCase();
 
+const getAxisDisplayName = (axis: string, lang: string) => {
+  if (axis === "MANAGE") return lang === "fr" ? "GÉRER" : "MANAGE";
+  if (axis === "ANALYZE") return lang === "fr" ? "ANALYSER" : "ANALYZE";
+  if (axis === "IMPROVE") return lang === "fr" ? "AMÉLIORER" : "IMPROVE";
+  return axis;
+};
+
 const getAxisProgressSubtitle = (axis: string, lang: string) => {
   if (axis === "MANAGE") {
     return lang === "fr"
@@ -458,19 +465,23 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
       return (
         <div className="min-h-screen bg-slate-50 px-4 py-8">
           <div className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-600">Final report is not available yet. Please return to chat and try again.</p>
+            <p className="text-sm text-slate-600">
+              {language === "fr"
+                ? "Le rapport final n'est pas encore disponible. Veuillez retourner au chat et réessayer."
+                : "Final report is not available yet. Please return to chat and try again."}
+            </p>
             <button
               type="button"
               onClick={() => setShowRecommendations(false)}
               className="mt-4 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
             >
-              Back to chat
+              {language === "fr" ? "Retour au chat" : "Back to chat"}
             </button>
           </div>
         </div>
       );
     }
-    return <AssessmentReport report={finalReport} companyName={companyName} onBack={() => setShowRecommendations(false)} />;
+    return <AssessmentReport report={finalReport} companyName={companyName} language={language} onBack={() => setShowRecommendations(false)} />;
   }
 
   if (showGeneratingPage) {
@@ -525,23 +536,29 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
             className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8"
           >
             <div className="mb-6">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Company profile</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-950">Set the assessment context</h2>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+                {language === "fr" ? "Profil de l'entreprise" : "Company profile"}
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">
+                {language === "fr" ? "Définir le contexte" : "Set the assessment context"}
+              </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Please complete the fields below. The assessment will start immediately after submission.
+                {language === "fr"
+                  ? "Veuillez remplir les champs ci-dessous. L'évaluation commencera immédiatement après validation."
+                  : "Please complete the fields below. The assessment will start immediately after submission."}
               </p>
             </div>
 
             <form className="space-y-5" onSubmit={handleProfileSubmit}>
               <div className="space-y-2">
                 <label htmlFor="companyName" className="text-sm font-semibold text-slate-800">
-                  Company name
+                  {language === "fr" ? "Nom de l'entreprise" : "Company name"}
                 </label>
                 <input
                   id="companyName"
                   value={companyProfile.companyName}
                   onChange={(event) => updateCompanyProfile("companyName", event.target.value)}
-                  placeholder="Example: Four Seasons"
+                  placeholder={language === "fr" ? "Exemple : Four Seasons" : "Example: Four Seasons"}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
                 />
               </div>
@@ -549,7 +566,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
                   <label htmlFor="sector" className="text-sm font-semibold text-slate-800">
-                    Sector
+                    {language === "fr" ? "Secteur d'activité" : "Sector"}
                   </label>
                   <select
                     id="sector"
@@ -558,7 +575,11 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     disabled={isReferenceLoading}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:bg-slate-50"
                   >
-                    <option value="">{isReferenceLoading ? "Loading sectors..." : "Select sector"}</option>
+                    <option value="">
+                      {isReferenceLoading
+                        ? (language === "fr" ? "Chargement des secteurs..." : "Loading sectors...")
+                        : (language === "fr" ? "Sélectionner un secteur" : "Select sector")}
+                    </option>
                     {sectorOptions.map((option) => (
                       <option key={option.code} value={option.code}>
                         {option.label}
@@ -569,7 +590,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
 
                 <div className="space-y-2">
                   <label htmlFor="companySize" className="text-sm font-semibold text-slate-800">
-                    Company size
+                    {language === "fr" ? "Taille de l'entreprise" : "Company size"}
                   </label>
                   <select
                     id="companySize"
@@ -578,7 +599,11 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     disabled={isReferenceLoading}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:bg-slate-50"
                   >
-                    <option value="">{isReferenceLoading ? "Loading sizes..." : "Select size"}</option>
+                    <option value="">
+                      {isReferenceLoading
+                        ? (language === "fr" ? "Chargement des tailles..." : "Loading sizes...")
+                        : (language === "fr" ? "Sélectionner la taille" : "Select size")}
+                    </option>
                     {sizeOptions.map((option) => (
                       <option key={option.code} value={option.code}>
                         {option.label}
@@ -590,7 +615,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
 
               <div className="space-y-2">
                 <label htmlFor="region" className="text-sm font-semibold text-slate-800">
-                  Region
+                  {language === "fr" ? "Région" : "Region"}
                 </label>
                 <select
                   id="region"
@@ -599,7 +624,11 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                   disabled={isReferenceLoading}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
                 >
-                  <option value="">{isReferenceLoading ? "Loading regions..." : "Select region"}</option>
+                  <option value="">
+                    {isReferenceLoading
+                      ? (language === "fr" ? "Chargement des régions..." : "Loading regions...")
+                      : (language === "fr" ? "Sélectionner la région" : "Select region")}
+                  </option>
                   {regionOptions.map((region) => (
                     <option key={region.code} value={region.code}>
                       {region.label}
@@ -622,7 +651,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Back
+                    {language === "fr" ? "Retour" : "Back"}
                   </button>
                 ) : <span />}
                 <button
@@ -630,7 +659,9 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                   disabled={isTyping || isReferenceLoading}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isTyping ? "Starting assessment..." : "Start assessment"}
+                  {isTyping
+                    ? (language === "fr" ? "Démarrage de l'évaluation..." : "Starting assessment...")
+                    : (language === "fr" ? "Démarrer l'évaluation" : "Start assessment")}
                   {!isTyping ? <ArrowRight className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
                 </button>
               </div>
@@ -666,7 +697,9 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
             </div>
             {assessment ? (
               <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Progress</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  {language === "fr" ? "Progression" : "Progress"}
+                </p>
                 <div className="h-2 w-full rounded-full bg-slate-200">
                   <div className={`h-2 rounded-full transition-all duration-500 ${progressStats.barClass}`} style={{ width: `${progressStats.percent}%` }} />
                 </div>
@@ -686,7 +719,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                           )}
                         </div>
                         <div className="flex flex-col">
-                          <span className={`text-xs font-bold uppercase tracking-wider ${textClass}`}>{axis}</span>
+                          <span className={`text-xs font-bold uppercase tracking-wider ${textClass}`}>{getAxisDisplayName(axis, language)}</span>
                           <span className="text-[11px] text-slate-500 font-normal mt-0.5 leading-normal">
                             {getAxisProgressSubtitle(axis, language)}
                           </span>
@@ -695,10 +728,18 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     );
                   })}
                 </div>
-                <p className="text-xs text-slate-500">Stay focused on practical examples. We handle the analysis.</p>
+                <p className="text-xs text-slate-500">
+                  {language === "fr"
+                    ? "Restez concentré sur des exemples concrets. Nous nous occupons de l'analyse."
+                    : "Stay focused on practical examples. We handle the analysis."}
+                </p>
               </div>
             ) : (
-              <p className="text-sm text-slate-500">We will profile your company context then run a smart maturity interview.</p>
+              <p className="text-sm text-slate-500">
+                {language === "fr"
+                  ? "Nous allons dresser le profil de votre entreprise puis lancer un entretien de maturité intelligent."
+                  : "We will profile your company context then run a smart maturity interview."}
+              </p>
             )}
           </div>
 
@@ -721,7 +762,9 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                   {language === "fr" ? "Discuter avec Orion" : "Chat with Orion"}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  {assessment ? `Assessment #${assessment.id} - ${assessment.status}` : "Profiling in chat"}
+                  {assessment
+                    ? (language === "fr" ? `Évaluation #${assessment.id} - ${assessment.status}` : `Assessment #${assessment.id} - ${assessment.status}`)
+                    : (language === "fr" ? "Profilage en cours" : "Profiling in chat")}
                 </p>
               </div>
               </div>
@@ -799,7 +842,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                         >
                           <div className="flex items-center gap-2 text-slate-600">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Assistant is thinking...</span>
+                            <span>{language === "fr" ? "L'assistant réfléchit..." : "Assistant is thinking..."}</span>
                           </div>
                         </motion.div>
                       </div>
@@ -852,12 +895,12 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                         onBlur={() => setIsFocused(false)}
                         placeholder={
                           stage === "await_company_name"
-                            ? "Type your company name..."
+                            ? (language === "fr" ? "Saisissez le nom de votre entreprise..." : "Type your company name...")
                             : stage === "await_sector_choice"
-                              ? "Type sector number or name..."
+                              ? (language === "fr" ? "Saisissez le numéro ou le nom du secteur..." : "Type sector number or name...")
                               : stage === "await_size_choice"
-                                ? "Type size number or name..."
-                                : "Type your own answer or pick an option above..."
+                                ? (language === "fr" ? "Saisissez le numéro ou le nom de la taille..." : "Type size number or name...")
+                                : (language === "fr" ? "Saisissez votre réponse ou choisissez une option..." : "Type your own answer or pick an option above...")
                         }
                         className={`w-full bg-transparent py-4 pr-14 text-[15px] text-slate-900 placeholder:text-slate-400 focus:outline-none ${
                           stage === "assessment_active" && !isTyping && questionOptions.length > 0 ? "pl-0" : "pl-5"
@@ -878,7 +921,11 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     </div>
                   </form>
                   <div className="mt-2.5 px-1">
-                    <p className="text-[13px] font-medium text-slate-400">Press Enter to send or pick an option above.</p>
+                    <p className="text-[13px] font-medium text-slate-400">
+                      {language === "fr"
+                        ? "Appuyez sur Entrée pour envoyer ou choisissez une option ci-dessus."
+                        : "Press Enter to send or pick an option above."}
+                    </p>
                   </div>
                 </div>
               </>
@@ -910,7 +957,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Back to chat
+                    {language === "fr" ? "Retour au chat" : "Back to chat"}
                   </button>
                   <button
                     type="button"
@@ -918,7 +965,9 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     disabled={isReportFetching}
                     className="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isReportFetching ? "Preparing report..." : "Generate Executive Report"}
+                    {isReportFetching
+                      ? (language === "fr" ? "Préparation du rapport..." : "Preparing report...")
+                      : (language === "fr" ? "Générer le rapport exécutif" : "Generate Executive Report")}
                     {!isReportFetching ? <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" /> : null}
                   </button>
                 </div>

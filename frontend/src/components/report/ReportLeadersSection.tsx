@@ -3,6 +3,7 @@ import type { FinalReportLeadersSnapshot } from "../../types/final-report";
 
 type Props = {
   snapshot?: FinalReportLeadersSnapshot | null;
+  language?: string | null;
 };
 
 const LEADER_EMOJIS = ["🧭", "🌍", "🎟️"];
@@ -349,7 +350,7 @@ const SECTION_STYLES = `
   }
 `;
 
-export default function ReportLeadersSection({ snapshot }: Props) {
+export default function ReportLeadersSection({ snapshot, language }: Props) {
   const leaders = snapshot?.leaders ?? [];
   const [selectedKey, setSelectedKey] = useState<string>(leaders[0]?.key ?? "");
 
@@ -366,12 +367,13 @@ export default function ReportLeadersSection({ snapshot }: Props) {
     return null;
   }
 
+  const isFrench = (language ?? "").toLowerCase().startsWith("fr");
   const isPending = snapshot.status === "pending" || snapshot.status === "running";
   const emptyMessage =
     snapshot.message ??
     (isPending
-      ? "Leader benchmark content is being prepared in the background."
-      : "Leader benchmark content is not available for this report yet.");
+      ? (isFrench ? "Le contenu de référence des leaders est en cours de préparation en arrière-plan." : "Leader benchmark content is being prepared in the background.")
+      : (isFrench ? "Le contenu de référence des leaders n'est pas encore disponible pour ce rapport." : "Leader benchmark content is not available for this report yet."));
 
   return (
     <div className="report-leaders-shell">
@@ -383,7 +385,9 @@ export default function ReportLeadersSection({ snapshot }: Props) {
 
         <div className="section-head">
           <span className="section-number">04</span>
-          <h1 className="section-title">What Leaders Are Doing</h1>
+          <h1 className="section-title">
+            {isFrench ? "Ce que font les leaders" : "What Leaders Are Doing"}
+          </h1>
         </div>
 
         <div className="panel">
@@ -392,7 +396,11 @@ export default function ReportLeadersSection({ snapshot }: Props) {
               <div className="content-stage active" data-stage="leaders">
                 <div className="stage-meta">
                   <div className="stage-summary">
-                    <h3 className="stage-heading">These leaders run customer experience as a coordinated growth system, not a collection of good intentions.</h3>
+                    <h3 className="stage-heading">
+                      {isFrench
+                        ? "Ces leaders gèrent l'expérience client comme un système de croissance coordonné, et non comme une simple collection de bonnes intentions."
+                        : "These leaders run customer experience as a coordinated growth system, not a collection of good intentions."}
+                    </h3>
                   </div>
                 </div>
 
@@ -412,7 +420,7 @@ export default function ReportLeadersSection({ snapshot }: Props) {
                           </div>
                           <p className="chip-name">{leader.company_name}</p>
                           <p className="chip-note">
-                            {leader.leader_summary ?? leader.note ?? "Public benchmark evidence was selected for this leader."}
+                            {leader.leader_summary ?? leader.note ?? (isFrench ? "Des données de référence publiques ont été sélectionnées pour ce leader." : "Public benchmark evidence was selected for this leader.")}
                           </p>
                         </button>
                       ))}
@@ -422,7 +430,7 @@ export default function ReportLeadersSection({ snapshot }: Props) {
                       <div className="drawer-head">
                         <h4 className="drawer-name">{selectedLeader?.company_name ?? ""}</h4>
                       </div>
-                      <p className="drawer-title">What leaders are doing</p>
+                      <p className="drawer-title">{isFrench ? "Ce que font les leaders" : "What leaders are doing"}</p>
                       <div className="practice-list">
                         {(selectedLeader?.evidence_links ?? []).map((link, index) => (
                           <div key={`${selectedLeader?.key ?? "leader"}-${index}`} className="practice">
@@ -433,7 +441,13 @@ export default function ReportLeadersSection({ snapshot }: Props) {
                               target="_blank"
                               rel="noreferrer"
                             >
-                              {link.source_title ? `Open source: ${link.source_title}` : "Open source"}
+                              {link.source_title
+                                ? isFrench
+                                  ? `Source ouverte : ${link.source_title}`
+                                  : `Open source: ${link.source_title}`
+                                : isFrench
+                                  ? "Source ouverte"
+                                  : "Open source"}
                             </a>
                           </div>
                         ))}
@@ -457,14 +471,20 @@ export default function ReportLeadersSection({ snapshot }: Props) {
                     </div>
                     <h4 className="drawer-name">{leader.company_name}</h4>
                     <p className="chip-note">
-                      {leader.leader_summary ?? leader.note ?? "Public benchmark evidence was selected for this leader."}
+                      {leader.leader_summary ?? leader.note ?? (isFrench ? "Des données de référence publiques ont été sélectionnées pour ce leader." : "Public benchmark evidence was selected for this leader.")}
                     </p>
                     <div className="practice-list">
                       {(leader.evidence_links ?? []).map((link, linkIndex) => (
                         <div key={`${leader.key}-print-${linkIndex}`} className="practice">
                           <span className="practice-copy">{link.label}</span>
                           <a className="practice-link" href={link.url} target="_blank" rel="noreferrer">
-                            {link.source_title ? `Open source: ${link.source_title}` : "Open source"}
+                            {link.source_title
+                              ? isFrench
+                                ? `Source ouverte : ${link.source_title}`
+                                : `Open source: ${link.source_title}`
+                              : isFrench
+                                ? "Source ouverte"
+                                : "Open source"}
                           </a>
                         </div>
                       ))}

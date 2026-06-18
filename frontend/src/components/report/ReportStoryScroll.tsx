@@ -10,6 +10,7 @@ type Props = {
   report: FinalReport;
   onBack: () => void;
   companyName?: string | null;
+  language?: string | null;
 };
 
 const STORY_SCROLL_STYLES = `
@@ -131,38 +132,40 @@ const STORY_SCROLL_STYLES = `
   }
 `;
 
-export default function ReportStoryScroll({ report, onBack, companyName }: Props) {
+export default function ReportStoryScroll({ report, onBack, companyName, language }: Props) {
+  const resolvedLanguage = language || report.quick_wins_timeline?.language;
+
   return (
     <>
       <style>{STORY_SCROLL_STYLES}</style>
       <FlowArt aria-label="Assessment report story scroll" className="report-story-scroll">
         <FlowSection aria-label="Report introduction" className="flow-tone-hero">
           <div className="flow-stage">
-            <ReportHeroSection report={report} onBack={onBack} companyName={companyName} />
+            <ReportHeroSection report={report} onBack={onBack} companyName={companyName} language={resolvedLanguage} />
           </div>
         </FlowSection>
 
         <FlowSection aria-label="Where you stand" className="flow-tone-stand">
           <div className="flow-stage">
-            <CapabilitiesAxesSection hero={report.hero} axes={report.working_missing} />
+            <CapabilitiesAxesSection hero={report.hero} axes={report.working_missing} language={resolvedLanguage} />
           </div>
         </FlowSection>
 
         <FlowSection aria-label="Benchmark leaders" className="flow-tone-leaders">
           <div className="flow-stage">
-            <ReportLeadersSection snapshot={report.leaders_snapshot} />
+            <ReportLeadersSection snapshot={report.leaders_snapshot} language={resolvedLanguage} />
           </div>
         </FlowSection>
 
         <FlowSection aria-label="Quick wins" className="flow-tone-wins">
           <div className="flow-stage">
-            <ReportQuickWinsTimeline timeline={report.quick_wins_timeline} />
+            <ReportQuickWinsTimeline timeline={report.quick_wins_timeline} language={resolvedLanguage} />
           </div>
         </FlowSection>
 
         <FlowSection aria-label="Go further" className="flow-tone-further">
           <div className="flow-stage">
-            <ReportGoFurtherSection assessmentId={report.assessment_id} />
+            <ReportGoFurtherSection assessmentId={report.assessment_id} language={resolvedLanguage} />
           </div>
         </FlowSection>
       </FlowArt>

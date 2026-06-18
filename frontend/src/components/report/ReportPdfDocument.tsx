@@ -10,6 +10,7 @@ import type {
 type Props = {
   report: FinalReport;
   companyName?: string | null;
+  language?: string | null;
 };
 
 const LOGO_SRC = "/EY_Studio+_Logo_Primary_WithoutStrapline_RGB_White_Yellow_Grad_EN.png";
@@ -457,9 +458,38 @@ function chipText(value?: string | null) {
   return clean(value) || "Not specified";
 }
 
-function axisLabel(axis: string) {
-  return axis.charAt(0).toUpperCase() + axis.slice(1);
-}
+const getMaturityBandDisplayName = (band?: string | null, isFr?: boolean) => {
+  if (!band) return "";
+  const key = band.toLowerCase().trim();
+  if (isFr) {
+    if (key.includes("basic") || key.includes("basique")) return "Basique";
+    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Établi";
+    if (key.includes("advanced") || key.includes("avancé")) return "Avancé";
+  } else {
+    if (key.includes("basic") || key.includes("basique")) return "Basic";
+    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Established";
+    if (key.includes("advanced") || key.includes("avancé")) return "Advanced";
+  }
+  return band;
+};
+
+const getAxisDisplayName = (axis?: string | null, isFr?: boolean) => {
+  if (!axis) return "";
+  const key = axis.toLowerCase().trim();
+  if (key.includes("manage") || key.includes("gérer")) return isFr ? "GÉRER" : "MANAGE";
+  if (key.includes("analyze") || key.includes("analyser")) return isFr ? "ANALYSER" : "ANALYZE";
+  if (key.includes("improve") || key.includes("améliorer")) return isFr ? "AMÉLIORER" : "IMPROVE";
+  return axis.toUpperCase();
+};
+
+const getStatusDisplayName = (status?: string | null, isFr?: boolean) => {
+  if (!status) return "";
+  if (!isFr) return status;
+  const key = status.toLowerCase().trim();
+  if (key === "assessed") return "Évalué";
+  if (key === "skipped" || key === "not_assessed") return "Non évalué";
+  return status;
+};
 
 function maturityBandToLevel(label?: string | null) {
   const normalized = clean(label).toLowerCase();
@@ -469,27 +499,27 @@ function maturityBandToLevel(label?: string | null) {
   return null;
 }
 
-function renderWorkingMissing(axis: FinalReportWorkingMissingAxis) {
+function renderWorkingMissing(axis: FinalReportWorkingMissingAxis, isFrench?: boolean) {
   return (
     <div className="pdf-axis-grid">
       <div className="pdf-card">
-        <p className="pdf-label">What is working</p>
+        <p className="pdf-label">{isFrench ? "Ce qui fonctionne" : "What is working"}</p>
         <div className="pdf-mini-list">
           {axis.working.map((item) => (
             <div key={`${axis.axis}-working-${item.capability}`} className="pdf-mini-item">
               <div className="pdf-mini-name">{item.capability}</div>
-              <div className="pdf-mini-copy">{item.summary || item.evidence_snippet || "Credible evidence is present."}</div>
+              <div className="pdf-mini-copy">{item.summary || item.evidence_snippet || (isFrench ? "Preuves crédibles présentes." : "Credible evidence is present.")}</div>
             </div>
           ))}
         </div>
       </div>
       <div className="pdf-card">
-        <p className="pdf-label">What is missing</p>
+        <p className="pdf-label">{isFrench ? "Ce qui manque" : "What is missing"}</p>
         <div className="pdf-mini-list">
           {axis.missing.map((item) => (
             <div key={`${axis.axis}-missing-${item.capability}`} className="pdf-mini-item">
               <div className="pdf-mini-name">{item.capability}</div>
-              <div className="pdf-mini-copy">{item.summary || item.evidence_snippet || "More evidence is still needed."}</div>
+              <div className="pdf-mini-copy">{item.summary || item.evidence_snippet || (isFrench ? "Des preuves supplémentaires sont requises." : "More evidence is still needed.")}</div>
             </div>
           ))}
         </div>
@@ -498,52 +528,52 @@ function renderWorkingMissing(axis: FinalReportWorkingMissingAxis) {
   );
 }
 
-function renderLeaderEvidence(link: FinalReportLeaderEvidenceLink, index: number) {
+function renderLeaderEvidence(link: FinalReportLeaderEvidenceLink, index: number, isFrench?: boolean) {
   return (
     <div key={`${link.url}-${index}`} className="pdf-mini-item">
       <div className="pdf-link-title">{link.label}</div>
-      {link.source_title ? <div className="pdf-link-source">{link.source_title}</div> : null}
+      {link.source_title ? <div className="pdf-link-source">{isFrench ? `Source ouverte : ${link.source_title}` : `Open source: ${link.source_title}`}</div> : null}
       {link.why_relevant ? <div className="pdf-link-reason">{link.why_relevant}</div> : null}
     </div>
   );
 }
 
-function renderLeader(leader: FinalReportLeaderItem) {
+function renderLeader(leader: FinalReportLeaderItem, isFrench?: boolean) {
   return (
     <article key={leader.key} className="pdf-leader-card">
       <div className="pdf-head-row">
         <div>
           <h3 className="pdf-card-title">{leader.company_name}</h3>
-          <div className="pdf-card-subtitle">{leader.leader_summary || leader.note || "Public benchmark evidence selected for this leader."}</div>
+          <div className="pdf-card-subtitle">{leader.leader_summary || leader.note || (isFrench ? "Des données de référence publiques ont été sélectionnées pour ce leader." : "Public benchmark evidence selected for this leader.")}</div>
         </div>
       </div>
       <div className="pdf-body-group">
-        <p className="pdf-label">Evidence used</p>
+        <p className="pdf-label">{isFrench ? "Preuves utilisées" : "Evidence used"}</p>
         <div className="pdf-link-list">
-          {leader.evidence_links.map(renderLeaderEvidence)}
+          {leader.evidence_links.map((link, idx) => renderLeaderEvidence(link, idx, isFrench))}
         </div>
       </div>
     </article>
   );
 }
 
-function renderQuickWin(item: FinalReportQuickWinItem) {
+function renderQuickWin(item: FinalReportQuickWinItem, isFrench?: boolean) {
   return (
     <article key={`quick-win-${item.step}`} className="pdf-quick-win-card">
       <div className="pdf-head-row">
         <div>
           <h3 className="pdf-card-title">{item.title}</h3>
-          <div className="pdf-card-subtitle">Owner | {chipText(item.owner)}</div>
+          <div className="pdf-card-subtitle">{isFrench ? "Responsable" : "Owner"} | {chipText(item.owner)}</div>
         </div>
         <span className="pdf-chip">{chipText(item.timeline_label)}</span>
       </div>
       <div className="pdf-quick-grid">
         <div className="pdf-card">
-          <p className="pdf-label">Current state</p>
+          <p className="pdf-label">{isFrench ? "État actuel" : "Current state"}</p>
           <div className="pdf-copy">{item.today_text}</div>
         </div>
         <div className="pdf-card">
-          <p className="pdf-label">Expected outcome</p>
+          <p className="pdf-label">{isFrench ? "Résultat attendu" : "Expected outcome"}</p>
           <div className="pdf-copy">{item.after_text}</div>
         </div>
       </div>
@@ -551,31 +581,34 @@ function renderQuickWin(item: FinalReportQuickWinItem) {
   );
 }
 
-function renderCapability(item: FinalReportCapabilityItem) {
+function renderCapability(item: FinalReportCapabilityItem, isFrench?: boolean) {
   return (
     <article key={`${item.axis}-${item.capability}-${item.capability_id}`} className="pdf-capability-card">
       <div className="pdf-head-row">
         <div>
           <h3 className="pdf-card-title">{item.capability}</h3>
           <div className="pdf-card-subtitle">
-            {item.axis} | {item.maturity_band} | {item.assessment_status}
+            {getAxisDisplayName(item.axis, isFrench)} | {getMaturityBandDisplayName(item.maturity_band, isFrench)} | {getStatusDisplayName(item.assessment_status, isFrench)}
           </div>
         </div>
         <span className="pdf-chip">{item.maturity_level_number} / 3</span>
       </div>
       <div className="pdf-body-group">
-        <p className="pdf-label">Observed signal</p>
+        <p className="pdf-label">{isFrench ? "Signal observé" : "Observed signal"}</p>
         <div className="pdf-copy">{item.rationale}</div>
       </div>
       <div className="pdf-body-group">
-        <p className="pdf-label">Recommended action</p>
+        <p className="pdf-label">{isFrench ? "Action recommandée" : "Recommended action"}</p>
         <div className="pdf-capability-reco">{item.recommendation}</div>
       </div>
     </article>
   );
 }
 
-export default function ReportPdfDocument({ report, companyName }: Props) {
+export default function ReportPdfDocument({ report, companyName, language }: Props) {
+  const isFrench = (language ?? report.quick_wins_timeline?.language ?? "").toLowerCase().startsWith("fr");
+  const stageLabels = isFrench ? ["Basique", "Établi", "Avancé"] : ["Basic", "Established", "Advanced"];
+
   const hero = report.hero;
   const summary = report.summary;
   const resolvedCompany = (companyName || hero.company_name || "Assessment").toUpperCase();
@@ -588,19 +621,20 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
   const shouldShowCapabilityDetail = assessedCapabilitiesCount >= 9;
   const overallLevelNumber = hero.overall_level ?? maturityBandToLevel(summary.overall_maturity_band) ?? 1;
   const overallLevelLabel = hero.overall_level_label || `${overallLevelNumber} / 3`;
-  const strongestAxisLabel = chipText(summary.strongest_axis);
+  const strongestAxisRaw = clean(summary.strongest_axis).toLowerCase();
+  const strongestAxisLabel = getAxisDisplayName(summary.strongest_axis, isFrench);
   const strongestAxisLevelLabel =
     hero.strongest_axis_level_label ||
     chipText(
-      report.axes.find((axis) => clean(axis.axis).toLowerCase() === strongestAxisLabel.toLowerCase())?.axis_level_label,
+      report.axes.find((axis) => clean(axis.axis).toLowerCase() === strongestAxisRaw)?.axis_level_label,
     );
-  const priorityAxisLabel = chipText(summary.priority_axis);
+  const priorityAxisRaw = clean(summary.priority_axis).toLowerCase();
+  const priorityAxisLabel = getAxisDisplayName(summary.priority_axis, isFrench);
   const priorityAxisLevelLabel =
     hero.priority_axis_level_label ||
     chipText(
-      report.axes.find((axis) => clean(axis.axis).toLowerCase() === priorityAxisLabel.toLowerCase())?.axis_level_label,
+      report.axes.find((axis) => clean(axis.axis).toLowerCase() === priorityAxisRaw)?.axis_level_label,
     );
-  const stageLabels = ["Basic", "Established", "Advanced"];
 
   return (
     <div className="report-pdf-shell hidden print:block">
@@ -615,32 +649,34 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
         </header>
 
         <section className="pdf-cover">
-          <div className="pdf-kicker">Customer Experience Assessment</div>
+          <div className="pdf-kicker">
+            {isFrench ? "Évaluation de l'expérience client" : "Customer Experience Assessment"}
+          </div>
           <div className="pdf-cover-grid">
             <div>
               <h1 className="pdf-company">{resolvedCompany}</h1>
               <div className="pdf-subline">
-                {chipText(hero.sector_name)} | {chipText(hero.region)} | Overall maturity: {chipText(summary.overall_maturity_band)}
+                {chipText(hero.sector_name)} | {chipText(hero.region)} | {isFrench ? "Maturité globale" : "Overall maturity"}: {getMaturityBandDisplayName(summary.overall_maturity_band, isFrench)}
               </div>
               <div className="pdf-summary">
-                {hero.hero_message || summary.executive_summary_text || "Assessment summary unavailable."}
+                {hero.hero_message || summary.executive_summary_text || (isFrench ? "Résumé de l'évaluation non disponible." : "Assessment summary unavailable.")}
               </div>
               <div className="pdf-cover-lower">
                 <div className="pdf-maturity-grid">
                   <article className="pdf-maturity-card">
                     <div className="pdf-maturity-top">
                       <span className="pdf-maturity-icon stage">○</span>
-                      <div className="pdf-maturity-label">Stage</div>
+                      <div className="pdf-maturity-label">{isFrench ? "Niveau" : "Stage"}</div>
                     </div>
                     <div>
-                      <h3 className="pdf-maturity-value">{chipText(summary.overall_maturity_band)}</h3>
+                      <h3 className="pdf-maturity-value">{getMaturityBandDisplayName(summary.overall_maturity_band, isFrench)}</h3>
                       <div className="pdf-maturity-sub">{overallLevelLabel}</div>
                     </div>
                   </article>
                   <article className="pdf-maturity-card">
                     <div className="pdf-maturity-top">
                       <span className="pdf-maturity-icon strongest">↗</span>
-                      <div className="pdf-maturity-label">Strongest</div>
+                      <div className="pdf-maturity-label">{isFrench ? "Le plus fort" : "Strongest"}</div>
                     </div>
                     <div>
                       <h3 className="pdf-maturity-value">{strongestAxisLabel}</h3>
@@ -650,7 +686,7 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
                   <article className="pdf-maturity-card">
                     <div className="pdf-maturity-top">
                       <span className="pdf-maturity-icon priority">⊕</span>
-                      <div className="pdf-maturity-label">Priority</div>
+                      <div className="pdf-maturity-label">{isFrench ? "Prioritaire" : "Priority"}</div>
                     </div>
                     <div>
                       <h3 className="pdf-maturity-value">{priorityAxisLabel}</h3>
@@ -661,7 +697,9 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
                 <section className="pdf-landscape">
                   <div className="pdf-section-head">
                     <span className="pdf-section-number">02</span>
-                    <h2 className="pdf-landscape-title">Where You Stand — Maturity Landscape</h2>
+                    <h2 className="pdf-landscape-title">
+                      {isFrench ? "Votre position — Paysage de maturité" : "Where You Stand — Maturity Landscape"}
+                    </h2>
                   </div>
                   <div className="pdf-stage-row">
                     {stageLabels.map((label, index) => {
@@ -672,11 +710,17 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
                           <div className="pdf-stage-dot">{stageNumber}</div>
                           <div className="pdf-stage-name">{label}</div>
                           <div className="pdf-stage-detail">
-                            {label === "Basic"
-                              ? "Reactive routines still dominate and customer evidence is not yet consistently translated into action."
-                              : label === "Established"
-                                ? "Foundations are visible and repeatable, but execution and governance remain uneven."
-                                : "Customer insight is embedded into decision-making, ownership, and sustained improvement."}
+                            {label === "Basic" || label === "Basique"
+                              ? (isFrench
+                                  ? "Les routines réactives dominent toujours et les retours clients ne sont pas encore traduits de manière cohérente en actions."
+                                  : "Reactive routines still dominate and customer evidence is not yet consistently translated into action.")
+                              : label === "Established" || label === "Établi"
+                                ? (isFrench
+                                    ? "Les bases sont visibles et répétables, mais l'exécution et la gouvernance restent inégales."
+                                    : "Foundations are visible and repeatable, but execution and governance remain uneven.")
+                                : (isFrench
+                                    ? "L'analyse client est intégrée dans la prise de décision, la responsabilité et l'amélioration continue."
+                                    : "Customer insight is embedded into decision-making, ownership, and sustained improvement.")}
                           </div>
                         </div>
                       );
@@ -692,7 +736,7 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
           <section className="pdf-section">
             <div className="pdf-section-head">
               <span className="pdf-section-number">02</span>
-              <h2 className="pdf-section-title">Axis Review</h2>
+              <h2 className="pdf-section-title">{isFrench ? "Examen par axe" : "Axis Review"}</h2>
             </div>
             <div className="pdf-list">
               {report.working_missing.map((axis) => (
@@ -700,11 +744,13 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
                   <div className="pdf-head-row">
                     <div>
                       <h3 className="pdf-card-title">{axis.label}</h3>
-                      <div className="pdf-card-subtitle">{axis.subtitle || axis.intro || "Assessment detail for this axis."}</div>
+                      <div className="pdf-card-subtitle">{axis.subtitle || axis.intro || (isFrench ? "Détails de l'évaluation pour cet axe." : "Assessment detail for this axis.")}</div>
                     </div>
-                    <span className="pdf-chip">{axis.axis_level_label || axis.maturity_band || axisLabel(axis.axis)}</span>
+                    <span className="pdf-chip">
+                      {axis.axis_level_label || getMaturityBandDisplayName(axis.maturity_band, isFrench) || getAxisDisplayName(axis.axis, isFrench)}
+                    </span>
                   </div>
-                  {renderWorkingMissing(axis)}
+                  {renderWorkingMissing(axis, isFrench)}
                 </article>
               ))}
             </div>
@@ -715,9 +761,9 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
           <section className="pdf-section">
             <div className="pdf-section-head">
               <span className="pdf-section-number">03</span>
-              <h2 className="pdf-section-title">Benchmark Leaders</h2>
+              <h2 className="pdf-section-title">{isFrench ? "Analyse comparative des leaders" : "Benchmark Leaders"}</h2>
             </div>
-            <div className="pdf-list">{leaders.map(renderLeader)}</div>
+            <div className="pdf-list">{leaders.map((leader) => renderLeader(leader, isFrench))}</div>
           </section>
         ) : null}
 
@@ -725,9 +771,9 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
           <section className="pdf-section">
             <div className="pdf-section-head">
               <span className="pdf-section-number">04</span>
-              <h2 className="pdf-section-title">{report.quick_wins_timeline?.section_title || "Quick Wins"}</h2>
+              <h2 className="pdf-section-title">{report.quick_wins_timeline?.section_title || (isFrench ? "Gains rapides" : "Quick Wins")}</h2>
             </div>
-            <div className="pdf-list">{quickWins.map(renderQuickWin)}</div>
+            <div className="pdf-list">{quickWins.map((qw) => renderQuickWin(qw, isFrench))}</div>
           </section>
         ) : null}
 
@@ -735,13 +781,17 @@ export default function ReportPdfDocument({ report, companyName }: Props) {
           <section className="pdf-section">
             <div className="pdf-section-head">
               <span className="pdf-section-number">05</span>
-              <h2 className="pdf-section-title">Capability Detail</h2>
+              <h2 className="pdf-section-title">{isFrench ? "Détails des capacités" : "Capability Detail"}</h2>
             </div>
-            <div className="pdf-list">{capabilities.map(renderCapability)}</div>
+            <div className="pdf-list">{capabilities.map((cap) => renderCapability(cap, isFrench))}</div>
           </section>
         ) : null}
 
-        <footer className="pdf-footer">EY Studio+ Customer Experience Assessment Report</footer>
+        <footer className="pdf-footer">
+          {isFrench
+            ? "Rapport d'évaluation de l'expérience client EY Studio+"
+            : "EY Studio+ Customer Experience Assessment Report"}
+        </footer>
       </div>
     </div>
   );

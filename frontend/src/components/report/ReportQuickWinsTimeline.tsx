@@ -4,6 +4,7 @@ import type { FinalReportQuickWinItem, FinalReportQuickWinsTimeline } from "../.
 
 type Props = {
   timeline?: FinalReportQuickWinsTimeline | null;
+  language?: string | null;
 };
 
 const ORBIT_IMAGE_SRC = "/d87248c323a11fe6364ab034b73bea1e1c1e77f7.png";
@@ -455,15 +456,15 @@ function fallbackTitle(item: FinalReportQuickWinItem) {
   return item.title?.trim() || `Quick win ${item.step}`;
 }
 
-export default function ReportQuickWinsTimeline({ timeline }: Props) {
+export default function ReportQuickWinsTimeline({ timeline, language }: Props) {
   const items = useMemo(() => timeline?.items?.slice(0, 4) ?? [], [timeline?.items]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const isFrench = (timeline?.language ?? "").toLowerCase().startsWith("fr");
+  const isFrench = (language ?? timeline?.language ?? "").toLowerCase().startsWith("fr");
   const labels = {
     owner: isFrench ? "Responsable" : "Owner",
     today: isFrench ? "Aujourd'hui" : "Today",
-    after: isFrench ? "Apres cette action" : "After this",
+    after: isFrench ? "Après cette action" : "After this",
     close: isFrench ? "Fermer le quick win" : "Close quick win",
     open: isFrench ? "Ouvrir le quick win" : "Open quick win",
   };
