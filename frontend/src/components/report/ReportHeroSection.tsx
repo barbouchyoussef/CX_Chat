@@ -13,6 +13,57 @@ const ORBIT_IMAGE_SRC = "/1b428a9545ed4c55816d6fd0bd7115df485a185c.png";
 const axisLabel = (value?: string | null) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "Unknown";
 
+const DEFINITIONS = {
+  en: {
+    basic: "This designates initial, ad-hoc practices with limited structure or consistency.",
+    established: "This designates defined practices with partial adoption and growing consistency.",
+    advanced: "This designates systematic, embedded practices with clear ownership and continuous improvement.",
+    listen: "This axis designates the deployment of voice of customer programs, feedback channels, data collection, and metric tracking.",
+    manage: "This axis defines the organizational mechanisms that make customer experience accountable: leadership attention, ownership, governance routines, decision rights, culture, and day-to-day reinforcement.",
+    analyze: "This axis designates how the organization listens to customers and turns feedback into usable understanding: feedback capture, journey visibility, cross-channel consistency, pattern recognition, and issue prioritization.",
+    improve: "This axis defines how the organization acts on customer pain points and measures improvement over time: execution discipline, action ownership, metric review, validation of fixes, and continuous improvement loops."
+  },
+  fr: {
+    basic: "Ceci désigne des pratiques initiales et ad-hoc avec une structure ou une cohérence limitée.",
+    established: "Ceci désigne des pratiques définies avec une adoption partielle et une cohérence croissante.",
+    advanced: "Ceci désigne des pratiques systématiques et intégrées avec une responsabilité claire et une amélioration continue.",
+    listen: "Cet axe désigne le déploiement des canaux d'écoute client, la collecte continue des feedbacks et le suivi des indicateurs de performance clés.",
+    manage: "Cet axe définit les mécanismes organisationnels qui responsabilisent la gestion de l'expérience client : attention de la direction, gouvernance, processus de décision, culture et valorisation de l'impact client au quotidien.",
+    analyze: "Cet axe désigne la manière dont l'organisation écoute ses clients et transforme les retours en compréhension exploitable : collecte des feedbacks, vision des parcours, cohérence multicanale, analyse des causes racines et priorisation.",
+    improve: "Cet axe définit la manière dont l'organisation traite les points de friction client et mesure le progrès dans le temps : rigueur d'exécution, responsabilité des actions, suivi des indicateurs, validation des correctifs et amélioration continue."
+  }
+};
+
+function InfoTooltip({ explanation }: { explanation: string }) {
+  if (!explanation) return null;
+  return (
+    <span className="relative group/info inline-flex items-center ml-2.5 print:hidden select-none">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-[15px] w-[15px] text-white/35 hover:text-white/80 transition-colors duration-150 cursor-help"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </svg>
+      
+      {/* Tooltip Card */}
+      <span className="absolute bottom-full left-1/2 z-50 mb-3 w-60 -translate-x-1/2 scale-95 rounded-xl border border-white/10 bg-[#0f1117]/95 p-3 shadow-[0_12px_36px_rgba(0,0,0,0.5)] backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100">
+        <span className="block text-left font-sans text-[0.78rem] leading-relaxed text-slate-200 font-medium normal-case tracking-normal">
+          {explanation}
+        </span>
+        {/* Arrow */}
+        <span className="absolute top-full left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-[5px] rotate-45 border-r border-b border-white/10 bg-[#0f1117]/95" />
+      </span>
+    </span>
+  );
+}
+
 function StageIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" aria-hidden="true">
@@ -50,6 +101,53 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
     summary.executive_summary_text?.trim() ||
     `${resolvedCompany} is currently at ${hero.overall_maturity_band} maturity. ${axisLabel(hero.strongest_axis)} is the strongest area today, while ${axisLabel(hero.priority_axis)} needs the most attention next.`;
 
+  const isFrench = overview.toLowerCase().includes("démontre") || overview.toLowerCase().includes("est") || overview.toLowerCase().includes("les");
+
+  // Explanations for the tooltips
+  const bandKey = (hero.overall_maturity_band || "").toLowerCase().trim();
+  const maturityExplanation = 
+    bandKey.includes("basic") || bandKey.includes("initial") || bandKey.includes("basique")
+      ? (isFrench ? DEFINITIONS.fr.basic : DEFINITIONS.en.basic)
+      : bandKey.includes("advanced") || bandKey.includes("avancé")
+      ? (isFrench ? DEFINITIONS.fr.advanced : DEFINITIONS.en.advanced)
+      : (isFrench ? DEFINITIONS.fr.established : DEFINITIONS.en.established);
+
+  const getAxisExplanation = (axisName?: string | null) => {
+    if (!axisName) return "";
+    const key = axisName.toLowerCase().trim();
+    if (key.includes("listen") || key.includes("écouter")) {
+      return isFrench ? DEFINITIONS.fr.listen : DEFINITIONS.en.listen;
+    }
+    if (key.includes("analyze") || key.includes("analyser")) {
+      return isFrench ? DEFINITIONS.fr.analyze : DEFINITIONS.en.analyze;
+    }
+    if (key.includes("manage") || key.includes("gérer")) {
+      return isFrench ? DEFINITIONS.fr.manage : DEFINITIONS.en.manage;
+    }
+    if (key.includes("improve") || key.includes("améliorer")) {
+      return isFrench ? DEFINITIONS.fr.improve : DEFINITIONS.en.improve;
+    }
+    return "";
+  };
+
+  const strongestExplanation = getAxisExplanation(hero.strongest_axis);
+  const priorityExplanation = getAxisExplanation(hero.priority_axis);
+
+  const overallLevelNum = hero.overall_level || 2;
+  const overallMaturityBandLower = (hero.overall_maturity_band || "Established").toLowerCase();
+  
+  const stageLabelText = isFrench
+    ? `Sur l'échelle de 3 niveaux de maturité, vous êtes au niveau ${overallLevelNum} ${overallMaturityBandLower}`
+    : `On the 3-level maturity scale, you are at level ${overallLevelNum} ${overallMaturityBandLower}`;
+
+  const strongestLabelText = isFrench
+    ? "C'est l'axe le plus fort selon vos réponses"
+    : "This is the strongest axis according to your answers";
+
+  const priorityLabelText = isFrench
+    ? "C'est l'axe le plus prioritaire à traiter selon vos réponses"
+    : "This is the highest priority axis to address according to your answers";
+
   return (
     <section className="relative overflow-hidden px-3 py-4 text-white sm:px-6 sm:py-6 lg:px-10 lg:py-8 print:px-0 print:py-0 print:text-black">
       <div className="pointer-events-none absolute inset-0 opacity-60 print:hidden">
@@ -84,9 +182,12 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
             </button>
           </div>
 
-          <div className="mb-7 inline-flex w-fit items-center gap-2 rounded-full border border-white/12 bg-white/6 px-[14px] py-[7px] font-mono text-[11px] uppercase tracking-[0.16em] text-white/88 backdrop-blur-xl print:border-black/15 print:bg-transparent print:text-black/70">
-            <span>{hero.report_title}</span>
-            <span>{hero.report_date_label || "Report"}</span>
+          <div className="mb-7 inline-flex w-fit items-center rounded-full border border-white/12 bg-white/6 px-[16px] py-[8px] font-sans text-xs normal-case tracking-wide text-white/88 backdrop-blur-xl print:border-black/15 print:bg-transparent print:text-black/70">
+            <span>
+              {isFrench
+                ? "Ce rapport est généré sur la base des réponses de la conversation et des informations fournies"
+                : "This report is generated based on the conversation replies and information provided"}
+            </span>
           </div>
 
           <h1 className="max-w-[10ch] text-[clamp(3.8rem,7vw,6rem)] font-extrabold leading-[0.92] tracking-[-0.075em] text-white print:text-black">
@@ -99,9 +200,62 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
             <span>{hero.region || "Global"}</span>
           </p>
 
-          <p className="mt-7 max-w-[58ch] text-[1.02rem] leading-[1.72] text-white/84 print:text-black/80">
-            {overview}
-          </p>
+          {(() => {
+            const sentences = overview
+              .split(/[.!?]\s+/)
+              .map(s => s.trim())
+              .filter(s => s.length > 3)
+              .map(s => s.endsWith('.') || s.endsWith('!') || s.endsWith('?') ? s : s + '.');
+
+            const formatSentence = (s: string) => {
+              const words = s.split(/\s+/);
+              const boldCount = Math.min(4, words.length);
+              const boldPart = words.slice(0, boldCount).join(" ");
+              const restPart = words.slice(boldCount).join(" ");
+              return { boldPart, restPart };
+            };
+
+            return (
+              <>
+                {/* Web View: Structured Ticks without Cards */}
+                <div className="mt-7 max-w-[58ch] space-y-4 print:hidden">
+                  {sentences.map((sentence, idx) => {
+                    const { boldPart, restPart } = formatSentence(sentence);
+                    return (
+                      <div key={idx} className="flex items-start gap-3 group">
+                        <div className="flex-shrink-0 mt-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 transition-all duration-200 group-hover:scale-110 group-hover:bg-emerald-500/25 group-hover:border-emerald-500/40">
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="h-2.5 w-2.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </div>
+                        <p className="text-[1.02rem] leading-[1.68] text-slate-200 transition-colors duration-200 group-hover:text-white">
+                          <strong className="font-bold text-white transition-colors duration-200">{boldPart}</strong>{" "}
+                          {restPart}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Print View: Standard Paragraphs */}
+                <div className="hidden print:block mt-6 max-w-[58ch]">
+                  {sentences.map((sentence, idx) => (
+                    <p key={idx} className="text-[1.02rem] leading-[1.72] text-black/80 mb-2">
+                      {sentence}
+                    </p>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         <div className="relative min-h-[440px] lg:min-h-[560px] print:hidden">
@@ -118,13 +272,14 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#ffd447_0%,#c8973f_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
                 <StageIcon />
               </div>
-              <p className="font-mono text-[0.74rem] uppercase tracking-[0.18em] text-white/50 print:text-black/50">Stage</p>
+              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">Actual Stage</p>
             </div>
             <div className="min-h-[84px]">
-              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black">
-                {hero.overall_maturity_band}
+              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
+                <span>{hero.overall_maturity_band}</span>
+                <InfoTooltip explanation={maturityExplanation} />
               </p>
-              <p className="mt-2 text-[1.02rem] text-white/68 print:text-black/65">{hero.overall_level_label || "-- / --"}</p>
+              <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{stageLabelText}</p>
             </div>
           </article>
 
@@ -133,13 +288,14 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#85eaff_0%,#00d4ff_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
                 <StrongestIcon />
               </div>
-              <p className="font-mono text-[0.74rem] uppercase tracking-[0.18em] text-white/50 print:text-black/50">Strongest</p>
+              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">Strongest Axis</p>
             </div>
             <div className="min-h-[84px]">
-              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black">
-                {axisLabel(hero.strongest_axis)}
+              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
+                <span>{axisLabel(hero.strongest_axis)}</span>
+                <InfoTooltip explanation={strongestExplanation} />
               </p>
-              <p className="mt-2 text-[1.02rem] text-white/68 print:text-black/65">{hero.strongest_axis_level_label || "-- / --"}</p>
+              <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{strongestLabelText}</p>
             </div>
           </article>
 
@@ -148,13 +304,14 @@ export default function ReportHeroSection({ report, companyName, onBack }: Props
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#7c5cff_0%,#4d22df_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
                 <PriorityIcon />
               </div>
-              <p className="font-mono text-[0.74rem] uppercase tracking-[0.18em] text-white/50 print:text-black/50">Priority</p>
+              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">Priority Axis</p>
             </div>
             <div className="min-h-[84px]">
-              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-[#ffe4eb] print:text-black">
-                {axisLabel(hero.priority_axis)}
+              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-[#ffe4eb] print:text-black flex items-center">
+                <span>{axisLabel(hero.priority_axis)}</span>
+                <InfoTooltip explanation={priorityExplanation} />
               </p>
-              <p className="mt-2 text-[1.02rem] text-white/68 print:text-black/65">{hero.priority_axis_level_label || "-- / --"}</p>
+              <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{priorityLabelText}</p>
             </div>
           </article>
         </div>

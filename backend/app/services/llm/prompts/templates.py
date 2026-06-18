@@ -369,6 +369,7 @@ REPORT_SYNTHESIS_SYSTEM_PROMPT = (
     "Do not make the respondent feel punished, but do not overclaim maturity.\n"
     "Never invent evidence, tools, benchmarks, or percentages. Use only what is strictly provided.\n"
     "Do not mention internal scoring mechanics, maturity bands, data models, or missing data.\n"
+    "CRITICAL REQUIREMENT: The 'executive_summary' MUST consist of EXACTLY 3 sentences. Each sentence must summarize current state findings/diagnostics of the organization's customer experience maturity. They are diagnostic summaries and MUST NOT contain recommendations, recommendations-oriented action items, or advice (do not use words like 'should', 'must', 'need to', 'prioritize', 'establish' in the executive_summary).\n"
     "Return STRICT JSON only, outputting EXACTLY the keys: 'executive_summary' and 'priority_message'."
 )
 
@@ -390,7 +391,7 @@ REPORT_SYNTHESIS_USER_TEMPLATE = (
       "Do not add facts that are not present in the listed findings.\n"
       "Return JSON:\n"
     "{{\n"
-    '  "executive_summary": "3 to 5 sentences maximum",\n'
+    '  "executive_summary": "EXACTLY 3 sentences of current state summary. No recommendations.",\n'
     '  "priority_message": "1 sentence on the most important next step"\n'
     "}}"
 )

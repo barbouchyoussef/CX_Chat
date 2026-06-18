@@ -13,8 +13,93 @@ type ModalState = {
   axisLabel: string;
 } | null;
 
-const STEP_NAMES = ["Basic", "Established", "Advanced"] as const;
-const STEP_TONES = ["gold", "cyan", "violet"] as const;
+const MATURITY_CARDS = {
+  en: {
+    1: {
+      title: "Basic",
+      desc: "Initial, loosely formalized practices. Processes are reactive and undocumented.",
+      tooltip: "This designates initial, ad-hoc practices with limited structure or consistency."
+    },
+    2: {
+      title: "Established",
+      desc: "Defined and partially standardized processes. Improvement is underway.",
+      tooltip: "This designates defined practices with partial adoption and growing consistency."
+    },
+    3: {
+      title: "Advanced",
+      desc: "Optimized, measured, and continuously improving practices.",
+      tooltip: "This designates systematic, embedded practices with clear ownership and continuous improvement."
+    },
+    yourPosition: "Your position"
+  },
+  fr: {
+    1: {
+      title: "Basique",
+      desc: "Pratiques initiales, peu formalisées. Les processus sont réactifs et non documentés.",
+      tooltip: "Ceci désigne des pratiques initiales et ad-hoc avec une structure ou une cohérence limitée."
+    },
+    2: {
+      title: "Intermédiaire",
+      desc: "Processus définis et partiellement standardisés. Amélioration en cours.",
+      tooltip: "Ceci désigne des pratiques définies avec une adoption partielle et une cohérence croissante."
+    },
+    3: {
+      title: "Avancé",
+      desc: "Pratiques optimisées, mesurées et en amélioration continue.",
+      tooltip: "Ceci désigne des pratiques systématiques et intégrées avec une responsabilité claire et une amélioration continue."
+    },
+    yourPosition: "Votre position"
+  }
+};
+
+function InfoTooltip({ explanation, stage }: { explanation: string; stage: number }) {
+  if (!explanation) return null;
+
+  let accentBorder = "border-white/15";
+  let arrowBorder = "border-r border-b border-white/15";
+  let shadowGlow = "shadow-[0_12px_36px_rgba(0,0,0,0.6)]";
+
+  if (stage === 1) {
+    accentBorder = "border-amber-400/40";
+    arrowBorder = "border-r border-b border-amber-400/40";
+    shadowGlow = "shadow-[0_12px_36px_rgba(255,212,71,0.15),0_4px_16px_rgba(0,0,0,0.6)]";
+  } else if (stage === 2) {
+    accentBorder = "border-cyan-400/45";
+    arrowBorder = "border-r border-b border-cyan-400/45";
+    shadowGlow = "shadow-[0_12px_36px_rgba(0,212,255,0.15),0_4px_16px_rgba(0,0,0,0.6)]";
+  } else if (stage === 3) {
+    accentBorder = "border-violet-400/40";
+    arrowBorder = "border-r border-b border-violet-400/40";
+    shadowGlow = "shadow-[0_12px_36px_rgba(124,92,255,0.15),0_4px_16px_rgba(0,0,0,0.6)]";
+  }
+
+  return (
+    <span className="relative group/info inline-flex items-center print:hidden select-none">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-[21px] w-[21px] text-white/50 hover:text-white transition-colors duration-150 cursor-help"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </svg>
+      
+      {/* Tooltip Card */}
+      <span className={`absolute bottom-full left-1/2 z-50 mb-3.5 w-80 -translate-x-1/2 scale-95 rounded-xl border ${accentBorder} bg-[#131622]/99 p-4.5 ${shadowGlow} backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100`}>
+        <span className="block text-left font-sans text-[0.92rem] leading-relaxed text-white font-normal normal-case tracking-wide">
+          {explanation}
+        </span>
+        {/* Arrow */}
+        <span className={`absolute top-full left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-[5px] rotate-45 ${arrowBorder} bg-[#131622]/99`} />
+      </span>
+    </span>
+  );
+}
 
 const SECTION_STYLES = `
   .report-orbit-shell {
@@ -633,13 +718,16 @@ function levelToStep(level?: number | null) {
   return 1;
 }
 
-function gradientForStep(step: number) {
-  if (step === 1) return "linear-gradient(90deg, rgb(255, 212, 71), rgb(200, 151, 63))";
-  if (step === 2) return "linear-gradient(90deg, rgb(133, 234, 255), rgb(0, 212, 255))";
-  return "linear-gradient(90deg, rgb(159, 147, 255), rgb(77, 34, 223))";
-}
-
 export default function CapabilitiesAxesSection({ hero, axes }: Props) {
+  const isFrench = (hero.overall_maturity_band || "").toLowerCase().includes("établi") || 
+                   (hero.overall_maturity_band || "").toLowerCase().includes("basique") || 
+                   (hero.overall_maturity_band || "").toLowerCase().includes("avancé") || 
+                   (hero.overall_maturity_band || "").toLowerCase().includes("intermédiaire") ||
+                   (hero.report_title || "").toLowerCase().includes("rapport") ||
+                   (hero.report_title || "").toLowerCase().includes("maturité");
+
+  const labels = isFrench ? MATURITY_CARDS.fr : MATURITY_CARDS.en;
+
   const normalizedAxes = useMemo(() => {
     const order = ["manage", "analyze", "improve"];
     const lookup = new Map(axes.map((axis) => [axis.axis.toLowerCase(), axis]));
@@ -730,21 +818,115 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
           <h2 className="section-title">Where You Stand — Competitive Landscape</h2>
         </div>
 
-        <div className="panel-inner">
-          <div className="stepper-shell">
-            <div className="stepper-head">
-              {STEP_NAMES.map((name, index) => {
-                const step = index + 1;
+        <div className="panel-inner print:hidden">
+          <div className="relative flex items-end gap-3 pt-20 pb-4 px-2 md:px-4">
+            {/* Maturity Axis (Vertical Arrow) */}
+            <div className="absolute left-1 top-4 bottom-4 flex flex-col items-center select-none w-14">
+              <span className="font-sans text-[0.7rem] font-bold uppercase tracking-[0.14em] text-white/70 mb-3.5 text-center whitespace-nowrap">
+                {isFrench ? "Maturité" : "Maturity"}
+              </span>
+              <div className="flex-1 w-[2px] bg-white/30 relative rounded-full">
+                {/* Arrowhead */}
+                <div className="absolute -top-[1px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 border-t-2 border-l-2 border-white/60 rotate-45" />
+                {/* Base tick line */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3.5 h-[2px] bg-white/30" />
+              </div>
+            </div>
+
+            {/* The Ascending Steps Grid */}
+            <div className="flex-1 grid grid-cols-3 gap-4 items-end pl-14 md:pl-16">
+              {[1, 2, 3].map((stage) => {
+                const isSelected = currentStep === stage;
+                const stageData = labels[stage as 1 | 2 | 3];
+                
+                // Staircase heights
+                const heightClass = stage === 1 ? "min-h-[130px]" : stage === 2 ? "min-h-[190px]" : "min-h-[250px]";
+                
+                // Color configuration matching EY theme gradients
+                let topBarGradient = "bg-white/10";
+                let tagBgGradient = "bg-white/20";
+                let tagTextColor = "text-white";
+                let arrowColor = "#ffffff";
+                let activeBorderClass = "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005))] hover:border-white/20 hover:bg-white/[0.03]";
+                let titleColor = "text-white/80 group-hover:text-white font-medium";
+                let subtitleColor = "text-white/40 group-hover:text-white/60";
+                
+                if (stage === 1) {
+                  topBarGradient = "bg-[linear-gradient(90deg,#ffd447,#c8973f)]";
+                  tagBgGradient = "bg-[linear-gradient(135deg,#ffd447_0%,#c8973f_100%)]";
+                  tagTextColor = "text-[#111318]";
+                  arrowColor = "#ffd447";
+                  if (isSelected) {
+                    activeBorderClass = "border-amber-400/40 bg-[linear-gradient(180deg,rgba(255,212,71,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(255,212,71,0.12),0_0_24px_rgba(255,212,71,0.06)]";
+                    titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
+                    subtitleColor = "text-amber-400 font-bold drop-shadow-[0_2px_4px_rgba(251,191,36,0.2)]";
+                  }
+                } else if (stage === 2) {
+                  topBarGradient = "bg-[linear-gradient(90deg,#85eaff,#00d4ff)]";
+                  tagBgGradient = "bg-[linear-gradient(135deg,#85eaff_0%,#00d4ff_100%)]";
+                  tagTextColor = "text-[#111318]";
+                  arrowColor = "#00d4ff";
+                  if (isSelected) {
+                    activeBorderClass = "border-cyan-400/40 bg-[linear-gradient(180deg,rgba(0,212,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(0,212,255,0.12),0_0_24px_rgba(0,212,255,0.06)]";
+                    titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
+                    subtitleColor = "text-cyan-400 font-bold drop-shadow-[0_2px_4px_rgba(34,211,238,0.2)]";
+                  }
+                } else {
+                  topBarGradient = "bg-[linear-gradient(90deg,#9f93ff,#4d22df)]";
+                  tagBgGradient = "bg-[linear-gradient(135deg,#9f93ff_0%,#4d22df_100%)]";
+                  tagTextColor = "text-white";
+                  arrowColor = "#9f93ff";
+                  if (isSelected) {
+                    activeBorderClass = "border-violet-400/40 bg-[linear-gradient(180deg,rgba(124,92,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(124,92,255,0.12),0_0_24px_rgba(124,92,255,0.06)]";
+                    titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
+                    subtitleColor = "text-violet-400 font-bold drop-shadow-[0_2px_4px_rgba(167,139,250,0.2)]";
+                  }
+                }
+                
                 return (
-                  <FragmentStep
-                    key={name}
-                    step={step}
-                    name={name}
-                    tone={STEP_TONES[index]}
-                    active={currentStep === step}
-                    connectorWidth={step < 3 ? (currentStep > step ? "100%" : "0%") : undefined}
-                    connectorBackground={gradientForStep(currentStep)}
-                  />
+                  <div
+                    key={stage}
+                    className={`relative flex flex-col w-full transition-all duration-200 ${
+                      isSelected ? "z-20 hover:z-40" : "z-10 hover:z-40"
+                    }`}
+                  >
+                    {/* Step Block Box */}
+                    <div
+                      className={`w-full ${heightClass} relative flex flex-col justify-center items-center rounded-[22px] border backdrop-blur-[10px] transition-all duration-300 ${activeBorderClass} group`}
+                    >
+                      {/* Your Position Tag */}
+                      {isSelected && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3.5 z-10 flex flex-col items-center select-none pointer-events-none">
+                          <div className={`px-4 py-1.5 rounded-full ${tagBgGradient} ${tagTextColor} font-sans text-[0.72rem] font-extrabold uppercase tracking-[0.1em] shadow-[0_8px_20px_rgba(0,0,0,0.3)]`}>
+                            {labels.yourPosition}
+                          </div>
+                          {/* Little pointing arrow */}
+                          <div 
+                            className="w-2.5 h-2.5 rotate-45 -mt-1 shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
+                            style={{ backgroundColor: arrowColor }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Top Color Accent Line */}
+                      <div className={`absolute top-0 left-0 right-0 h-1.5 rounded-t-[20px] ${topBarGradient}`} />
+                      
+                      {/* Encircled Info Tooltip (Top Right) */}
+                      <div className="absolute top-3 right-3 print:hidden z-20">
+                        <InfoTooltip explanation={stageData.tooltip} stage={stage} />
+                      </div>
+
+                      {/* Box Typography */}
+                      <div className="text-center px-3">
+                        <h3 className={`font-sans text-[1.2rem] tracking-wide m-0 transition-colors duration-200 ${titleColor}`}>
+                          {stageData.title}
+                        </h3>
+                        <p className={`font-mono text-[0.82rem] m-0 mt-2.5 uppercase tracking-[0.15em] transition-colors duration-200 ${subtitleColor}`}>
+                          {isFrench ? `Niveau ${stage}` : `Level ${stage}`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -958,51 +1140,6 @@ export default function CapabilitiesAxesSection({ hero, axes }: Props) {
 
       {!activePanel && null}
     </div>
-  );
-}
-
-function FragmentStep({
-  step,
-  name,
-  tone,
-  active,
-  connectorWidth,
-  connectorBackground,
-}: {
-  step: number;
-  name: string;
-  tone: string;
-  active: boolean;
-  connectorWidth?: string;
-  connectorBackground: string;
-}) {
-  return (
-    <>
-      <div className="step-wrap">
-        <button
-          className={`step-button ${active ? "active" : ""}`}
-          type="button"
-          data-step={step}
-          data-tone={tone}
-          aria-disabled="true"
-          tabIndex={-1}
-        >
-          <span className="step-badge" style={{ color: "#fff" }}>{step}</span>
-          <span className="step-labels">
-            <span className="step-name">{name}</span>
-          </span>
-        </button>
-      </div>
-      {step < 3 ? (
-        <div className="connector">
-          <div
-            className="connector-fill"
-            data-connector={step}
-            style={{ width: connectorWidth, background: connectorBackground }}
-          ></div>
-        </div>
-      ) : null}
-    </>
   );
 }
 

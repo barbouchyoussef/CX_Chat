@@ -5,107 +5,45 @@ type Props = {
   competitiveLandscape: FinalReportCompetitiveStage[];
 };
 
-const STAGE_TONE_MAP: Record<number, { color: string; gradient: string }> = {
-  1: {
-    color: "gold",
-    gradient: "linear-gradient(135deg, #ffd447 0%, #c8973f 100%)",
+
+const MATURITY_CARDS = {
+  en: {
+    1: {
+      title: "Basic",
+      desc: "Initial, loosely formalized practices. Processes are reactive and undocumented.",
+      tooltip: "This designates initial, ad-hoc practices with limited structure or consistency."
+    },
+    2: {
+      title: "Established",
+      desc: "Defined and partially standardized processes. Improvement is underway.",
+      tooltip: "This designates defined practices with partial adoption and growing consistency."
+    },
+    3: {
+      title: "Advanced",
+      desc: "Optimized, measured, and continuously improving practices.",
+      tooltip: "This designates systematic, embedded practices with clear ownership and continuous improvement."
+    },
+    yourPosition: "Your position"
   },
-  2: {
-    color: "cyan",
-    gradient: "linear-gradient(135deg, #85eaff 0%, #00d4ff 100%)",
-  },
-  3: {
-    color: "violet",
-    gradient: "linear-gradient(135deg, #9f93ff 0%, #4d22df 100%)",
-  },
+  fr: {
+    1: {
+      title: "Basique",
+      desc: "Pratiques initiales, peu formalisées. Les processus sont réactifs et non documentés.",
+      tooltip: "Ceci désigne des pratiques initiales et ad-hoc avec une structure ou une cohérence limitée."
+    },
+    2: {
+      title: "Intermédiaire",
+      desc: "Processus définis et partiellement standardisés. Amélioration en cours.",
+      tooltip: "Ceci désigne des pratiques définies avec une adoption partielle et une cohérence croissante."
+    },
+    3: {
+      title: "Avancé",
+      desc: "Pratiques optimisées, mesurées et en amélioration continue.",
+      tooltip: "Ceci désigne des pratiques systématiques et intégrées avec une responsabilité claire et une amélioration continue."
+    },
+    yourPosition: "Votre position"
+  }
 };
-
-const STAGE_LABEL_MAP: Record<number, string> = {
-  1: "Basic",
-  2: "Established",
-  3: "Advanced",
-};
-
-function StepButton({
-  step,
-  label,
-  isActive,
-  tone,
-  onClick,
-}: {
-  step: number;
-  label: string;
-  isActive: boolean;
-  tone: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative z-10 flex flex-col items-center gap-3 px-1 pb-5 pt-0 ${
-        isActive ? "pointer-events-none" : ""
-      }`}
-      data-step={step}
-      data-tone={tone}
-      aria-disabled={true}
-      tabIndex={-1}
-    >
-      <span
-        className={`grid h-12 w-12 place-items-center rounded-full border font-bold text-white transition-all ${
-          isActive
-            ? `border-transparent text-[#111318] shadow-[0_12px_26px_rgba(0,0,0,0.28)]`
-            : "border-white/12 bg-white/6 text-white/90"
-        }`}
-        style={{
-          background: isActive ? STAGE_TONE_MAP[step]?.gradient : "rgba(255, 255, 255, 0.06)",
-          boxShadow: isActive
-            ? tone === "gold"
-              ? "0 12px 26px rgba(200, 151, 63, 0.28)"
-              : tone === "cyan"
-                ? "0 12px 26px rgba(0, 212, 255, 0.24)"
-                : "0 12px 26px rgba(77, 34, 223, 0.26)"
-            : "inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-        }}
-      >
-        {step}
-      </span>
-      <div className="text-center">
-        <p className="m-0 text-[1rem] font-semibold leading-[1.1] text-white/92">{label}</p>
-      </div>
-    </button>
-  );
-}
-
-function Connector({ index, activatedUpTo }: { index: number; activatedUpTo: number }) {
-  const isCompleted = activatedUpTo > index + 1;
-
-  return (
-    <div
-      className="relative top-0 h-0.5 w-full self-start rounded-full"
-      style={{
-        background: "linear-gradient(90deg, rgba(255, 212, 71, 0.28), rgba(133, 234, 255, 0.22))",
-        marginTop: "23px",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        className="absolute inset-0 rounded-full transition-all"
-        style={{
-          width: isCompleted ? "100%" : "0%",
-          background:
-            activatedUpTo === 1
-              ? "linear-gradient(90deg, #ffd447, #c8973f)"
-              : activatedUpTo === 2
-                ? "linear-gradient(90deg, #85eaff, #00d4ff)"
-                : "linear-gradient(90deg, #9f93ff, #4d22df)",
-          transitionDuration: "320ms",
-          transitionTimingFunction: "ease",
-        }}
-      />
-    </div>
-  );
-}
 
 function CompetitorChip({
   competitor,
@@ -222,6 +160,20 @@ export default function CompetitiveLandscapeSection({ competitiveLandscape }: Pr
   const [currentStageIndex, setCurrentStageIndex] = useState(1); // Default to stage 2 (Established)
   const [selectedCompetitorKey, setSelectedCompetitorKey] = useState<string>("");
 
+  const isFrench = competitiveLandscape.some(s => 
+    s.label.toLowerCase().includes("établi") || 
+    s.label.toLowerCase().includes("basique") || 
+    s.label.toLowerCase().includes("avancé") || 
+    s.label.toLowerCase().includes("intermédiaire") ||
+    s.competitors.some(c => c.note && (c.note.toLowerCase().includes("est") || c.note.toLowerCase().includes("les") || c.note.toLowerCase().includes("démontre")))
+  );
+  
+  const labels = isFrench ? MATURITY_CARDS.fr : MATURITY_CARDS.en;
+
+  const userStageLevel = competitiveLandscape.find(stage => 
+    stage.competitors.some(c => c.is_you)
+  )?.level || 1;
+
   // Initialize with default competitor for the current stage
   useEffect(() => {
     const stage = competitiveLandscape.find((s) => s.level === currentStageIndex);
@@ -302,28 +254,85 @@ export default function CompetitiveLandscapeSection({ competitiveLandscape }: Pr
         </div>
 
         <div className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-7 shadow-[0_24px_72px_rgba(0,0,0,0.28)] backdrop-blur-[12px]">
-          {/* Stepper */}
-          <div className="mb-6">
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(56px,1fr)_minmax(0,1fr)_minmax(56px,1fr)_minmax(0,1fr)] gap-0 rounded-[24px] border border-white/6 bg-white/[0.025] px-[22px] pb-0 pt-[22px]">
-              {[1, 2, 3].map((stage) => (
-                <div key={stage}>
-                  {stage > 1 && (
-                    <Connector
-                      index={stage - 2}
-                      activatedUpTo={currentStageIndex}
-                    />
-                  )}
-                  <div className="flex justify-center">
-                    <StepButton
-                      step={stage}
-                      label={STAGE_LABEL_MAP[stage]}
-                      isActive={currentStageIndex === stage}
-                      tone={STAGE_TONE_MAP[stage]?.color || "gold"}
-                      onClick={() => handleStageClick(stage)}
-                    />
+          {/* Maturity Stage Selection Cards */}
+          <div className="mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((stage) => {
+                const isSelected = currentStageIndex === stage;
+                const isUserStage = stage === userStageLevel;
+                const stageData = labels[stage as 1 | 2 | 3];
+                
+                let activeBorderClass = "border-white/6 bg-white/[0.02] hover:bg-white/[0.04]";
+                let circleBg = "bg-white/10 text-white/90";
+                
+                if (isSelected) {
+                  if (stage === 1) {
+                    activeBorderClass = "border-amber-500/40 bg-amber-500/[0.03] shadow-[0_12px_36px_rgba(245,158,11,0.1)]";
+                    circleBg = "bg-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]";
+                  } else if (stage === 2) {
+                    activeBorderClass = "border-emerald-500/40 bg-emerald-500/[0.03] shadow-[0_12px_36px_rgba(16,185,129,0.1)]";
+                    circleBg = "bg-emerald-500 text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)]";
+                  } else {
+                    activeBorderClass = "border-violet-500/40 bg-violet-500/[0.03] shadow-[0_12px_36px_rgba(139,92,246,0.1)]";
+                    circleBg = "bg-violet-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.3)]";
+                  }
+                }
+                
+                return (
+                  <div
+                    key={stage}
+                    onClick={() => handleStageClick(stage)}
+                    className={`relative flex flex-col items-center p-6 rounded-[22px] border backdrop-blur-md cursor-pointer transition-all duration-300 ${activeBorderClass} group`}
+                  >
+                    {isUserStage && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-sans text-[0.68rem] font-black uppercase tracking-wider shadow-[0_4px_12px_rgba(245,158,11,0.4)] z-20 select-none">
+                        {labels.yourPosition}
+                      </div>
+                    )}
+                    
+                    {/* Circle Number */}
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-full font-bold text-[1.1rem] transition-all duration-300 ${circleBg}`}>
+                      {stage}
+                    </div>
+                    
+                    {/* Title & Info Icon */}
+                    <div className="mt-4 flex items-center justify-center">
+                      <span className="font-sans text-[1.15rem] font-bold text-white leading-none">
+                        {stageData.title}
+                      </span>
+                      
+                      {/* Encircled Info Tooltip */}
+                      <span className="relative group/info inline-flex items-center ml-2 print:hidden select-none">
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-[14px] w-[14px] text-white/40 hover:text-white/80 transition-colors duration-150 cursor-help"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 16v-4" />
+                          <path d="M12 8h.01" />
+                        </svg>
+                        
+                        <span className="absolute bottom-full left-1/2 z-50 mb-3 w-56 -translate-x-1/2 scale-95 rounded-xl border border-white/10 bg-[#0f1117]/95 p-3 shadow-2xl backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100">
+                          <span className="block text-left font-sans text-[0.78rem] leading-relaxed text-slate-200 font-medium normal-case tracking-normal">
+                            {stageData.tooltip}
+                          </span>
+                          <span className="absolute top-full left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-[5px] rotate-45 border-r border-b border-white/10 bg-[#0f1117]/95" />
+                        </span>
+                      </span>
+                    </div>
+                    
+                    {/* Short Description */}
+                    <p className="mt-3.5 mb-0 text-center text-[0.92rem] leading-relaxed text-slate-300 font-normal group-hover:text-white transition-colors duration-200">
+                      {stageData.desc}
+                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
