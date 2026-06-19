@@ -33,6 +33,26 @@ const TRANSLATIONS = {
         desc: "Les leviers exacts à activer en premier, en fonction de votre contexte spécifique.",
       },
     ],
+    resultsSnapshot: "Aperçu des résultats",
+    strengths: "Forces",
+    painPoints: "Points de friction",
+    priorities: "Priorités",
+    guidedResults: "Résultats guidés",
+    builtForDecisionMaking: "Conçu pour la prise de décision",
+    overallPercentage: "68% global",
+    scoreRows: [
+      ["Stratégie & gouvernance", "62%", "#C5A04F"],
+      ["Compréhension client", "78%", "#2D7A3A"],
+      ["Design de parcours", "51%", "#EAAA08"],
+      ["Mesure", "68%", "#3858E9"],
+    ],
+    benchmarkInsight: "Analyse comparative",
+    benchmarkText: "Vos capacités les plus fortes se rapprochent des leaders du secteur",
+    benchmarkPts: "+12 pts",
+    peerMedian: "Médiane sectorielle",
+    bestInClass: "Meilleur de sa catégorie",
+    recommendedFocus: "Focus recommandé",
+    recommendationText: "Les résultats rassemblent les priorités clés pour faciliter l'alignement sur les premières actions à mener.",
   },
   en: {
     headingPart1: "You don’t leave with answers",
@@ -60,15 +80,28 @@ const TRANSLATIONS = {
         desc: "The exact levers to pull first, based on your specific context.",
       },
     ],
+    resultsSnapshot: "Results snapshot",
+    strengths: "Strengths",
+    painPoints: "Pain points",
+    priorities: "Priorities",
+    guidedResults: "Guided results",
+    builtForDecisionMaking: "Built for decision-making",
+    overallPercentage: "68% overall",
+    scoreRows: [
+      ["Strategy & governance", "62%", "#C5A04F"],
+      ["Customer understanding", "78%", "#2D7A3A"],
+      ["Journey design", "51%", "#EAAA08"],
+      ["Measurement", "68%", "#3858E9"],
+    ],
+    benchmarkInsight: "Benchmark insight",
+    benchmarkText: "Your strongest capabilities are approaching sector leaders",
+    benchmarkPts: "+12 pts",
+    peerMedian: "Peer median",
+    bestInClass: "Best-in-class",
+    recommendedFocus: "Recommended focus",
+    recommendationText: "The results bring the most important priorities into one place, making it easier to align on where action should begin.",
   },
 };
-
-const scoreRows = [
-  ["Strategy & governance", "62%", "#C5A04F"],
-  ["Customer understanding", "78%", "#2D7A3A"],
-  ["Journey design", "51%", "#EAAA08"],
-  ["Measurement", "68%", "#3858E9"],
-];
 
 export default function CoreFeaturesShowcase({ language = "en" }: CoreFeaturesShowcaseProps) {
   const sectionRef = useRef<HTMLElement>(null);
@@ -163,12 +196,12 @@ export default function CoreFeaturesShowcase({ language = "en" }: CoreFeaturesSh
 
                 <div className="absolute right-3 top-0 hidden w-40 rounded-[1.2rem] border border-white/70 bg-white/82 p-3 shadow-[0_12px_30px_rgba(17,24,39,0.08)] backdrop-blur md:block">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#667085]">
-                    Results snapshot
+                    {t.resultsSnapshot}
                   </p>
                   <div className="mt-4 space-y-3 text-sm text-[#111827]">
-                    <div className="rounded-xl bg-[#F0F9F2] px-3 py-2">Strengths</div>
-                    <div className="rounded-xl bg-[#FFF4E8] px-3 py-2">Pain points</div>
-                    <div className="rounded-xl bg-[#EEF2FF] px-3 py-2">Priorities</div>
+                    <div className="rounded-xl bg-[#F0F9F2] px-3 py-2">{t.strengths}</div>
+                    <div className="rounded-xl bg-[#FFF4E8] px-3 py-2">{t.painPoints}</div>
+                    <div className="rounded-xl bg-[#EEF2FF] px-3 py-2">{t.priorities}</div>
                   </div>
                 </div>
 
@@ -178,19 +211,19 @@ export default function CoreFeaturesShowcase({ language = "en" }: CoreFeaturesSh
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#667085]">
-                        Guided results
+                        {t.guidedResults}
                       </p>
                       <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#111827]">
-                        Built for decision-making
+                        {t.builtForDecisionMaking}
                       </h3>
                     </div>
                     <div className="rounded-full bg-[#111827] px-3 py-1.5 text-xs font-semibold text-white">
-                      68% overall
+                      {t.overallPercentage}
                     </div>
                   </div>
 
                   <div className="mt-6 space-y-4">
-                    {scoreRows.map(([label, value, color], index) => (
+                    {t.scoreRows.map(([label, value, color], index) => (
                       <div key={label}>
                         <div className="mb-2 flex items-center justify-between text-sm">
                           <span className="text-[#111827]">{label}</span>
@@ -212,9 +245,9 @@ export default function CoreFeaturesShowcase({ language = "en" }: CoreFeaturesSh
 
                   <div className="mt-6 grid gap-2 sm:grid-cols-3">
                     {[
-                      ["Strengths", "#F0F9F2", "#2D7A3A"],
-                      ["Pain points", "#FFF1F1", "#B42318"],
-                      ["Priorities", "#EEF2FF", "#3858E9"],
+                      [t.strengths, "#F0F9F2", "#2D7A3A"],
+                      [t.painPoints, "#FFF1F1", "#B42318"],
+                      [t.priorities, "#EEF2FF", "#3858E9"],
                     ].map(([label, background, color]) => (
                       <div
                         key={label}
@@ -230,23 +263,23 @@ export default function CoreFeaturesShowcase({ language = "en" }: CoreFeaturesSh
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#667085]">
-                          Benchmark insight
+                          {t.benchmarkInsight}
                         </p>
                         <p className="mt-1 text-xs font-semibold text-[#111827]">
-                          Your strongest capabilities are approaching sector leaders
+                          {t.benchmarkText}
                         </p>
                       </div>
                       <div className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#3858E9] shadow-[0_6px_18px_rgba(17,24,39,0.06)]">
-                        +12 pts
+                        {t.benchmarkPts}
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#667085]">
                       <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1.5 shadow-[0_6px_16px_rgba(17,24,39,0.05)]">
-                        Peer median
+                        {t.peerMedian}
                         <ArrowUpRight className="h-3.5 w-3.5 text-[#3858E9]" />
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1.5 shadow-[0_6px_16px_rgba(17,24,39,0.05)]">
-                        Best-in-class
+                        {t.bestInClass}
                         <Sparkles className="h-3.5 w-3.5 text-[#C5A04F]" />
                       </span>
                     </div>
@@ -257,12 +290,11 @@ export default function CoreFeaturesShowcase({ language = "en" }: CoreFeaturesSh
                   <div className="flex items-center gap-2 text-[#C5A04F]">
                     <Wand2 className="h-4 w-4" />
                     <span className="text-xs font-semibold uppercase tracking-[0.18em]">
-                      Recommended focus
+                      {t.recommendedFocus}
                     </span>
                   </div>
                   <p className="mt-2 text-xs leading-6 text-[#4B5563]">
-                    The results bring the most important priorities into one place,
-                    making it easier to align on where action should begin.
+                    {t.recommendationText}
                   </p>
                 </div>
               </div>
