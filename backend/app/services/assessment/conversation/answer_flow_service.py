@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from app.core.text_normalization import normalize_text
-from app.domain.constants import ASSESSMENT_STATUS_COMPLETED, ASSESSMENT_STATUS_IN_PROGRESS
+from app.domain.constants import ASSESSMENT_STATUS_IN_PROGRESS
 from app.repositories.assessment_answer_repository import AssessmentAnswerRepository
 from app.repositories.assessment_repository import AssessmentRepository
 from app.repositories.capability_repository import CapabilityRepository
@@ -279,8 +279,6 @@ class AnswerFlowService:
             assessment=assessment,
             max_extra_questions_per_axis=self._max_extra_questions_per_axis(),
         )
-        if assessment.status == ASSESSMENT_STATUS_COMPLETED:
-            await self.reporting.finalize_completed_assessment(assessment_id=assessment_id, assessment=assessment)
         self.state.bump_version(assessment)
 
     async def handle_resume_intent(
@@ -411,6 +409,10 @@ class AnswerFlowService:
             assessment.current_axis_low_quality_count = int(assessment.current_axis_low_quality_count or 0) + 1
 
         pending_focus_capability_id = self.question_flow.resolve_pending_focus_capability_id(assessment)
+        pending_options = await self.question_flow.options_for_focus(
+            pending_focus_capability_id,
+            language=getattr(assessment, "language", "fr"),
+        )
         assessment.pending_question = None
         assessment.pending_options = None
         assessment.pending_followup_hint = None
@@ -426,6 +428,7 @@ class AnswerFlowService:
         )
         if is_same_active_axis:
             assessment.pending_question = clarification_question
+            assessment.pending_options = pending_options
             assessment.pending_focus_capability_id = pending_focus_capability_id
             assessment.conversation_stage = "diagnostic"
 
@@ -1044,8 +1047,6 @@ class AnswerFlowService:
                 assessment=assessment,
                 max_extra_questions_per_axis=self._max_extra_questions_per_axis(),
             )
-            if assessment.status == ASSESSMENT_STATUS_COMPLETED:
-                await self.reporting.finalize_completed_assessment(assessment_id=assessment_id, assessment=assessment)
 
         self.state.bump_version(assessment)
 

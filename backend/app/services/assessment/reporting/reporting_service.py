@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
+from app.domain.constants import ASSESSMENT_STATUS_COMPLETED
 from app.repositories.assessment_answer_repository import AssessmentAnswerRepository
 from app.repositories.assessment_repository import AssessmentRepository
 from app.repositories.capability_repository import CapabilityRepository
@@ -68,10 +69,38 @@ class AssessmentReportingService:
         assessment_id: int,
         refresh_synthesis: bool = False,
     ) -> FinalReportResponse | None:
+        assessment = await self._prepare_completed_report_artifacts(assessment_id)
+        if assessment is None:
+            return None
         return await self.report_builder.get_final_report(
             assessment_id=assessment_id,
             refresh_synthesis=refresh_synthesis,
         )
+
+    async def _prepare_completed_report_artifacts(self, assessment_id: int) -> Any | None:
+        assessment = await self.report_builder.assessments.get_by_id(assessment_id)
+        if assessment is None:
+            return None
+        if str(getattr(assessment, "status", "")) != ASSESSMENT_STATUS_COMPLETED:
+            return assessment
+
+        outputs = await self.recommendations.get_recommendation_outputs(assessment_id=assessment_id)
+        if (
+            outputs is None
+            or not outputs.items
+            or getattr(assessment, "overall_maturity_level_id", None) is None
+            or not getattr(assessment, "overall_maturity_band", None)
+        ):
+            await self.recommendations.finalize_completed_assessment(
+                assessment_id=assessment_id,
+                assessment=assessment,
+            )
+
+        await self.report_builder.prepare_leaders_snapshot_generation(
+            assessment_id=assessment_id,
+            assessment=assessment,
+        )
+        return assessment
 
     async def debug_competitive_first_layer(
         self,

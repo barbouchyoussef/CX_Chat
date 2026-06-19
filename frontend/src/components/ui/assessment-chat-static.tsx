@@ -151,11 +151,14 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
     };
   };
 
-  const fetchNextQuestion = async (assessmentId: number): Promise<{ question: string | null; options: string[] }> => {
+  const fetchNextQuestion = async (
+    assessmentId: number
+  ): Promise<{ status: string; question: string | null; options: string[] }> => {
     const response = await fetch(`${API_BASE_URL}/assessments/${assessmentId}/next-question`);
     if (!response.ok) throw new Error("Failed to fetch next question");
     const payload = await response.json();
     return {
+      status: payload.status ?? "active",
       question: payload.question ?? payload.message ?? null,
       options: payload.options ?? [],
     };
@@ -245,6 +248,19 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
     const payload = await response.json();
     setFinalReport(payload);
     return payload;
+  };
+
+  const startReportGeneration = async (assessmentId: number) => {
+    setIsTyping(false);
+    setQuestionOptions([]);
+    setIsReportFetching(true);
+    setIsGeneratingMinDelayDone(false);
+    setShowGeneratingPage(true);
+    try {
+      await fetchFinalReport(assessmentId);
+    } finally {
+      setIsReportFetching(false);
+    }
   };
 
   const parseChoice = (text: string, options: Option[]): Option | null => {
@@ -346,15 +362,19 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
       setSubmittedAnswersCount((prev) => prev + 1);
       if (snapshot.status === "completed") {
         setStage("completed");
-        appendAssistant(
-          language === "fr"
-            ? "Merci — nous avons maintenant assez d'éléments pour concevoir votre rapport de maturité de l'expérience client."
-            : "Thank you — we now have enough evidence to build your customer experience maturity report."
-        );
+        setQuestionOptions([]);
         return;
       }
 
       const result = await fetchNextQuestion(assessment.id);
+      if (result.status === "completed") {
+        const completedSnapshot = await fetchAssessmentSnapshot(assessment.id);
+        setAssessment(completedSnapshot);
+        setStage("completed");
+        setQuestionOptions([]);
+        return;
+      }
+
       if (result.question) {
         appendAssistant(result.question);
         setQuestionOptions(result.options);
@@ -450,14 +470,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
 
   const handleGenerateReportClick = async () => {
     if (!assessment) return;
-    setIsReportFetching(true);
-    setIsGeneratingMinDelayDone(false);
-    setShowGeneratingPage(true);
-    try {
-      await fetchFinalReport(assessment.id);
-    } finally {
-      setIsReportFetching(false);
-    }
+    await startReportGeneration(assessment.id);
   };
 
   if (showRecommendations && assessment) {
@@ -967,7 +980,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                   >
                     {isReportFetching
                       ? (language === "fr" ? "Préparation du rapport..." : "Preparing report...")
-                      : (language === "fr" ? "Générer le rapport exécutif" : "Generate Executive Report")}
+                      : (language === "fr" ? "Obtenir le rapport" : "Get report")}
                     {!isReportFetching ? <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" /> : null}
                   </button>
                 </div>

@@ -171,8 +171,13 @@ class QuestionFlowService:
                 )
                 assessment.pending_question = question
                 assessment.pending_focus_capability_id = focus.get("primary_capability_id")
+                options = await self.options_for_focus(
+                    focus.get("primary_capability_id"),
+                    language=getattr(assessment, "language", "fr"),
+                )
+                assessment.pending_options = options
                 assessment.conversation_stage = "diagnostic"
-                return NextQuestionResponse(status=assessment.status, axis=axis, question=question)
+                return NextQuestionResponse(status=assessment.status, axis=axis, question=question, options=options)
         else:
             low_quality_exit_bridge = False
 
@@ -267,6 +272,7 @@ class QuestionFlowService:
             missing_topic=focus_topic,
             history=await self._build_chat_history(assessment_id),
             concerned_question=previous_question,
+            language=getattr(assessment, "language", "fr"),
         )
 
     def select_question_focus(
@@ -759,6 +765,10 @@ class QuestionFlowService:
         except Exception:
             return []
         return list(rubrics_by_capability.get(int(capability_id)) or [])
+
+    async def options_for_focus(self, capability_id: int | None, language: str = "fr") -> list[str]:
+        rubrics = await self._maturity_rubrics_for_focus(capability_id)
+        return self._derive_options_from_rubrics(rubrics, language=language)
 
 
 def build_question_flow_service(
