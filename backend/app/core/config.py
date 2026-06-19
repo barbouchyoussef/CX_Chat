@@ -199,7 +199,7 @@ def get_settings() -> Settings:
         scoring_min_evidence_text_len=_get_int("SCORING_MIN_EVIDENCE_TEXT_LEN", 4),
         scoring_min_rationale_text_len=_get_int("SCORING_MIN_RATIONALE_TEXT_LEN", 42),
         chat_max_extra_questions_per_axis=_get_int("CHAT_MAX_EXTRA_QUESTIONS_PER_AXIS", 1),
-        chat_max_clarifications_per_focus=_get_int("CHAT_MAX_CLARIFICATIONS_PER_FOCUS", 2),
+        chat_max_clarifications_per_focus=_get_int("CHAT_MAX_CLARIFICATIONS_PER_FOCUS", 3),
         chat_max_insufficient_evidence_retries=_get_int("CHAT_MAX_INSUFFICIENT_EVIDENCE_RETRIES", 1),
         recommendation_max_actions_per_capability=_get_int("MAX_ACTIONS_PER_CAPABILITY", 2),
         recommendation_max_words_per_capability=_get_int("MAX_WORDS_PER_CAPABILITY", 120),

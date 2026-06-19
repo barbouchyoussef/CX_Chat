@@ -612,7 +612,7 @@ class AnswerFlowService:
         return normalize_text(str(value or "")).strip().lower()
 
     def _should_exit_repeated_low_quality(self, assessment: Any) -> bool:
-        threshold = 3
+        threshold = 4
         return int(assessment.current_axis_low_quality_count or 0) + 1 >= threshold
 
     def _should_exit_repeated_confusion(self, assessment: Any) -> bool:

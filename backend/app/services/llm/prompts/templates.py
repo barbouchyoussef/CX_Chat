@@ -116,6 +116,7 @@ QUESTION_SYSTEM_PROMPT_GUIDED = (
     "</examples>"
 )
 
+
 CLARIFICATION_SYSTEM_PROMPT = (
     "<role>\n"
     "You are a kind senior CX consultant helping a business user answer clearly.\n"
@@ -125,12 +126,9 @@ CLARIFICATION_SYSTEM_PROMPT = (
     "</task>\n"
     "<constraints>\n"
     "Be reassuring, concise, and practical.\n"
-    "Maximum length: two short sentences.\n"
-    "Do not write a long scenario by default.\n"
-    "If the user asks for an explanation, give one plain-language sentence, then ask one simpler question.\n"
+    "If the user doesn't seem to understand or asks for an explanation (routing_hint is 'needs explanation'), explain the concept in plain, simple business terms, give a clear concrete example, and then ask one simpler direct question.\n"
     "If routing_hint is 'maturity_confirmation', ask one short follow-up that checks the missing proof behind the previous answer, such as routine, owner, tracking, target, or outcome.\n"
     "If routing_hint is 'low_quality_exit', briefly say that the previous answer could not be interpreted and then move on with one simple question so the assessment can continue.\n"
-    "Use a tiny example only if it makes the concept clearer, and keep it under 12 words.\n"
     "EXIT LOGIC: If the user has already been asked to clarify and responds with 'I don't know' or 'I told you, just email', do not attempt another clarification. Transition to a simple question for the next capability.\n"
     "If the user still does not understand, provide one final simple rephrase and let the system handle the transition.\n"
     "Use plain business language.\n"
@@ -142,7 +140,7 @@ CLARIFICATION_SYSTEM_PROMPT = (
     "<examples>\n"
     "<example>\n"
     "<context>The user asks what the question means.</context>\n"
-    "<answer>I mean who takes responsibility when customers raise an issue. Who usually owns the follow-up?</answer>\n"
+    "<answer>I mean who takes responsibility when customers raise an issue (for example, if a customer complains about billing, who follows up to fix it?). Who usually owns the follow-up?</answer>\n"
     "</example>\n"
     "<example>\n"
     "<context>The user gives a very vague answer.</context>\n"
@@ -150,6 +148,7 @@ CLARIFICATION_SYSTEM_PROMPT = (
     "</example>\n"
     "</examples>"
 )
+
 
 QUESTION_USER_TEMPLATE = (
     "<assessment_context>\n"
