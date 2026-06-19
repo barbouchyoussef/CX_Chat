@@ -66,6 +66,8 @@ class IntentRouter:
             return "LOW_QUALITY"
         if self.is_negative_evidence_text(normalized, previous_question=previous_question):
             return "VALID_ANSWER"
+        if self.is_affirmative_evidence_text(normalized, previous_question=previous_question):
+            return "VALID_ANSWER"
         if self.is_confusion_request_text(normalized):
             return "CONFUSION"
         if normalized in {
@@ -138,6 +140,27 @@ class IntentRouter:
         return self.is_negative_evidence_text(
             self.normalize_fast_intent_text(text),
             previous_question=self.normalize_fast_intent_text(previous_question or "") if previous_question else None,
+        )
+
+    def is_affirmative_evidence_text(self, normalized_text: str, previous_question: str | None = None) -> bool:
+        if normalized_text not in {"yes", "yeah", "yep", "sure", "oui", "exactement"}:
+            return False
+        return self._question_supports_brief_affirmative_evidence(previous_question or "")
+
+    def _question_supports_brief_affirmative_evidence(self, normalized_question: str) -> bool:
+        if not normalized_question:
+            return False
+        return bool(
+            re.search(
+                r"\b("
+                r"do you|did you|have you|are you|is it|"
+                r"does it|can you|could you|would you|"
+                r"est ce que|avez vous|utilisez vous|suivez vous|mesurez vous|collectez vous|"
+                r"pouvez vous|est il|est elle|"
+                r"for example|par exemple"
+                r")\b",
+                normalized_question,
+            )
         )
 
     def is_negative_evidence_text(self, normalized_text: str, previous_question: str | None = None) -> bool:

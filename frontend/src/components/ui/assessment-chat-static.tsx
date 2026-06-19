@@ -26,6 +26,16 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000
 const AXIS_ORDER = ["MANAGE", "ANALYZE", "IMPROVE"];
 const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim().toUpperCase();
 
+const getInitialGreeting = (lang: string) =>
+  lang === "fr"
+    ? "Bonjour, je suis ORION. Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose. C'est là que j'interviens."
+    : "Hello, I’m ORION. If you’re here, it means your organization is ready to take an honest look at the experience it delivers. That’s where I come in.";
+
+const getAssessmentStartIntro = (lang: string) =>
+  lang === "fr"
+    ? "Maintenant que j'ai le contexte de votre entreprise, commençons l'évaluation."
+    : "Now that I have your company context, let's begin the assessment.";
+
 const getAxisDisplayName = (axis: string, lang: string) => {
   if (axis === "MANAGE") return lang === "fr" ? "GÉRER" : "MANAGE";
   if (axis === "ANALYZE") return lang === "fr" ? "ANALYSER" : "ANALYZE";
@@ -52,14 +62,54 @@ const getAxisProgressSubtitle = (axis: string, lang: string) => {
   return "";
 };
 
+const splitAssistantQuestion = (text: string) => {
+  const trimmedEnd = text.trimEnd();
+  const questionEnd = trimmedEnd.lastIndexOf("?");
+  if (questionEnd < 0) {
+    return { prefix: text, question: "", suffix: "" };
+  }
+
+  let questionStart = 0;
+  for (let index = questionEnd - 1; index >= 0; index -= 1) {
+    if ([".", "?", "!", "\n"].includes(trimmedEnd[index])) {
+      questionStart = index + 1;
+      break;
+    }
+  }
+
+  while (questionStart < trimmedEnd.length && /\s/.test(trimmedEnd[questionStart])) {
+    questionStart += 1;
+  }
+
+  return {
+    prefix: text.slice(0, questionStart),
+    question: text.slice(questionStart, questionEnd + 1),
+    suffix: text.slice(questionEnd + 1),
+  };
+};
+
+const AssistantMessageText = ({ text }: { text: string }) => {
+  const { prefix, question, suffix } = splitAssistantQuestion(text);
+
+  if (!question) {
+    return <span className="whitespace-pre-wrap">{text}</span>;
+  }
+
+  return (
+    <span className="whitespace-pre-wrap">
+      {prefix}
+      <strong className="font-bold text-slate-950">{question}</strong>
+      {suffix}
+    </span>
+  );
+};
+
 export default function AssessmentChatStatic({ onBack, language = "fr" }: Props) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: crypto.randomUUID(),
-      text: language === "fr"
-        ? "Bonjour, je suis ORION. Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose. C'est là que j'interviens. Parlez-moi un peu de votre organisation pour commencer."
-        : "Hello, I’m ORION. If you’re here, it means your organization is ready to take an honest look at the experience it delivers. That’s where I come in. Tell me a little about your organization to get us started.",
+      text: getInitialGreeting(language),
       isUser: false,
     },
   ]);
@@ -192,17 +242,14 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
     setStage(snapshot.status === "completed" ? "completed" : "assessment_active");
     const result = await fetchNextQuestion(snapshot.id);
     if (result.question) {
-      setMessages([
-        {
-          id: crypto.randomUUID(),
-          text: `${
-            language === "fr"
-              ? "Merci. J'ai bien noté le contexte de votre entreprise. Commençons l'évaluation."
-              : "Thank you. I now have your company context. Let's begin the assessment."
-          } ${result.question}`,
-          isUser: false,
-        },
-      ]);
+      setMessages((prev) => {
+        const combined = `${getInitialGreeting(language)}\n\n${getAssessmentStartIntro(language)} ${result.question}`.trim();
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && !lastMessage.isUser) {
+          return [...prev.slice(0, -1), { ...lastMessage, text: combined }];
+        }
+        return [...prev, { id: crypto.randomUUID(), text: combined, isUser: false }];
+      });
       setQuestionOptions(result.options);
     }
   };
@@ -422,9 +469,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
     setMessages([
       {
         id: crypto.randomUUID(),
-        text: language === "fr"
-          ? "Bonjour, je suis ORION. Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose. C'est là que j'interviens. Parlez-moi un peu de votre organisation pour commencer."
-          : "Hello, I’m ORION. If you’re here, it means your organization is ready to take an honest look at the experience it delivers. That’s where I come in. Tell me a little about your organization to get us started.",
+        text: getInitialGreeting(language),
         isUser: false,
       },
     ]);
@@ -834,10 +879,10 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                           className={`max-w-[95%] rounded-2xl px-5 py-4 text-[17px] leading-relaxed sm:max-w-[90%] shadow-sm ${
                             msg.isUser
                               ? "rounded-tr-none bg-slate-900 text-white font-normal"
-                              : "rounded-tl-none border border-slate-200 bg-slate-50 text-slate-800 font-semibold"
+                              : "rounded-tl-none border border-slate-200 bg-slate-50 text-slate-800 font-normal"
                           }`}
                         >
-                          {msg.text}
+                          {msg.isUser ? msg.text : <AssistantMessageText text={msg.text} />}
                         </motion.div>
                       </div>
                       );
