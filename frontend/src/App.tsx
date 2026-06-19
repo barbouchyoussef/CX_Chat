@@ -75,9 +75,9 @@ export default function App() {
 
   return (
     <>
-      <NavBar onStartConversation={() => setShowChat(true)} language={language} />
+      <NavBar onStartConversation={() => setShowChat(true)} language={language} onLanguageChange={setLanguage} />
       <main style={{ paddingTop: "80px" }}>
-        <Hero onStartConversation={() => setShowChat(true)} language={language} onLanguageChange={setLanguage} />
+        <Hero onStartConversation={() => setShowChat(true)} language={language} />
         <HowItWorks language={language} />
         <Features language={language} />
         <CoreFeaturesShowcase language={language} />

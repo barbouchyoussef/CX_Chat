@@ -1,6 +1,6 @@
 import React from "react";
 
-const logoSrc = `${import.meta.env.BASE_URL}ey_logo.svg`;
+const logoSrc = `${import.meta.env.BASE_URL}EY_Studio+_Logo_Primary_WithoutStrapline_RGB_White_Yellow_Grad_EN.png`;
 
 type FooterProps = {
   projectName?: string;

@@ -4,6 +4,7 @@ import "./Navbar.css";
 type NavbarProps = {
   onStartConversation?: () => void;
   language?: string;
+  onLanguageChange?: (lang: string) => void;
 };
 
 const TRANSLATIONS = {
@@ -23,7 +24,7 @@ const TRANSLATIONS = {
   },
 };
 
-export default function Navbar({ onStartConversation, language = "en" }: NavbarProps) {
+export default function Navbar({ onStartConversation, language = "en", onLanguageChange }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const logoSrc = `${import.meta.env.BASE_URL}ey_logo.svg`;
   const t = TRANSLATIONS[language as "fr" | "en"] || TRANSLATIONS.en;
@@ -58,6 +59,25 @@ export default function Navbar({ onStartConversation, language = "en" }: NavbarP
           </a>
           <button type="button" className="nav__cta" onClick={onStartConversation}>
             {t.cta}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 p-0.5 shadow-sm backdrop-blur ml-auto lg:ml-6">
+          <button
+            type="button"
+            onClick={() => onLanguageChange?.("fr")}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${language === "fr" ? "bg-[#111827] text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}
+          >
+            FR
+          </button>
+          <button
+            type="button"
+            onClick={() => onLanguageChange?.("en")}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${language === "en" ? "bg-[#111827] text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}
+          >
+            EN
           </button>
         </div>
       </div>
