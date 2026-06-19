@@ -822,6 +822,7 @@ class ReportBuilderService:
                     "timeline_label": timeline_labels[step - 1],
                     "axis": item["axis"],
                     "capability": item["capability"],
+                    "capability_raw": item.get("capability_raw"),
                     "maturity_band": item["maturity_band"],
                     "quick_win_guideline": item.get("quick_win_guideline"),
                     "after_text": item.get("after_text"),
@@ -886,6 +887,7 @@ class ReportBuilderService:
                     "maturity_level_number": int(maturity_level_number),
                     "axis": capability_item.axis,
                     "capability": capability_item.capability,
+                    "capability_raw": str(row.get("label") or ""),
                     "maturity_band": capability_item.maturity_band,
                     "confidence": float(capability_item.confidence or 0.0),
                     "rationale": normalize_text(
@@ -1203,7 +1205,7 @@ class ReportBuilderService:
         return "CX Lead" if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability)
 
     def _fallback_quick_win_title(self, candidate: dict[str, Any], language: str = "fr") -> str:
-        capability_text = normalize_text(str(candidate.get("capability") or "")).lower()
+        capability_text = normalize_text(str(candidate.get("capability_raw") or candidate.get("capability") or "")).lower()
         title_map = self._fr_quick_win_title_map() if self._is_french(language) else {
             "decision-making": "Launch monthly customer decision review",
             "ownership and governance": "Formalize cross-functional CX reviews",
@@ -1228,7 +1230,7 @@ class ReportBuilderService:
         return title
 
     def _fallback_quick_win_today_text(self, candidate: dict[str, Any], language: str = "fr") -> str:
-        capability_text = normalize_text(str(candidate.get("capability") or "")).lower()
+        capability_text = normalize_text(str(candidate.get("capability_raw") or candidate.get("capability") or "")).lower()
         today_map = self._fr_quick_win_today_map() if self._is_french(language) else {
             "decision-making": "Customer feedback is monitored, but it rarely shapes decisions, priorities, or roadmap choices in a structured way.",
             "ownership and governance": "A named owner exists, but cross-functional routines and escalation paths are still inconsistent.",
