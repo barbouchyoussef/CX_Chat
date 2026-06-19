@@ -7,9 +7,9 @@ type CTASectionProps = {
 
 const TRANSLATIONS = {
   fr: {
-    title: "Prêt à voir où se situe réellement votre organisation ?",
-    subtitle: "Une conversation avec ORION. Une clarté qui transforme votre façon de diriger.",
-    cta: "Parler à ORION",
+    title: "Prêt à évaluer la maturité réelle de votre organisation ?",
+    subtitle: "Une conversation avec ORION. Une clarté nouvelle pour orienter vos décisions stratégiques.",
+    cta: "Échanger avec ORION",
   },
   en: {
     title: "Ready to see where your organization really stands?",

@@ -9,11 +9,11 @@ type NavbarProps = {
 
 const TRANSLATIONS = {
   fr: {
-    brandTitle: "Évaluation gratuite",
-    howItWorks: "Comment ORION pense",
-    analysis: "Analyse",
-    synthesis: "Synthèse",
-    cta: "Commencer la conversation",
+    brandTitle: "Diagnostic gratuit",
+    howItWorks: "La méthodologie ORION",
+    analysis: "Prismes d'analyse",
+    synthesis: "Synthèse des résultats",
+    cta: "Lancer le diagnostic",
   },
   en: {
     brandTitle: "Free Audit",

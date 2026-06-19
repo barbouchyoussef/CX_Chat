@@ -7,19 +7,19 @@ type FeaturesProps = {
 
 const TRANSLATIONS = {
   fr: {
-    heading: "Une évaluation d'un autre genre",
+    heading: "Une approche d'évaluation repensée",
     features: [
       {
         title: "Adaptatif par nature",
-        desc: "ORION écoute avant de poser des questions. Chaque conversation s'adapte à vos réponses, sans suivre un scénario prédéterminé.",
+        desc: "ORION écoute avant d'interroger. L'échange s'adapte dynamiquement à vos réponses, rompant avec la rigidité des questionnaires classiques.",
       },
       {
-        title: "Comparé à votre réalité",
-        desc: "Votre score de maturité est mesuré par rapport aux organisations de votre secteur, vous apportant du contexte, pas seulement un chiffre.",
+        title: "Positionné face à vos pairs",
+        desc: "Votre niveau de maturité est évalué au regard des standards de votre secteur, vous offrant un véritable repère concurrentiel plutôt qu'un score abstrait.",
       },
       {
-        title: "Des perspectives, pas seulement des résultats",
-        desc: "Ce que vous recevez n'est pas un simple rapport. C'est une vision priorisée de votre situation, de ce qui vous freine et des axes sur lesquels concentrer vos efforts.",
+        title: "De l'analyse à l'action",
+        desc: "Vous ne recevez pas un simple rapport de plus. ORION vous fournit une feuille de route priorisée identifiant vos points de blocage et les actions concrètes sur lesquelles concentrer vos efforts.",
       },
     ],
   },

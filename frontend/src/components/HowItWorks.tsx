@@ -10,28 +10,28 @@ type HowItWorksProps = {
 
 const TRANSLATIONS = {
   fr: {
-    category: "COMMENT ORION PENSE",
-    heading: "Trois prismes. Une vérité",
-    subtitle: "La plupart des organisations ont des zones d'ombre. ORION analyse votre organisation sous trois angles pour dresser un portrait complet et honnête de votre situation.",
+    category: "MÉTHODOLOGIE ORION",
+    heading: "Trois prismes. Une seule réalité",
+    subtitle: "Chaque organisation a ses zones d'ombre. ORION évalue votre maturité sous trois angles complémentaires pour dresser un diagnostic précis et objectif.",
     axisLabel: "AXE",
     axes: [
       {
         step: "01",
-        title: "Gérer",
-        tagline: "Qui est responsable de l'expérience dans votre organisation ?",
-        desc: "Avant de pouvoir s'améliorer, quelqu'un doit être responsable. Cette dimension mesure la façon dont l'expérience client est gouvernée, intégrée à votre structure et soutenue à tous les niveaux, de la direction générale au personnel de terrain.",
+        title: "Piloter",
+        tagline: "Qui pilote l'expérience client au sein de votre organisation ?",
+        desc: "Pour initier le changement, la responsabilisation et le sponsorship sont clés. Cette dimension évalue la gouvernance de votre expérience client, son intégration structurelle et son portage, du comité de direction aux équipes terrain.",
       },
       {
         step: "02",
         title: "Analyser",
-        tagline: "Écoutez-vous les bons signaux ?",
-        desc: "Des données sans orientation ne sont que du bruit. Cette dimension évalue la façon dont votre organisation capte les signaux des clients, leur donne du sens et transforme les retours bruts en décisions concrètes.",
+        tagline: "Écoutez-vous et comprenez-vous réellement la voix du client ?",
+        desc: "Accumuler de la donnée sans vision claire n'est que du bruit. Cette dimension évalue votre aptitude à capter les signaux clients, à en extraire des insights exploitables et à les traduire en décisions stratégiques.",
       },
       {
         step: "03",
-        title: "Améliorer",
-        tagline: "Vos analyses se traduisent-elles en actions ?",
-        desc: "La plupart des organisations collectent des données. Rares sont celles qui agissent de manière cohérente. Cette dimension mesure l'aptitude de votre organisation à concevoir, tester et perfectionner continuellement l'expérience, fermant ainsi la boucle entre le ressenti client et vos actions.",
+        title: "Transformer",
+        tagline: "Vos analyses se traduisent-elles en actions concrètes sur le terrain ?",
+        desc: "Collecter de la donnée est courant, agir avec impact l'est moins. Cette dimension mesure votre agilité à concevoir, tester et itérer sur vos parcours pour aligner concrètement vos actions sur le ressenti client.",
       },
     ],
   },
@@ -102,6 +102,12 @@ export default function HowItWorks({ language = "en" }: HowItWorksProps) {
     return "bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-100";
   };
 
+  const getTextColorClass = (step: string) => {
+    if (step === "01") return "text-indigo-600";
+    if (step === "02") return "text-sky-500";
+    return "text-fuchsia-600";
+  };
+
   const getBottomLineGradient = (step: string) => {
     if (step === "01") return "bg-gradient-to-r from-indigo-500 to-indigo-600";
     if (step === "02") return "bg-gradient-to-r from-sky-400 to-sky-500";
@@ -153,8 +159,8 @@ export default function HowItWorks({ language = "en" }: HowItWorksProps) {
                       {axis.step}
                     </span>
                     <div>
-                      <h4 className="font-bold text-slate-950 leading-none">{axis.title}</h4>
-                      <p className="mt-2.5 text-xs text-slate-500 font-medium line-clamp-1">{axis.tagline}</p>
+                      <h4 className="font-bold text-slate-950 leading-snug text-[15px]">{axis.tagline}</h4>
+                      <p className="mt-1.5 text-xs text-slate-500 font-semibold uppercase tracking-wider">{axis.title}</p>
                     </div>
                   </button>
                 );
@@ -184,11 +190,11 @@ export default function HowItWorks({ language = "en" }: HowItWorksProps) {
                     {t.axisLabel} {activeAxis.step}
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold tracking-tight text-slate-950">
-                  {activeAxis.title}
-                </h3>
-                <h4 className="mt-2 text-sm font-semibold leading-snug text-slate-800">
+                <h3 className={`text-xl font-bold tracking-tight ${getTextColorClass(activeAxis.step)}`}>
                   {activeAxis.tagline}
+                </h3>
+                <h4 className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  {activeAxis.title}
                 </h4>
                 <p className="mt-3 text-[13px] leading-relaxed text-slate-500 font-normal">
                   {activeAxis.desc}

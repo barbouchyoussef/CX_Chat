@@ -10,8 +10,8 @@ type FooterProps = {
 
 const TRANSLATIONS = {
   fr: {
-    project: "Rapport de maturité de l'expérience client",
-    desc: "Ce rapport synthétise l'évaluation de la maturité de l'expérience client, les éléments de comparaison et les actions prioritaires issues de l'entretien réalisé.",
+    project: "Diagnostic de maturité d'expérience client",
+    desc: "Ce rapport synthétise la maturité de votre expérience client, les repères sectoriels comparatifs et les recommandations stratégiques issues du diagnostic.",
   },
   en: {
     project: "Customer Experience Maturity Report",

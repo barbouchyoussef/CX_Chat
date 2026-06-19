@@ -4,9 +4,10 @@ import type { ReactNode } from "react";
 type FadeUpProps = {
   children: ReactNode;
   delay?: string;
+  className?: string;
 };
 
-export default function FadeUp({ children, delay = "" }: FadeUpProps) {
+export default function FadeUp({ children, delay = "", className = "" }: FadeUpProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
 
@@ -29,7 +30,7 @@ export default function FadeUp({ children, delay = "" }: FadeUpProps) {
   }, []);
 
   return (
-    <div ref={ref} className={`fade-up ${delay} ${inView ? "fade-up--in" : ""}`.trim()}>
+    <div ref={ref} className={`fade-up ${delay} ${inView ? "fade-up--in" : ""} ${className}`.trim()}>
       {children}
     </div>
   );
