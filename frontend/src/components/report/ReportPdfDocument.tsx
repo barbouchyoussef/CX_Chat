@@ -6,6 +6,8 @@ import type {
   FinalReportQuickWinItem,
   FinalReportWorkingMissingAxis,
 } from "../../types/final-report";
+import { getMaturityBandDisplayName } from "../../utils/reportHelpers";
+
 
 type Props = {
   report: FinalReport;
@@ -458,20 +460,6 @@ function chipText(value?: string | null) {
   return clean(value) || "Not specified";
 }
 
-const getMaturityBandDisplayName = (band?: string | null, isFr?: boolean) => {
-  if (!band) return "";
-  const key = band.toLowerCase().trim();
-  if (isFr) {
-    if (key.includes("basic") || key.includes("basique")) return "Basique";
-    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Établi";
-    if (key.includes("advanced") || key.includes("avancé")) return "Avancé";
-  } else {
-    if (key.includes("basic") || key.includes("basique")) return "Basic";
-    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Established";
-    if (key.includes("advanced") || key.includes("avancé")) return "Advanced";
-  }
-  return band;
-};
 
 const getAxisDisplayName = (axis?: string | null, isFr?: boolean) => {
   if (!axis) return "";

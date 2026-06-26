@@ -148,7 +148,6 @@ export default function HowItWorks({ language = "en" }: HowItWorksProps) {
                   <button
                     key={axis.step}
                     onClick={() => setActiveIdx(index)}
-                    onMouseEnter={() => setActiveIdx(index)}
                     className={`flex items-start gap-4 rounded-2xl border p-4.5 text-left transition-all duration-300 cursor-pointer ${
                       isActive
                         ? `${activeBorderClass} shadow-[0_10px_30px_rgba(0,0,0,0.02)]`
@@ -177,14 +176,24 @@ export default function HowItWorks({ language = "en" }: HowItWorksProps) {
                   key={activeAxis.step}
                   src={activeAxis.image}
                   alt={activeAxis.title}
-                  style={{ animation: "fadeInScale 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}
+                  style={{ 
+                    animation: "fadeInScale 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+                    willChange: "transform, opacity"
+                  }}
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
               </div>
 
               {/* Tag and Content with entrance animations */}
-              <div key={`content-${activeIdx}`} style={{ animation: "fadeInUpShort 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards" }} className="mt-6">
+              <div 
+                key={`content-${activeIdx}`} 
+                style={{ 
+                  animation: "fadeInUpShort 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+                  willChange: "transform, opacity"
+                }} 
+                className="mt-6"
+              >
                 <div className="mb-3">
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold tracking-wider uppercase ${getBadgeStyles(activeAxis.step)}`}>
                     {t.axisLabel} {activeAxis.step}

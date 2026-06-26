@@ -79,7 +79,11 @@ docker compose up -d
    MISTRAL_API_KEY=your-key-here
    LANGSEARCH_API_KEY=your-key-here
    ```
-5. Start the backend development server:
+5. Run the database seed and migration script to bootstrap the schema and reference data:
+   ```bash
+   python seed.py
+   ```
+6. Start the backend development server:
    ```bash
    python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
    ```

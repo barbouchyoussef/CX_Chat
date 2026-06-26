@@ -9,29 +9,7 @@ type Props = {
   language?: string | null;
 };
 
-const axisLabel = (value?: string | null, isFr?: boolean) => {
-  if (!value) return "Unknown";
-  const key = value.toLowerCase().trim();
-  if (key.includes("manage") || key.includes("gérer")) return isFr ? "Gérer" : "Manage";
-  if (key.includes("analyze") || key.includes("analyser")) return isFr ? "Analyser" : "Analyze";
-  if (key.includes("improve") || key.includes("améliorer")) return isFr ? "Améliorer" : "Improve";
-  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-};
-
-const getMaturityBandDisplayName = (band?: string | null, isFr?: boolean) => {
-  if (!band) return "";
-  const key = band.toLowerCase().trim();
-  if (isFr) {
-    if (key.includes("basic") || key.includes("basique")) return "Basique";
-    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Établi";
-    if (key.includes("advanced") || key.includes("avancé")) return "Avancé";
-  } else {
-    if (key.includes("basic") || key.includes("basique")) return "Basic";
-    if (key.includes("established") || key.includes("établi") || key.includes("intermédiaire")) return "Established";
-    if (key.includes("advanced") || key.includes("avancé")) return "Advanced";
-  }
-  return band;
-};
+import { getMaturityBandDisplayName, axisLabel } from "../../utils/reportHelpers";
 
 const DEFINITIONS = {
   en: {
@@ -73,12 +51,12 @@ function InfoTooltip({ explanation }: { explanation: string }) {
       </svg>
       
       {/* Tooltip Card */}
-      <span className="absolute bottom-full left-1/2 z-50 mb-3 w-60 -translate-x-1/2 scale-95 rounded-xl border border-white/10 bg-[#0f1117]/95 p-3 shadow-[0_12px_36px_rgba(0,0,0,0.5)] backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100">
-        <span className="block text-left font-sans text-[0.78rem] leading-relaxed text-slate-200 font-medium normal-case tracking-normal">
+      <span className="absolute bottom-full left-1/2 z-50 mb-3.5 w-80 -translate-x-1/2 scale-95 rounded-xl border border-white/10 bg-[#0f1117]/95 p-4 shadow-[0_12px_36px_rgba(0,0,0,0.5)] backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100">
+        <span className="block text-left font-sans text-[0.92rem] leading-relaxed text-slate-200 font-medium normal-case tracking-normal">
           {explanation}
         </span>
         {/* Arrow */}
-        <span className="absolute top-full left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-[5px] rotate-45 border-r border-b border-white/10 bg-[#0f1117]/95" />
+        <span className="absolute top-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-[6px] rotate-45 border-r border-b border-white/10 bg-[#0f1117]/95" />
       </span>
     </span>
   );
@@ -238,9 +216,15 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
                   {isFrench ? "DIAGNOSTIC EXPÉRIENCE CLIENT" : "CUSTOMER EXPERIENCE AUDIT"}
                 </span>
                 
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white mt-3 mb-4 print:text-black uppercase">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white mt-3 mb-2 print:text-black uppercase">
                   {resolvedCompany}
                 </h1>
+                
+                {hero.sector_name && (
+                  <div className="font-mono text-sm tracking-widest text-[#ffd447]/90 uppercase mb-4 print:text-black/70">
+                    {isFrench ? `Secteur : ${hero.sector_name}` : `Sector: ${hero.sector_name}`}
+                  </div>
+                )}
                 
                 <p className="text-[1.12rem] leading-relaxed text-white/70 max-w-[62ch] print:text-black/75 font-medium">
                   {getFirstSentence(overview)}
@@ -328,7 +312,7 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
         </div>
 
         {/* 3 Premium Metric Cards starting directly here */}
-        <div className="grid gap-6 md:grid-cols-3 w-full print:break-inside-avoid">
+        <div className="relative z-20 grid gap-6 md:grid-cols-3 w-full print:break-inside-avoid">
           
           {/* Card 1: Actual Stage */}
           <article className="flex min-h-[180px] flex-col justify-between gap-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 backdrop-blur-xl shadow-[0_16px_36px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-[#ffd447]/30 hover:shadow-[0_20px_48px_rgba(255,212,71,0.08)] group print:border-black/10 print:bg-white print:text-black">

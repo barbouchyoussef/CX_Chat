@@ -317,11 +317,11 @@ export default function CompetitiveLandscapeSection({ competitiveLandscape }: Pr
                           <path d="M12 8h.01" />
                         </svg>
                         
-                        <span className="absolute bottom-full left-1/2 z-50 mb-3 w-56 -translate-x-1/2 scale-95 rounded-xl border border-white/10 bg-[#0f1117]/95 p-3 shadow-2xl backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100">
-                          <span className="block text-left font-sans text-[0.78rem] leading-relaxed text-slate-200 font-medium normal-case tracking-normal">
+                        <span className="absolute bottom-full left-1/2 z-50 mb-3.5 w-80 -translate-x-1/2 scale-95 rounded-xl border border-white/10 bg-[#0f1117]/95 p-4 shadow-2xl backdrop-blur-md opacity-0 transition-all duration-200 pointer-events-none group-hover/info:opacity-100 group-hover/info:scale-100">
+                          <span className="block text-left font-sans text-[0.92rem] leading-relaxed text-slate-200 font-medium normal-case tracking-normal">
                             {stageData.tooltip}
                           </span>
-                          <span className="absolute top-full left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-[5px] rotate-45 border-r border-b border-white/10 bg-[#0f1117]/95" />
+                          <span className="absolute top-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-[6px] rotate-45 border-r border-b border-white/10 bg-[#0f1117]/95" />
                         </span>
                       </span>
                     </div>

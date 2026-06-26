@@ -262,53 +262,102 @@ class SemanticLeadersService:
         language: str = "fr",
     ) -> dict | None:
         """
-        Queries site:ey.com for general sector insights and constructs a virtual leader card
-        representing EY Industry Insights with curated evidence links.
+        Constructs a virtual leader card representing EY Industry Insights.
+        Integrates PPTX presentations (all.pptx and sector-specific) with dynamic EY articles.
         """
-        query = f'site:ey.com "{sector_label}" (customer OR client OR experience OR transformation OR strategy)'
-        logger.warning("Generating decoupled EY Insights card query=%r", query)
-        
-        try:
-            results = await self._web_search(query)
-        except Exception as exc:
-            logger.warning("EY Insights web search failed: %s", exc)
-            return None
-
-        if not results:
-            return None
-
         is_french = (language or "").lower().startswith("fr")
         target_lang = "French" if is_french else "English"
+        sector_key = self._resolve_sector_key(sector) or ""
 
-        # Curate titles and why_relevant reasons via Mistral in a single call to remove corporate tagline clutter
-        raw_candidates = []
-        for idx, item in enumerate(results[:3], 1):
-            title = str(item.get("title") or "").strip()
-            summary = str(item.get("summary") or "").strip()
-            url = str(item.get("url") or "").strip()
-            raw_candidates.append(
-                f"{idx}. Title: {title}\n"
-                f"   Summary: {summary}\n"
-                f"   URL: {url}"
-            )
-        evidence_lines = "\n".join(raw_candidates)
+        # Build presentations list
+        presentations = []
 
-        summary_prompt = (
-            f"Review these general EY publication/case study results for the {sector} sector:\n\n"
-            f"{evidence_lines}\n\n"
-            f"Generate a professional curated package for the EY Insights card. "
-            f"Return strict JSON with this shape:\n"
-            f'{{"leader_summary": "one fluid sentence under 140 characters", "links": [{{"url": "...", "label": "...", "why_relevant": "..."}}]}}\n\n'
-            f"Rules:\n"
-            f"- Write all text values ('leader_summary', 'label', 'why_relevant') entirely in {target_lang}.\n"
-            f"- For 'leader_summary': write a one-sentence summary of the main customer experience recommendations/approaches from EY for this sector. Keep it natural, professional, and strictly under 140 characters.\n"
-            f"- For each link's 'label': clean the title to be a concise, professional description of the case study/report (strictly under 80 characters). Do NOT include corporate suffixes like '| EY - Global', '| EY - US', '| EY', or branding boilerplates.\n"
-            f"- For each link's 'why_relevant': write a specific, single-sentence explanation of what the article demonstrates. Do NOT include search boilerplate tagline texts (like 'the better the question the better the answer', 'building a better working world').\n"
-            f"- Match each input URL exactly."
-        )
+        # 1. Always include master deck "all.pptx"
+        all_label = "Présentation Méthodologie Globale ORION CX" if is_french else "ORION CX Global Methodology Master Framework"
+        all_why = "Guide de référence de la méthodologie d'évaluation ORION CX et des piliers de maturité." if is_french else "Master reference guide detailing the ORION CX assessment methodology and maturity pillars."
+        presentations.append({
+            "label": all_label,
+            "url": "/assets/all.pptx",
+            "source_title": "EY Presentation",
+            "mapped_capability": "Industry Benchmark",
+            "why_relevant": all_why,
+        })
 
+        # 2. Domain-specific deck if available
+        if sector_key == "healthcare":
+            hc_label = "Présentation Maturité CX - Secteur Santé" if is_french else "CX Maturity Framework - Healthcare Sector"
+            hc_why = "Analyse approfondie de la transformation de l'expérience patient et des parcours de soins." if is_french else "Deep-dive analysis on transforming patient experience and healthcare journeys."
+            presentations.append({
+                "label": hc_label,
+                "url": "/assets/healthcare.pptx",
+                "source_title": "EY Presentation",
+                "mapped_capability": "Industry Benchmark",
+                "why_relevant": hc_why,
+            })
+        elif sector_key in ("banking_insurance", "banking", "insurance"):
+            fin_label = "Présentation Maturité CX - Services Financiers" if is_french else "CX Maturity Framework - Financial Services"
+            fin_why = "Stratégie d'optimisation de l'expérience client et de digitalisation dans la banque et l'assurance." if is_french else "Strategy for optimizing customer experience and digitization in banking and insurance."
+            presentations.append({
+                "label": fin_label,
+                "url": "/assets/finantial.pptx",
+                "source_title": "EY Presentation",
+                "mapped_capability": "Industry Benchmark",
+                "why_relevant": fin_why,
+            })
+        elif sector_key in ("retail_ecommerce", "ecommerce", "retail"):
+            ret_label = "Présentation Maturité CX - Retail & E-Commerce" if is_french else "CX Maturity Framework - Retail & E-Commerce"
+            ret_why = "Guide pratique sur l'omnicanalité, la fidélisation et la réduction des frictions d'achat." if is_french else "Practical guide on omnichannality, customer loyalty, and checkout friction reduction."
+            presentations.append({
+                "label": ret_label,
+                "url": "/assets/retail.pptx",
+                "source_title": "EY Presentation",
+                "mapped_capability": "Industry Benchmark",
+                "why_relevant": ret_why,
+            })
+
+        # Determine remaining slot count for dynamic links (total 3 links)
+        dynamic_count = max(0, 3 - len(presentations))
+        results = []
+
+        if dynamic_count > 0:
+            query = f'site:ey.com "{sector_label}" (customer OR client OR experience OR transformation OR strategy)'
+            logger.warning("Generating decoupled EY Insights card query=%r", query)
+            try:
+                results = await self._web_search(query)
+            except Exception as exc:
+                logger.warning("EY Insights web search failed: %s", exc)
+
+        target_results = results[:dynamic_count] if results else []
+
+        # Curate dynamic titles and summaries via Mistral if we have dynamic links
         parsed = {}
-        if self.llm:
+        if target_results and self.llm:
+            raw_candidates = []
+            for idx, item in enumerate(target_results, 1):
+                title = str(item.get("title") or "").strip()
+                summary = str(item.get("summary") or "").strip()
+                url = str(item.get("url") or "").strip()
+                raw_candidates.append(
+                    f"{idx}. Title: {title}\n"
+                    f"   Summary: {summary}\n"
+                    f"   URL: {url}"
+                )
+            evidence_lines = "\n".join(raw_candidates)
+
+            summary_prompt = (
+                f"Review these general EY publication/case study results for the {sector} sector:\n\n"
+                f"{evidence_lines}\n\n"
+                f"Generate a professional curated package for the EY Insights card. "
+                f"Return strict JSON with this shape:\n"
+                f'{{"leader_summary": "one fluid sentence under 140 characters", "links": [{{"url": "...", "label": "...", "why_relevant": "..."}}]}}\n\n'
+                f"Rules:\n"
+                f"- Write all text values ('leader_summary', 'label', 'why_relevant') entirely in {target_lang}.\n"
+                f"- For 'leader_summary': write a one-sentence summary of the main customer experience recommendations/approaches from EY for this sector. Keep it natural, professional, and strictly under 140 characters.\n"
+                f"- For each link's 'label': clean the title to be a concise, professional description of the case study/report (strictly under 80 characters). Do NOT include corporate suffixes like '| EY - Global', '| EY - US', '| EY', or branding boilerplates.\n"
+                f"- For each link's 'why_relevant': write a specific, single-sentence explanation of what the article demonstrates. Do NOT include search boilerplate tagline texts (like 'the better the question the better the answer', 'building a better working world').\n"
+                f"- Match each input URL exactly."
+            )
+
             try:
                 system_content = f"You are a precise business analyst. Respond entirely in {target_lang}. Output JSON only."
                 response = await self.llm.gateway.chat_messages(
@@ -334,8 +383,8 @@ class SemanticLeadersService:
         if len(leader_summary) > 140:
             leader_summary = leader_summary[:137] + "..."
 
-        # Build curated links list
-        evidence_links = []
+        # Build curated links list (presentations first, then dynamic links)
+        evidence_links = list(presentations)
         parsed_links = parsed.get("links") if isinstance(parsed, dict) else None
         
         llm_links_by_url = {}
@@ -344,7 +393,7 @@ class SemanticLeadersService:
                 if isinstance(link, dict) and link.get("url"):
                     llm_links_by_url[link["url"].strip()] = link
 
-        for item in results[:3]:
+        for item in target_results:
             title = str(item.get("title") or "").strip()
             url = str(item.get("url") or "").strip()
             summary = str(item.get("summary") or "").strip()
