@@ -211,13 +211,7 @@ ECOMMERCE_LEADER_CANDIDATES: tuple[LeaderCandidate, ...] = (
         "e-commerce platform provider, known for merchant success, API-driven platform design, and customer-centric product development",
         region="Global",
     ),
-    LeaderCandidate(
-        "alibaba",
-        "Alibaba",
-        "alibaba.com",
-        "Asian e-commerce giant, known for marketplace operations, seller enablement, and logistics-driven customer experience",
-        region="APAC",
-    ),
+
     LeaderCandidate(
         "ebay",
         "eBay",

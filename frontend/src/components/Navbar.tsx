@@ -57,6 +57,17 @@ export default function Navbar({ onStartConversation, language = "en", onLanguag
           <a href="#summary" className="nav__link">
             {t.synthesis}
           </a>
+          <a
+            href="/test-benchmarks"
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.pushState({}, "", "/test-benchmarks");
+              window.dispatchEvent(new Event("popstate"));
+            }}
+            className="nav__link font-semibold text-indigo-600 hover:text-indigo-700"
+          >
+            Sandbox
+          </a>
           <button type="button" className="nav__cta" onClick={onStartConversation}>
             {t.cta}
           </button>

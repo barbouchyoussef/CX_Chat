@@ -11,6 +11,7 @@ import AdminDashboard from "./components/ui/admin-dashboard";
 import AdminAssessmentDetail from "./components/ui/admin-assessment-detail";
 import AdminAssessmentReport from "./components/ui/admin-assessment-report";
 import CustomizedTimeline from "./components/CustomizedTimeline";
+import BenchmarkTester from "./components/ui/benchmark-tester";
 
 export default function App() {
   const [showChat, setShowChat] = useState(false);
@@ -27,6 +28,7 @@ export default function App() {
 
   const showAdmin = pathname.startsWith("/admin");
   const showTimelinePreview = pathname === "/timeline-preview";
+  const showBenchmarkTester = pathname === "/test-benchmarks" || pathname === "/debug/benchmarks";
 
   if (showTimelinePreview) {
     return (
@@ -64,6 +66,17 @@ export default function App() {
         onOpenAssessmentReport={(assessmentId) => {
           setSelectedAssessmentId(assessmentId);
           setAdminView("report");
+        }}
+      />
+    );
+  }
+
+  if (showBenchmarkTester) {
+    return (
+      <BenchmarkTester
+        onBack={() => {
+          window.history.pushState({}, "", "/");
+          setPathname("/");
         }}
       />
     );

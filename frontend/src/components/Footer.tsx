@@ -38,9 +38,36 @@ const Footer: React.FC<FooterProps> = ({
             </p>
           </div>
 
-          <div className="text-sm text-gray-400 md:text-right">
-            <p>{displayProjectName}</p>
-            <p className="mt-2">{date}</p>
+          <div className="text-sm text-gray-400 md:text-right flex flex-col justify-between">
+            <div>
+              <p className="font-semibold text-white">{displayProjectName}</p>
+              <p className="mt-1 text-xs text-gray-500">{date}</p>
+            </div>
+            <div className="mt-4 flex gap-3 md:justify-end items-center">
+              <a
+                href="/test-benchmarks"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, "", "/test-benchmarks");
+                  window.dispatchEvent(new Event("popstate"));
+                }}
+                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
+              >
+                Benchmark Sandbox
+              </a>
+              <span className="text-gray-700">|</span>
+              <a
+                href="/admin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, "", "/admin");
+                  window.dispatchEvent(new Event("popstate"));
+                }}
+                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
+              >
+                Admin Panel
+              </a>
+            </div>
           </div>
         </div>
       </div>

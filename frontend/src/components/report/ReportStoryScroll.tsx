@@ -147,7 +147,12 @@ export default function ReportStoryScroll({ report, onBack, companyName, languag
 
         <FlowSection aria-label="Where you stand" className="flow-tone-stand">
           <div className="flow-stage">
-            <CapabilitiesAxesSection hero={report.hero} axes={report.working_missing} language={resolvedLanguage} />
+            <CapabilitiesAxesSection
+              hero={report.hero}
+              axes={report.working_missing}
+              language={resolvedLanguage}
+              summaryText={report.summary?.executive_summary_text}
+            />
           </div>
         </FlowSection>
 

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FinalReportHero, FinalReportWorkingMissingAxis, FinalReportWorkingMissingItem } from "../../types/final-report";
+import type { FinalReportHero, FinalReportWorkingMissingAxis, FinalReportWorkingMissingItem, FinalReportCapabilityItem } from "../../types/final-report";
 import { capabilityLinks } from "../../config/capabilityLinks";
 
 type Props = {
   hero: FinalReportHero;
   axes: FinalReportWorkingMissingAxis[];
   language?: string | null;
+  summaryText?: string | null;
+  capabilities?: FinalReportCapabilityItem[];
 };
+
 
 type ModalState = {
   item: FinalReportWorkingMissingItem;
@@ -63,10 +66,19 @@ const getMaturityBandDisplayName = (band?: string | null, isFr?: boolean) => {
   return band;
 };
 
+const getBandClass = (band?: string | null) => {
+  if (!band) return "cap-tag-established";
+  const key = band.toLowerCase().trim();
+  if (key.includes("basic") || key.includes("basique") || key.includes("initial")) return "cap-tag-basic";
+  if (key.includes("advanced") || key.includes("avancé")) return "cap-tag-advanced";
+  return "cap-tag-established";
+};
+
 const SECTION_STYLES = `
   .report-orbit-shell {
     position: relative;
     isolation: isolate;
+    overflow: hidden;
   }
   .report-orbit-shell .hero-glow-layer {
     position: absolute;
@@ -277,86 +289,100 @@ const SECTION_STYLES = `
   .report-orbit-shell .axis-tabs {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 22px;
+    gap: 16px;
+    margin-bottom: 24px;
   }
   .report-orbit-shell .axis-tab {
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 22px;
-    padding: 18px 18px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    padding: 22px 22px 20px;
     text-align: left;
     color: #fff;
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.035);
-    transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+    background: rgba(255, 255, 255, 0.015);
+    backdrop-filter: blur(12px);
+    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), border-color 300ms ease, background-color 300ms ease, box-shadow 300ms ease;
   }
-  .report-orbit-shell .axis-tab:hover,
-  .report-orbit-shell .axis-tab.active {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.18);
-    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
+  .report-orbit-shell .axis-tab:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.035);
   }
   .report-orbit-shell .axis-tab[data-axis="manage"].active {
-    background: linear-gradient(135deg, rgba(255, 212, 71, 0.2), rgba(200, 151, 63, 0.14));
+    background: linear-gradient(135deg, rgba(255, 212, 71, 0.08), rgba(255, 255, 255, 0.01));
+    border-color: rgba(255, 212, 71, 0.35);
+    box-shadow: 0 16px 36px rgba(255, 212, 71, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   .report-orbit-shell .axis-tab[data-axis="analyze"].active {
-    background: linear-gradient(135deg, rgba(133, 234, 255, 0.2), rgba(0, 212, 255, 0.14));
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(255, 255, 255, 0.01));
+    border-color: rgba(0, 212, 255, 0.35);
+    box-shadow: 0 16px 36px rgba(0, 212, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   .report-orbit-shell .axis-tab[data-axis="improve"].active {
-    background: linear-gradient(135deg, rgba(159, 147, 255, 0.22), rgba(77, 34, 223, 0.16));
+    background: linear-gradient(135deg, rgba(124, 92, 255, 0.08), rgba(255, 255, 255, 0.01));
+    border-color: rgba(124, 92, 255, 0.35);
+    box-shadow: 0 16px 36px rgba(124, 92, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
+  .report-orbit-shell .axis-tab[data-axis="manage"].active .axis-kicker { color: #ffd447; }
+  .report-orbit-shell .axis-tab[data-axis="manage"].active .axis-score { color: #ffd447; }
+  .report-orbit-shell .axis-tab[data-axis="analyze"].active .axis-kicker { color: #00d4ff; }
+  .report-orbit-shell .axis-tab[data-axis="analyze"].active .axis-score { color: #00d4ff; }
+  .report-orbit-shell .axis-tab[data-axis="improve"].active .axis-kicker { color: #9f93ff; }
+  .report-orbit-shell .axis-tab[data-axis="improve"].active .axis-score { color: #9f93ff; }
   .report-orbit-shell .axis-kicker {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-family: "Geist Mono", monospace;
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: rgba(255, 255, 255, 0.54);
+    color: rgba(255, 255, 255, 0.45);
+    transition: color 300ms ease;
   }
   .report-orbit-shell .axis-name {
     margin: 0;
-    font-size: 1.06rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 800;
     letter-spacing: -0.02em;
   }
   .report-orbit-shell .axis-mini {
     margin: 6px 0 0;
-    color: rgba(255, 255, 255, 0.66);
-    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.88rem;
     line-height: 1.45;
   }
   .report-orbit-shell .axis-score-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 16px;
+    margin-top: 18px;
     gap: 16px;
   }
   .report-orbit-shell .axis-score {
-    font-size: 1.8rem;
-    font-weight: 800;
+    font-size: 1.85rem;
+    font-weight: 900;
     letter-spacing: -0.05em;
+    transition: color 300ms ease;
   }
   .report-orbit-shell .axis-band {
     display: inline-flex;
     align-items: center;
     border-radius: 999px;
-    padding: 7px 12px;
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    padding: 6px 12px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
   .report-orbit-shell .axis-panel {
     display: none;
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    background: transparent;
     overflow: hidden;
   }
   .report-orbit-shell .axis-panel.active {
@@ -364,132 +390,156 @@ const SECTION_STYLES = `
   }
   .report-orbit-shell .axis-panel-head {
     display: block;
-    padding: 24px 24px 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 16px 16px 20px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
   .report-orbit-shell .axis-panel-title {
     margin: 0 0 10px;
-    font-size: clamp(1.4rem, 3vw, 1.9rem);
-    line-height: 1.05;
+    font-size: clamp(1.4rem, 3vw, 1.85rem);
+    line-height: 1.1;
     letter-spacing: -0.04em;
-    font-weight: 700;
+    font-weight: 800;
     color: #fff;
   }
   .report-orbit-shell .axis-panel-copy {
     margin: 0;
-    color: rgba(255, 255, 255, 0.84);
-    line-height: 1.7;
-    max-width: 60ch;
+    color: rgba(255, 255, 255, 0.74);
+    line-height: 1.65;
+    max-width: 68ch;
+    font-size: 0.98rem;
   }
   .report-orbit-shell .axis-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    padding: 22px 24px 24px;
+    gap: 20px;
+    padding: 24px 16px 16px 16px;
   }
   .report-orbit-shell .cap-col {
     border-radius: 24px;
     padding: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
     min-height: 100%;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
   }
   .report-orbit-shell .cap-col.working {
-    background: linear-gradient(180deg, rgba(97, 242, 186, 0.1), rgba(12, 166, 120, 0.05));
+    background: linear-gradient(180deg, rgba(97, 242, 186, 0.02), rgba(97, 242, 186, 0.005));
+    border: 1px solid rgba(97, 242, 186, 0.12);
   }
   .report-orbit-shell .cap-col.missing {
-    background: linear-gradient(180deg, rgba(255, 139, 167, 0.1), rgba(217, 72, 113, 0.05));
+    background: linear-gradient(180deg, rgba(255, 139, 167, 0.02), rgba(255, 139, 167, 0.005));
+    border: 1px solid rgba(255, 139, 167, 0.12);
   }
   .report-orbit-shell .cap-col-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
   .report-orbit-shell .cap-col-title {
     margin: 0;
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 800;
     color: #fff;
+    letter-spacing: -0.01em;
   }
   .report-orbit-shell .cap-title-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
   .report-orbit-shell .status-icon {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.92rem;
-    font-weight: 800;
     flex: 0 0 auto;
   }
   .report-orbit-shell .status-icon.working {
-    background: rgba(97, 242, 186, 0.16);
+    background: rgba(97, 242, 186, 0.12);
     color: #baf7df;
-    border: 1px solid rgba(97, 242, 186, 0.26);
+    border: 1px solid rgba(97, 242, 186, 0.24);
   }
   .report-orbit-shell .status-icon.missing {
-    background: rgba(255, 139, 167, 0.16);
+    background: rgba(255, 139, 167, 0.12);
     color: #ffc0d0;
-    border: 1px solid rgba(255, 139, 167, 0.26);
+    border: 1px solid rgba(255, 139, 167, 0.24);
   }
   .report-orbit-shell .cap-col-sub {
-    margin: 8px 0 0;
-    color: rgba(255, 255, 255, 0.68);
-    font-size: 0.93rem;
-    line-height: 1.55;
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.88rem;
+    line-height: 1.5;
   }
-  .report-orbit-shell .cap-count {
+  .report-orbit-shell .cap-col.working .cap-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 34px;
-    height: 34px;
+    min-width: 32px;
+    height: 32px;
     padding: 0 10px;
     border-radius: 999px;
-    font-weight: 700;
-    font-size: 0.86rem;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
+    font-weight: 800;
+    font-size: 0.8rem;
+    background: rgba(97, 242, 186, 0.08);
+    border: 1px solid rgba(97, 242, 186, 0.2);
+    color: #baf7df;
+  }
+  .report-orbit-shell .cap-col.missing .cap-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    background: rgba(255, 139, 167, 0.08);
+    border: 1px solid rgba(255, 139, 167, 0.2);
+    color: #ffc0d0;
   }
   .report-orbit-shell .cap-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
   }
   .report-orbit-shell .cap-pill {
     width: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 24px;
-    padding: 24px 22px 22px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 22px;
+    padding: 22px 20px 20px;
     text-align: left;
     color: inherit;
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.045);
-    transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+    background: rgba(9, 12, 22, 0.45);
+    backdrop-filter: blur(6px);
+    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), border-color 300ms ease, background-color 300ms ease, box-shadow 300ms ease;
   }
   .report-orbit-shell .cap-pill:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.22);
-    background: rgba(255, 255, 255, 0.07);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px) scale(1.015);
+    background: rgba(14, 18, 30, 0.6);
+  }
+  .report-orbit-shell .cap-col.working .cap-pill:hover {
+    border-color: rgba(97, 242, 186, 0.3);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3), 0 0 20px rgba(97, 242, 186, 0.06);
+  }
+  .report-orbit-shell .cap-col.missing .cap-pill:hover {
+    border-color: rgba(255, 139, 167, 0.3);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 139, 167, 0.06);
   }
   .report-orbit-shell .cap-pill-top {
     display: flex;
-    align-items: start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
   }
   .report-orbit-shell .cap-pill-name {
     margin: 0;
-    font-size: 1.1rem;
-    line-height: 1.4;
-    font-weight: 700;
+    font-size: 1.08rem;
+    line-height: 1.35;
+    font-weight: 800;
     color: #fff;
     letter-spacing: -0.01em;
   }
@@ -497,20 +547,32 @@ const SECTION_STYLES = `
     display: inline-flex;
     align-items: center;
     border-radius: 999px;
-    padding: 6px 10px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.08);
   }
-  .report-orbit-shell .cap-tag.positive { color: #baf7df; }
-  .report-orbit-shell .cap-tag.negative { color: #ffc0d0; }
+  .report-orbit-shell .cap-tag-basic {
+    color: #ffd447;
+    background: rgba(255, 212, 71, 0.09);
+    border: 1px solid rgba(255, 212, 71, 0.2);
+  }
+  .report-orbit-shell .cap-tag-established {
+    color: #00d4ff;
+    background: rgba(0, 212, 255, 0.09);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+  }
+  .report-orbit-shell .cap-tag-advanced {
+    color: #9f93ff;
+    background: rgba(159, 147, 255, 0.09);
+    border: 1px solid rgba(159, 147, 255, 0.2);
+  }
   .report-orbit-shell .cap-pill-summary {
-    margin: 14px 0 0;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.98rem;
-    line-height: 1.65;
+    margin: 12px 0 0;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.94rem;
+    line-height: 1.6;
   }
   .report-orbit-shell .modal {
     position: fixed;
@@ -674,13 +736,260 @@ const SECTION_STYLES = `
   }
 `;
 
+const axisLabel = (value?: string | null, isFr?: boolean) => {
+  if (!value) return "Unknown";
+  const key = value.toLowerCase().trim();
+  if (key.includes("manage") || key.includes("gérer")) return isFr ? "Gérer" : "Manage";
+  if (key.includes("analyze") || key.includes("analyser")) return isFr ? "Analyser" : "Analyze";
+  if (key.includes("improve") || key.includes("améliorer")) return isFr ? "Améliorer" : "Improve";
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+};
+
+const STATIC_CAPABILITIES = [
+  { key: "cx culture", axis: "manage", en: "CX culture", fr: "Culture CX" },
+  { key: "ownership and governance", axis: "manage", en: "Ownership & governance", fr: "Ownership & gouvernance" },
+  { key: "decision-making", axis: "manage", en: "Decision-making", fr: "Prise de décision" },
+  { key: "feedback collection", axis: "analyze", en: "Feedback collection", fr: "Collecte des retours" },
+  { key: "use of insights", axis: "analyze", en: "Use of insights", fr: "Exploitation des insights" },
+  { key: "channel consistency", axis: "analyze", en: "Channel consistency", fr: "Cohérence des canaux" },
+  { key: "journey visibility", axis: "analyze", en: "Journey visibility", fr: "Visibilité des parcours" },
+  { key: "measurement and continuous improvement", axis: "improve", en: "Measurement & improvement", fr: "Mesure & amélioration" },
+  { key: "acting on pain points", axis: "improve", en: "Acting on pain points", fr: "Traitement des irritants" }
+] as const;
+
+function getCanonicalCapabilityKey(name: string): string {
+  const norm = name.toLowerCase().trim();
+  if (norm.includes("culture")) return "cx culture";
+  if (norm.includes("decision") || norm.includes("décision")) return "decision-making";
+  if (norm.includes("governance") || norm.includes("gouvernance") || norm.includes("ownership")) return "ownership and governance";
+  if (norm.includes("feedback") || norm.includes("collecte des retours") || norm.includes("collection")) return "feedback collection";
+  if (norm.includes("insights") || norm.includes("exploitation")) return "use of insights";
+  if (norm.includes("channel") || norm.includes("canal") || norm.includes("canaux") || norm.includes("cohérence")) return "channel consistency";
+  if (norm.includes("journey") || norm.includes("parcours") || norm.includes("visibilité")) return "journey visibility";
+  if (norm.includes("measurement") || norm.includes("mesure") || norm.includes("continuous") || norm.includes("amélioration continue")) return "measurement and continuous improvement";
+  if (norm.includes("acting on") || norm.includes("irritant") || norm.includes("pain point")) return "acting on pain points";
+  return norm;
+}
+
+function getMaturityScore(maturityBand: string, maturityLevelNumber?: number | null): number {
+  if (maturityLevelNumber) return maturityLevelNumber;
+  const bandNorm = maturityBand.toLowerCase();
+  if (bandNorm.includes("advanced") || bandNorm.includes("avancé")) return 3;
+  if (bandNorm.includes("basic") || bandNorm.includes("basique")) return 1;
+  return 2;
+}
+
+function getAngle(index: number, numAxes: number): number {
+  return -Math.PI / 2 + (index * 2 * Math.PI) / numAxes;
+}
+
+function getCoords(centerX: number, centerY: number, distance: number, angle: number) {
+  return {
+    x: centerX + distance * Math.cos(angle),
+    y: centerY + distance * Math.sin(angle),
+  };
+}
+
+function MaturityRadarChart({
+  axes,
+  capabilities = [],
+  isFrench,
+}: {
+  axes: FinalReportWorkingMissingAxis[];
+  capabilities?: FinalReportCapabilityItem[];
+  isFrench: boolean;
+}) {
+  const allCapabilities = useMemo(() => {
+    const scoreMap = new Map<string, number>();
+    
+    if (capabilities && capabilities.length > 0) {
+      capabilities.forEach((cap) => {
+        const canonical = getCanonicalCapabilityKey(cap.capability);
+        const score = getMaturityScore(cap.maturity_band, cap.maturity_level_number);
+        scoreMap.set(canonical, score);
+      });
+    } else {
+      axes.forEach((axisItem) => {
+        axisItem.working.forEach((item) => {
+          const canonical = getCanonicalCapabilityKey(item.capability);
+          const score = getMaturityScore(item.maturity_band);
+          scoreMap.set(canonical, score);
+        });
+        axisItem.missing.forEach((item) => {
+          const canonical = getCanonicalCapabilityKey(item.capability);
+          const score = getMaturityScore(item.maturity_band);
+          scoreMap.set(canonical, score);
+        });
+      });
+    }
+
+    return STATIC_CAPABILITIES.map((staticItem) => {
+      const score = scoreMap.get(staticItem.key) || 1;
+      return {
+        name: isFrench ? staticItem.fr : staticItem.en,
+        axis: staticItem.axis,
+        score,
+        key: staticItem.key
+      };
+    });
+  }, [capabilities, axes, isFrench]);
+
+  const numAxes = allCapabilities.length;
+  if (numAxes === 0) return null;
+
+  const width = 480;
+  const height = 320;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const maxRadius = 92;
+
+  const level1Points = allCapabilities.map((_, i) => getCoords(centerX, centerY, maxRadius * 0.33, getAngle(i, numAxes)));
+  const level2Points = allCapabilities.map((_, i) => getCoords(centerX, centerY, maxRadius * 0.66, getAngle(i, numAxes)));
+  const level3Points = allCapabilities.map((_, i) => getCoords(centerX, centerY, maxRadius, getAngle(i, numAxes)));
+  const scorePoints = allCapabilities.map((cap, i) => getCoords(centerX, centerY, maxRadius * (cap.score / 3), getAngle(i, numAxes)));
+
+  const level1String = level1Points.map((p) => `${p.x},${p.y}`).join(" ");
+  const level2String = level2Points.map((p) => `${p.x},${p.y}`).join(" ");
+  const level3String = level3Points.map((p) => `${p.x},${p.y}`).join(" ");
+  const scoreString = scorePoints.map((p) => `${p.x},${p.y}`).join(" ");
+
+  const renderLabelText = (
+    label: string,
+    x: number,
+    y: number,
+    textAnchor: "inherit" | "start" | "end" | "middle",
+    dx: number,
+    dy: number,
+    color: string
+  ) => {
+    const words = label.split(" ");
+    
+    if (words.length >= 2 && label.length > 12) {
+      const midpoint = Math.ceil(words.length / 2);
+      const line1 = words.slice(0, midpoint).join(" ");
+      const line2 = words.slice(midpoint).join(" ");
+      return (
+        <text x={x + dx} y={y + dy} textAnchor={textAnchor} fill="#fff" fontSize="11" fontWeight="800" className="font-sans tracking-wide">
+          <tspan x={x + dx} dy="-4">{line1.toUpperCase()}</tspan>
+          <tspan x={x + dx} dy="12" fill={color}>{line2.toUpperCase()}</tspan>
+        </text>
+      );
+    }
+    return (
+      <text x={x + dx} y={y + dy} textAnchor={textAnchor} fill="#fff" fontSize="11" fontWeight="800" className="font-sans tracking-wide">
+        {label.toUpperCase()}
+      </text>
+    );
+  };
+
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="radarGlow" x="-25%" y="-25%" width="150%" height="150%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+
+        <linearGradient id="goldFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffd447" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#c8973f" stopOpacity="0.08" />
+        </linearGradient>
+
+        <linearGradient id="goldStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffd447" stopOpacity="1" />
+          <stop offset="100%" stopColor="#c8973f" stopOpacity="0.75" />
+        </linearGradient>
+      </defs>
+
+      <polygon points={level3String} fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      <polygon points={level2String} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+      <polygon points={level1String} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="2,2" />
+
+      {level3Points.map((p, i) => (
+        <line key={i} x1={centerX} y1={centerY} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3,3" />
+      ))}
+
+      <text x={centerX + 6} y={centerY - maxRadius * 0.33 + 4} fill="rgba(255,255,255,0.28)" fontSize="8.5" fontFamily="monospace" fontWeight="500">1</text>
+      <text x={centerX + 6} y={centerY - maxRadius * 0.66 + 4} fill="rgba(255,255,255,0.28)" fontSize="8.5" fontFamily="monospace" fontWeight="500">2</text>
+      <text x={centerX + 6} y={centerY - maxRadius + 4} fill="rgba(255,255,255,0.28)" fontSize="8.5" fontFamily="monospace" fontWeight="500">3</text>
+
+      <polygon
+        points={scoreString}
+        fill="url(#goldFill)"
+        stroke="url(#goldStroke)"
+        strokeWidth="2.5"
+        filter="url(#radarGlow)"
+      />
+
+      <circle cx={centerX} cy={centerY} r="3" fill="rgba(255,255,255,0.3)" />
+
+      {scorePoints.map((p, idx) => {
+        const cap = allCapabilities[idx];
+        let nodeColor = "#ffd447";
+        if (cap.axis.toLowerCase() === "analyze" || cap.axis.toLowerCase() === "analyser") nodeColor = "#00d4ff";
+        if (cap.axis.toLowerCase() === "improve" || cap.axis.toLowerCase() === "améliorer") nodeColor = "#9f93ff";
+        
+        return (
+          <g key={idx}>
+            <circle cx={p.x} cy={p.y} r="7" fill={nodeColor} fillOpacity="0.15" />
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r="4"
+              fill={nodeColor}
+              stroke="#0f121d"
+              strokeWidth="2"
+            />
+          </g>
+        );
+      })}
+
+      {allCapabilities.map((cap, i) => {
+        const angle = getAngle(i, numAxes);
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        
+        const labelRadius = maxRadius + 14;
+        const coords = getCoords(centerX, centerY, labelRadius, angle);
+        
+        let textAnchor: "inherit" | "start" | "end" | "middle" = "middle";
+        let dx = 0;
+        let dy = 0;
+        
+        if (Math.abs(cos) < 0.15) {
+          textAnchor = "middle";
+          dy = sin < 0 ? -4 : 12;
+        } else if (cos > 0) {
+          textAnchor = "start";
+          dx = 4;
+          dy = 3;
+        } else {
+          textAnchor = "end";
+          dx = -4;
+          dy = 3;
+        }
+
+        let axisColor = "#ffd447";
+        if (cap.axis.toLowerCase() === "analyze" || cap.axis.toLowerCase() === "analyser") axisColor = "#00d4ff";
+        if (cap.axis.toLowerCase() === "improve" || cap.axis.toLowerCase() === "améliorer") axisColor = "#9f93ff";
+
+        return (
+          <g key={i}>
+            {renderLabelText(cap.name, coords.x, coords.y, textAnchor, dx, dy, axisColor)}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 function levelToStep(level?: number | null) {
   if (level === 3) return 3;
   if (level === 2) return 2;
   return 1;
 }
 
-export default function CapabilitiesAxesSection({ hero, axes, language }: Props) {
+export default function CapabilitiesAxesSection({ hero, axes, language, summaryText, capabilities }: Props) {
   const isFrench = language
     ? language.toLowerCase().startsWith("fr")
     : ((hero.overall_maturity_band || "").toLowerCase().includes("établi") || 
@@ -727,6 +1036,37 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
   }, [modalState]);
 
   const currentStep = levelToStep(hero.overall_level);
+  
+  const overview = useMemo(() => {
+    const resolvedCompany = (hero.company_name || "Executive Report").toUpperCase();
+    const fallbackOverview = isFrench
+      ? `${resolvedCompany} est actuellement au niveau de maturité ${getMaturityBandDisplayName(hero.overall_maturity_band, true)}. L'axe ${axisLabel(hero.strongest_axis, true)} est la zone la plus forte aujourd'hui, tandis que l'axe ${axisLabel(hero.priority_axis, true)} nécessite le plus d'attention ensuite.`
+      : `${resolvedCompany} is currently at ${getMaturityBandDisplayName(hero.overall_maturity_band, false)} maturity. ${axisLabel(hero.strongest_axis, false)} is the strongest area today, while ${axisLabel(hero.priority_axis, false)} needs the most attention next.`;
+
+    return (
+      hero.hero_message?.trim() ||
+      summaryText?.trim() ||
+      fallbackOverview
+    );
+  }, [hero, summaryText, isFrench]);
+
+  const sentences = useMemo(() => {
+    if (!overview) return [];
+    return overview
+      .split(/[.!?]\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 3)
+      .map((s) => (s.endsWith(".") || s.endsWith("!") || s.endsWith("?") ? s : s + "."));
+  }, [overview]);
+
+  const formatSentence = (s: string) => {
+    const words = s.split(/\s+/);
+    const boldCount = Math.min(4, words.length);
+    const boldPart = words.slice(0, boldCount).join(" ");
+    const restPart = words.slice(boldCount).join(" ");
+    return { boldPart, restPart };
+  };
+
   const activePanel = normalizedAxes.find((axis) => axis.axis === activeAxis) ?? normalizedAxes[0];
   /*
   const modal = (
@@ -772,6 +1112,22 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
         <div className="hero-glow-b"></div>
       </div>
 
+      {/* 3D Logos peeking in from left and right edges */}
+      <div className="pointer-events-none absolute left-[-180px] top-[15%] z-0 h-[360px] w-[360px] select-none opacity-[0.38] blur-[1px] print:hidden">
+        <img
+          src="/d87248c323a11fe6364ab034b73bea1e1c1e77f7.png"
+          alt=""
+          className="h-full w-full object-contain animate-[aiOrbit_90s_linear_infinite]"
+        />
+      </div>
+      <div className="pointer-events-none absolute right-[-180px] top-[50%] z-0 h-[360px] w-[360px] select-none opacity-[0.38] blur-[1px] print:hidden">
+        <img
+          src="/d87248c323a11fe6364ab034b73bea1e1c1e77f7.png"
+          alt=""
+          className="h-full w-full object-contain"
+        />
+      </div>
+
       <section className="section">
         <div className="orbital-ring" aria-hidden="true"></div>
         <div className="orbital-ring-small" aria-hidden="true"></div>
@@ -780,126 +1136,182 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
         <div className="section-head">
           <span className="section-number">02</span>
           <h2 className="section-title">
-            {isFrench ? "Votre position — Paysage concurrentiel" : "Where You Stand — Competitive Landscape"}
+            {isFrench ? "Votre position" : "Where You Stand"}
           </h2>
         </div>
 
         <div className="panel-inner print:hidden">
-          <div className="relative flex items-end gap-3 pt-20 pb-4 px-2 md:px-4">
-            {/* Maturity Axis (Vertical Arrow) */}
-            <div className="absolute left-1 top-4 bottom-4 flex flex-col items-center select-none w-14">
-              <span className="font-sans text-[0.7rem] font-bold uppercase tracking-[0.14em] text-white/70 mb-3.5 text-center whitespace-nowrap">
-                {isFrench ? "Maturité" : "Maturity"}
-              </span>
-              <div className="flex-1 w-[2px] bg-white/30 relative rounded-full">
-                {/* Arrowhead */}
-                <div className="absolute -top-[1px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 border-t-2 border-l-2 border-white/60 rotate-45" />
-                {/* Base tick line */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3.5 h-[2px] bg-white/30" />
-              </div>
+          <div className="relative flex items-start gap-3 pt-20 pb-4 px-2 md:px-4">
+            
+            {/* Connected horizontal track line behind the nodes */}
+            <div className="absolute left-[calc(16.6%+3.5rem)] right-[calc(16.6%)] top-[46px] h-[3px] bg-white/10 select-none pointer-events-none rounded-full print:hidden">
+              {/* Active progress line fill */}
+              <div 
+                className="h-full bg-gradient-to-r from-[#ffd447] via-[#00d4ff] to-[#7c5cff] rounded-full transition-all duration-1000 ease-out" 
+                style={{
+                  width: currentStep === 1 ? "0%" : currentStep === 2 ? "50%" : "100%"
+                }}
+              />
             </div>
 
-            {/* The Ascending Steps Grid */}
-            <div className="flex-1 grid grid-cols-3 gap-4 items-end pl-14 md:pl-16">
+            {/* The Connected Maturity Flow Grid */}
+            <div className="flex-1 grid grid-cols-3 gap-6 items-start pl-14 md:pl-16 relative z-10">
               {[1, 2, 3].map((stage) => {
                 const isSelected = currentStep === stage;
+                const isPassed = currentStep >= stage;
                 const stageData = labels[stage as 1 | 2 | 3];
                 
-                // Staircase heights
-                const heightClass = stage === 1 ? "min-h-[160px]" : stage === 2 ? "min-h-[215px]" : "min-h-[270px]";
-                
-                // Color configuration matching EY theme gradients
-                let topBarGradient = "bg-white/10";
-                let tagBgGradient = "bg-white/20";
-                let tagTextColor = "text-white";
-                let arrowColor = "#ffffff";
-                let activeBorderClass = "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005))] hover:border-white/20 hover:bg-white/[0.03]";
-                let titleColor = "text-white/80 group-hover:text-white font-medium";
-                let subtitleColor = "text-white/40 group-hover:text-white/60";
-                let descColor = "text-white/45 group-hover:text-white/60";
+                // Color configuration matching stage
+                let accentColor = "rgba(255, 255, 255, 0.4)";
+                let gradientText = "from-white to-white/70";
+                let borderClass = "border-white/10 bg-white/[0.01]";
+                let badgeBg = "bg-white/20";
+                let badgeTextColor = "text-white";
                 
                 if (stage === 1) {
-                  topBarGradient = "bg-[linear-gradient(90deg,#ffd447,#c8973f)]";
-                  tagBgGradient = "bg-[linear-gradient(135deg,#ffd447_0%,#c8973f_100%)]";
-                  tagTextColor = "text-[#111318]";
-                  arrowColor = "#ffd447";
+                  accentColor = "#ffd447";
+                  gradientText = "from-[#ffd447] to-[#c8973f]";
+                  badgeBg = "bg-[linear-gradient(135deg,#ffd447_0%,#c8973f_100%)]";
+                  badgeTextColor = "text-[#111318]";
                   if (isSelected) {
-                    activeBorderClass = "border-amber-400/40 bg-[linear-gradient(180deg,rgba(255,212,71,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(255,212,71,0.12),0_0_24px_rgba(255,212,71,0.06)]";
-                    titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
-                    subtitleColor = "text-amber-400 font-bold drop-shadow-[0_2px_4px_rgba(251,191,36,0.2)]";
-                    descColor = "text-white/85 font-normal";
+                    borderClass = "border-[#ffd447]/45 bg-[linear-gradient(180deg,rgba(255,212,71,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(255,212,71,0.12)] print:border-black/15";
                   }
                 } else if (stage === 2) {
-                  topBarGradient = "bg-[linear-gradient(90deg,#85eaff,#00d4ff)]";
-                  tagBgGradient = "bg-[linear-gradient(135deg,#85eaff_0%,#00d4ff_100%)]";
-                  tagTextColor = "text-[#111318]";
-                  arrowColor = "#00d4ff";
+                  accentColor = "#00d4ff";
+                  gradientText = "from-[#85eaff] to-[#00d4ff]";
+                  badgeBg = "bg-[linear-gradient(135deg,#85eaff_0%,#00d4ff_100%)]";
+                  badgeTextColor = "text-[#111318]";
                   if (isSelected) {
-                    activeBorderClass = "border-cyan-400/40 bg-[linear-gradient(180deg,rgba(0,212,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(0,212,255,0.12),0_0_24px_rgba(0,212,255,0.06)]";
-                    titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
-                    subtitleColor = "text-cyan-400 font-bold drop-shadow-[0_2px_4px_rgba(34,211,238,0.2)]";
-                    descColor = "text-white/85 font-normal";
+                    borderClass = "border-[#00d4ff]/45 bg-[linear-gradient(180deg,rgba(0,212,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(0,212,255,0.12)] print:border-black/15";
                   }
                 } else {
-                  topBarGradient = "bg-[linear-gradient(90deg,#9f93ff,#4d22df)]";
-                  tagBgGradient = "bg-[linear-gradient(135deg,#9f93ff_0%,#4d22df_100%)]";
-                  tagTextColor = "text-white";
-                  arrowColor = "#9f93ff";
+                  accentColor = "#7c5cff";
+                  gradientText = "from-[#9f93ff] to-[#7c5cff]";
+                  badgeBg = "bg-[linear-gradient(135deg,#9f93ff_0%,#7c5cff_100%)]";
+                  badgeTextColor = "text-white";
                   if (isSelected) {
-                    activeBorderClass = "border-violet-400/40 bg-[linear-gradient(180deg,rgba(124,92,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(124,92,255,0.12),0_0_24px_rgba(124,92,255,0.06)]";
-                    titleColor = "text-white font-bold drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]";
-                    subtitleColor = "text-violet-400 font-bold drop-shadow-[0_2px_4px_rgba(167,139,250,0.2)]";
-                    descColor = "text-white/85 font-normal";
+                    borderClass = "border-[#7c5cff]/45 bg-[linear-gradient(180deg,rgba(124,92,255,0.06),rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(124,92,255,0.12)] print:border-black/15";
                   }
                 }
-                
+
                 return (
-                  <div
-                    key={stage}
-                    className={`relative flex flex-col w-full transition-all duration-200 ${
-                      isSelected ? "z-20 hover:z-40" : "z-10 hover:z-40"
-                    }`}
-                  >
-                    {/* Step Block Box */}
-                    <div
-                      className={`w-full ${heightClass} relative flex flex-col justify-center items-center rounded-[22px] border backdrop-blur-[10px] transition-all duration-300 ${activeBorderClass} group`}
-                    >
-                      {/* Your Position Tag */}
+                  <div key={stage} className="flex flex-col items-center group relative print:text-black">
+                    
+                    {/* Interactive Step Node on the Line */}
+                    <div className="relative flex items-center justify-center h-[54px] w-full mb-6 print:hidden">
+                      <div 
+                        className={`h-11 w-11 rounded-full border-2 flex items-center justify-center font-bold font-mono text-sm transition-all duration-500 ${
+                          isSelected 
+                            ? "bg-[#111318] scale-110" 
+                            : isPassed 
+                            ? "bg-white/5 text-white/90" 
+                            : "bg-[#111318] text-white/30 border-white/10"
+                        }`}
+                        style={{ 
+                          borderColor: isPassed ? accentColor : "rgba(255,255,255,0.1)",
+                          color: isPassed ? accentColor : undefined,
+                          boxShadow: isSelected ? `0 0 20px ${accentColor}44` : undefined
+                        }}
+                      >
+                        {stage}
+                      </div>
+
+                      {/* Your Position floating label above the active node */}
                       {isSelected && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3.5 z-10 flex flex-col items-center select-none pointer-events-none">
-                          <div className={`px-4 py-1.5 rounded-full ${tagBgGradient} ${tagTextColor} font-sans text-[0.72rem] font-extrabold uppercase tracking-[0.1em] shadow-[0_8px_20px_rgba(0,0,0,0.3)]`}>
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3.5 z-10 flex flex-col items-center select-none pointer-events-none animate-bounce">
+                          <div className={`px-3.5 py-1.5 rounded-full ${badgeBg} ${badgeTextColor} font-sans text-[0.68rem] font-bold uppercase tracking-[0.15em] shadow-[0_8px_20px_rgba(0,0,0,0.3)]`}>
                             {labels.yourPosition}
                           </div>
-                          {/* Little pointing arrow */}
-                          <div 
-                            className="w-2.5 h-2.5 rotate-45 -mt-1 shadow-[0_4px_10px_rgba(0,0,0,0.3)]"
-                            style={{ backgroundColor: arrowColor }}
-                          />
+                          <div className="w-1.5 h-1.5 rotate-45 -mt-0.5" style={{ backgroundColor: accentColor }} />
                         </div>
                       )}
-
-                      {/* Top Color Accent Line */}
-                      <div className={`absolute top-0 left-0 right-0 h-1.5 rounded-t-[20px] ${topBarGradient}`} />
-                      
-                      {/* Box Typography */}
-                      <div className="text-center px-4 flex flex-col items-center">
-                        <h3 className={`font-sans text-[1.2rem] tracking-wide m-0 transition-colors duration-200 ${titleColor}`}>
-                          {stageData.title}
-                        </h3>
-                        <p className={`font-mono text-[0.78rem] m-0 mt-1.5 uppercase tracking-[0.15em] transition-colors duration-200 ${subtitleColor}`}>
-                          {isFrench ? `Niveau ${stage}` : `Level ${stage}`}
-                        </p>
-                        <p className={`font-sans text-[0.78rem] leading-relaxed m-0 mt-3.5 transition-colors duration-200 ${descColor} max-w-[190px]`}>
-                          {stageData.desc}
-                        </p>
-                      </div>
                     </div>
+
+                    {/* Card describing the level */}
+                    <div className={`w-full rounded-2xl border p-5.5 backdrop-blur-[10px] min-h-[195px] transition-all duration-300 ${borderClass} hover:border-white/20 hover:bg-white/[0.02] flex flex-col items-center text-center print:bg-white print:border-black/10 print:text-black print:min-h-0`}>
+                      <h3 className={`font-sans text-[1.25rem] font-extrabold tracking-tight m-0 bg-clip-text text-transparent bg-gradient-to-r ${gradientText} print:text-black print:bg-none print:bg-clip-border`}>
+                        {stageData.title}
+                      </h3>
+                      <p className="font-mono text-[0.72rem] m-0 mt-1 uppercase tracking-[0.15em] text-white/50 print:text-black/50">
+                        {isFrench ? `Niveau ${stage}` : `Level ${stage}`}
+                      </p>
+                      <p className="font-sans text-[0.92rem] leading-relaxed m-0 mt-3 text-white/78 group-hover:text-white transition-colors duration-200 max-w-[210px] print:text-black/80">
+                        {stageData.desc}
+                      </p>
+                    </div>
+
                   </div>
                 );
               })}
             </div>
           </div>
         </div>
+
+        {/* Executive summary and Radar Chart dashboard */}
+        {sentences.length > 0 && (
+          <div className="mt-12 md:mt-16 relative z-10 mx-auto max-w-[1140px] print:text-black">
+            {/* Unified Glassmorphic Card */}
+            <div className="bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.01))] border border-white/6 rounded-[32px] p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-md print:bg-white print:border-black/10 print:shadow-none print:backdrop-blur-none print:p-0">
+              <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-8 lg:gap-16 items-center">
+                
+                {/* Left Column: Key Findings */}
+                <div>
+                  {/* Header/Subtitle */}
+                  <div className="flex items-center gap-3 mb-6 px-1 print:hidden">
+                    <div className="h-1.5 w-1.5 rounded-full bg-[#ffd447] animate-pulse" />
+                    <span className="font-mono text-[0.74rem] uppercase tracking-[0.2em] text-white/50">
+                      {isFrench ? "Diagnostic & constats clés" : "Key diagnostic findings"}
+                    </span>
+                  </div>
+
+                  <div className="space-y-6 print:space-y-4">
+                    {sentences.map((sentence, idx) => {
+                      const { boldPart, restPart } = formatSentence(sentence);
+                      return (
+                        <div key={idx} className="flex items-start gap-4 group print:text-black">
+                          <div className="flex-shrink-0 mt-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.1)] transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/35 group-hover:text-emerald-300 print:bg-emerald-50 print:border-emerald-200 print:text-emerald-600 print:shadow-none print:h-5 print:w-5 print:mt-1">
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="h-2.5 w-2.5 print:h-2 print:w-2"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </div>
+                          <p className="text-[1.02rem] leading-relaxed text-white/70 transition-colors duration-200 group-hover:text-white/90 m-0 print:text-black/85">
+                            <strong className="font-bold text-white transition-colors duration-200 print:text-black">{boldPart}</strong>{" "}
+                            {restPart}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right Column: Radar Chart */}
+                <div className="flex flex-col items-center justify-center print:hidden">
+                  {/* Header/Subtitle */}
+                  <div className="flex items-center gap-3 mb-6 px-1 w-full justify-center lg:justify-start">
+                    <div className="h-1.5 w-1.5 rounded-full bg-[#ffd447] animate-pulse" />
+                    <span className="font-mono text-[0.74rem] uppercase tracking-[0.2em] text-white/50">
+                      {isFrench ? "Profil de maturité" : "Maturity profile"}
+                    </span>
+                  </div>
+
+                  {/* Radar Container - border-less and background-less inside the parent card */}
+                  <div className="flex items-center justify-center w-full max-w-[500px] aspect-[480/320]">
+                    <MaturityRadarChart axes={axes} capabilities={capabilities} isFrench={isFrench} />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="section">
@@ -959,7 +1371,11 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
                       <div className="cap-col-head">
                         <div>
                           <div className="cap-title-row">
-                            <span className="status-icon working" aria-hidden="true">&#10003;</span>
+                            <div className="status-icon working" aria-hidden="true">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </div>
                             <h4 className="cap-col-title">{isFrench ? "Ce qui fonctionne" : "Working"}</h4>
                           </div>
                           <p className="cap-col-sub">
@@ -988,7 +1404,12 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
                       <div className="cap-col-head">
                         <div>
                           <div className="cap-title-row">
-                            <span className="status-icon missing" aria-hidden="true">!</span>
+                            <div className="status-icon missing" aria-hidden="true">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                              </svg>
+                            </div>
                             <h4 className="cap-col-title">{isFrench ? "Ce qui manque" : "Missing"}</h4>
                           </div>
                           <p className="cap-col-sub">
@@ -1028,7 +1449,11 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
                       <div className="cap-col-head">
                         <div>
                           <div className="cap-title-row">
-                            <span className="status-icon working" aria-hidden="true">&#10003;</span>
+                            <div className="status-icon working" aria-hidden="true">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </div>
                             <h4 className="cap-col-title">{isFrench ? "Ce qui fonctionne" : "Working"}</h4>
                           </div>
                           <p className="cap-col-sub">
@@ -1043,7 +1468,7 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
                           <div key={`print-${axis.axis}-working-${item.capability}`} className="cap-pill">
                             <div className="cap-pill-top">
                               <p className="cap-pill-name">{item.capability}</p>
-                              <span className="cap-tag positive">{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
+                              <span className={`cap-tag ${getBandClass(item.maturity_band)}`}>{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
                             </div>
                             <p className="cap-pill-summary">{item.summary}</p>
                           </div>
@@ -1055,7 +1480,12 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
                       <div className="cap-col-head">
                         <div>
                           <div className="cap-title-row">
-                            <span className="status-icon missing" aria-hidden="true">!</span>
+                            <div className="status-icon missing" aria-hidden="true">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                              </svg>
+                            </div>
                             <h4 className="cap-col-title">{isFrench ? "Ce qui manque" : "Missing"}</h4>
                           </div>
                           <p className="cap-col-sub">
@@ -1070,7 +1500,7 @@ export default function CapabilitiesAxesSection({ hero, axes, language }: Props)
                           <div key={`print-${axis.axis}-missing-${item.capability}`} className="cap-pill">
                             <div className="cap-pill-top">
                               <p className="cap-pill-name">{item.capability}</p>
-                              <span className="cap-tag negative">{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
+                              <span className={`cap-tag ${getBandClass(item.maturity_band)}`}>{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
                             </div>
                             <p className="cap-pill-summary">{item.summary}</p>
                           </div>
@@ -1152,6 +1582,8 @@ function CapabilityButton({
   onOpen: (state: ModalState) => void;
   isFrench?: boolean;
 }) {
+  const linkColor = status === "working" ? "text-emerald-400 hover:text-emerald-300" : "text-rose-400 hover:text-rose-300";
+
   return (
     <div 
       className="cap-pill group relative cursor-pointer" 
@@ -1161,7 +1593,7 @@ function CapabilityButton({
     >
       <div className="cap-pill-top">
         <p className="cap-pill-name">{item.capability}</p>
-        <span className={`cap-tag ${status === "working" ? "positive" : "negative"}`}>{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
+        <span className={`cap-tag ${getBandClass(item.maturity_band)}`}>{getMaturityBandDisplayName(item.maturity_band, isFrench)}</span>
       </div>
       <p className="cap-pill-summary">{item.summary}</p>
       
@@ -1172,10 +1604,10 @@ function CapabilityButton({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-violet-400 transition hover:text-violet-300"
+            className={`inline-flex items-center gap-1.5 text-[13px] font-semibold transition ${linkColor}`}
           >
             {isFrench ? "Guide de référence" : "Reference Guide"}
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:translate-x-0.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           </a>
         </div>
       ) : null}

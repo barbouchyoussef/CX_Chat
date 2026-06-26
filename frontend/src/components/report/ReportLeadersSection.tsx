@@ -6,7 +6,7 @@ type Props = {
   language?: string | null;
 };
 
-const LEADER_EMOJIS = ["🧭", "🌍", "🎟️"];
+const LEADER_EMOJIS = ["🧭", "🌍", "🎟️", "📊"];
 
 const SECTION_STYLES = `
   .report-leaders-shell .section {
@@ -115,7 +115,7 @@ const SECTION_STYLES = `
   }
   .report-leaders-shell .chip-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 16px;
     margin-bottom: 22px;
   }
@@ -294,6 +294,127 @@ const SECTION_STYLES = `
       align-items: flex-start;
     }
   }
+  .report-leaders-shell .ey-insights-wrapper {
+    margin-top: 48px;
+    border-radius: 32px;
+    border: 1px solid rgba(255, 230, 0, 0.15);
+    border-left: 6px solid #FFE600;
+    background: linear-gradient(135deg, rgba(255, 230, 0, 0.08) 0%, rgba(255, 255, 255, 0.02) 60%, rgba(8, 11, 22, 0.25) 100%), rgba(8, 11, 22, 0.35);
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.35), 0 0 50px rgba(255, 230, 0, 0.03);
+    backdrop-filter: blur(16px);
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+  }
+  .report-leaders-shell .ey-insights-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(255, 230, 0, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .report-leaders-shell .ey-insights-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 32px 36px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .report-leaders-shell .ey-insights-brand-logo {
+    height: 38px;
+    width: auto;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+    display: block;
+  }
+  .report-leaders-shell .ey-insights-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .report-leaders-shell .ey-insights-pre {
+    margin: 0;
+    color: #FFE600;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+  }
+  .report-leaders-shell .ey-insights-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #fff;
+  }
+  .report-leaders-shell .ey-insights-body {
+    padding: 32px 36px 36px;
+  }
+  .report-leaders-shell .ey-insights-summary {
+    font-size: 1.35rem;
+    line-height: 1.6;
+    color: #ffffff;
+    margin: 0 0 32px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    max-width: 1040px;
+    border-left: 3px solid rgba(255, 230, 0, 0.35);
+    padding-left: 20px;
+  }
+  .report-leaders-shell .ey-insights-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 20px;
+  }
+  .report-leaders-shell .ey-link-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.015);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    text-decoration: none;
+    color: inherit;
+    min-height: 170px;
+  }
+  .report-leaders-shell .ey-link-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 230, 0, 0.3);
+    background: rgba(255, 230, 0, 0.025);
+  }
+  .report-leaders-shell .ey-link-card:hover .ey-link-arrow {
+    transform: translateX(4px);
+  }
+  .report-leaders-shell .ey-link-label {
+    margin: 0 0 8px;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.4;
+  }
+  .report-leaders-shell .ey-link-desc {
+    margin: 0 0 16px;
+    font-size: 0.88rem;
+    line-height: 1.48;
+    color: rgba(255, 255, 255, 0.62);
+  }
+  .report-leaders-shell .ey-link-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #FFE600;
+    font-size: 0.84rem;
+    font-weight: 600;
+  }
+  .report-leaders-shell .ey-link-arrow {
+    transition: transform 180ms ease;
+    display: inline-block;
+  }
   @media print {
     .report-leaders-shell .orbital-ring,
     .report-leaders-shell .orbital-ring-small,
@@ -347,20 +468,62 @@ const SECTION_STYLES = `
       color: #17315f;
       border-bottom-color: rgba(23, 49, 95, 0.28);
     }
+    .report-leaders-shell .ey-insights-wrapper {
+      margin-top: 24px !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: 100% !important;
+      border: 1px solid rgba(0, 0, 0, 0.15) !important;
+      border-left: 6px solid #FFE600 !important;
+      background: #fff !important;
+      box-shadow: none !important;
+      color: #111318 !important;
+      page-break-inside: avoid;
+    }
+    .report-leaders-shell .ey-insights-title,
+    .report-leaders-shell .ey-insights-summary,
+    .report-leaders-shell .ey-link-label {
+      color: #111318 !important;
+    }
+    .report-leaders-shell .ey-insights-pre,
+    .report-leaders-shell .ey-link-footer {
+      color: #1a1c23 !important;
+    }
+    .report-leaders-shell .ey-link-desc {
+      color: rgba(17, 19, 24, 0.72) !important;
+    }
+    .report-leaders-shell .ey-link-card {
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      background: #fff !important;
+    }
   }
 `;
 
 export default function ReportLeadersSection({ snapshot, language }: Props) {
   const leaders = snapshot?.leaders ?? [];
-  const [selectedKey, setSelectedKey] = useState<string>(leaders[0]?.key ?? "");
+  const logoSrc = `${import.meta.env.BASE_URL}EY_Studio+_Logo_Primary_WithoutStrapline_RGB_White_Yellow_Grad_EN.png`;
+
+  const competitorLeaders = useMemo(
+    () => leaders.filter((l) => l.key !== "ey-insights"),
+    [leaders]
+  );
+
+  const eyLeader = useMemo(
+    () => leaders.find((l) => l.key === "ey-insights"),
+    [leaders]
+  );
+
+  const [selectedKey, setSelectedKey] = useState<string>("");
 
   useEffect(() => {
-    setSelectedKey(leaders[0]?.key ?? "");
-  }, [leaders]);
+    if (competitorLeaders.length > 0) {
+      setSelectedKey(competitorLeaders[0].key);
+    }
+  }, [competitorLeaders]);
 
   const selectedLeader = useMemo(
-    () => leaders.find((leader) => leader.key === selectedKey) ?? leaders[0] ?? null,
-    [leaders, selectedKey],
+    () => competitorLeaders.find((leader) => leader.key === selectedKey) ?? competitorLeaders[0] ?? null,
+    [competitorLeaders, selectedKey],
   );
 
   if (!snapshot) {
@@ -404,10 +567,10 @@ export default function ReportLeadersSection({ snapshot, language }: Props) {
                   </div>
                 </div>
 
-                {leaders.length ? (
+                {competitorLeaders.length ? (
                   <>
                     <div className="chip-grid">
-                      {leaders.map((leader, index) => (
+                      {competitorLeaders.map((leader, index) => (
                         <button
                           key={leader.key}
                           className={`comp-chip ${leader.key === (selectedLeader?.key ?? "") ? "active" : ""}`}
@@ -416,7 +579,7 @@ export default function ReportLeadersSection({ snapshot, language }: Props) {
                           onClick={() => setSelectedKey(leader.key)}
                         >
                           <div className="chip-head">
-                            <span className="chip-emoji">{LEADER_EMOJIS[index] ?? "✦"}</span>
+                             <span className="chip-emoji">{LEADER_EMOJIS[index] ?? "✦"}</span>
                           </div>
                           <p className="chip-name">{leader.company_name}</p>
                           <p className="chip-note">
@@ -463,11 +626,11 @@ export default function ReportLeadersSection({ snapshot, language }: Props) {
             </div>
 
             <div className="print-leaders-list hidden">
-              {leaders.length ? (
-                leaders.map((leader, index) => (
+              {competitorLeaders.length ? (
+                competitorLeaders.map((leader, index) => (
                   <section key={`print-${leader.key}`} className="print-leader-card">
                     <div className="chip-head">
-                      <span className="chip-emoji">{LEADER_EMOJIS[index] ?? "·"}</span>
+                       <span className="chip-emoji">{LEADER_EMOJIS[index] ?? "·"}</span>
                     </div>
                     <h4 className="drawer-name">{leader.company_name}</h4>
                     <p className="chip-note">
@@ -499,6 +662,41 @@ export default function ReportLeadersSection({ snapshot, language }: Props) {
             </div>
           </div>
         </div>
+
+        {eyLeader && (
+          <div className="ey-insights-wrapper print:page-break-inside-avoid">
+            <div className="ey-insights-header">
+              <img src={logoSrc} alt="EY Logo" className="ey-insights-brand-logo" />
+              <div className="ey-insights-title-block">
+                <p className="ey-insights-pre">{isFrench ? "Perspective exclusive" : "Exclusive thought leadership"}</p>
+                <h3 className="ey-insights-title">{eyLeader.company_name}</h3>
+              </div>
+            </div>
+            <div className="ey-insights-body">
+              <p className="ey-insights-summary">{eyLeader.leader_summary}</p>
+              <div className="ey-insights-links-grid">
+                {(eyLeader.evidence_links ?? []).map((link, index) => (
+                  <a
+                    key={`ey-link-${index}`}
+                    className="ey-link-card"
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <div>
+                      <h4 className="ey-link-label">{link.label}</h4>
+                      <p className="ey-link-desc">{link.why_relevant}</p>
+                    </div>
+                    <div className="ey-link-footer">
+                      <span>{isFrench ? "Consulter l'article EY" : "Read EY Article"}</span>
+                      <span className="ey-link-arrow">→</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

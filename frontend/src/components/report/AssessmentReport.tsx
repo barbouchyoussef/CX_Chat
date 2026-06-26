@@ -27,7 +27,13 @@ export default function AssessmentReport({ report, onBack, companyName, language
           heroSlot={<ReportHeroSection report={report} onBack={onBack} companyName={companyName} language={resolvedLanguage} />}
           sectionsSlot={
             <>
-              <CapabilitiesAxesSection hero={report.hero} axes={report.working_missing} language={resolvedLanguage} />
+              <CapabilitiesAxesSection
+                hero={report.hero}
+                axes={report.working_missing}
+                language={resolvedLanguage}
+                summaryText={report.summary?.executive_summary_text}
+                capabilities={report.capabilities}
+              />
               <ReportLeadersSection snapshot={report.leaders_snapshot} language={resolvedLanguage} />
               <ReportQuickWinsTimeline timeline={report.quick_wins_timeline} language={resolvedLanguage} />
               <ReportGoFurtherSection assessmentId={report.assessment_id} language={resolvedLanguage} />

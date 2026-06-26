@@ -9,8 +9,6 @@ type Props = {
   language?: string | null;
 };
 
-const ORBIT_IMAGE_SRC = "/1b428a9545ed4c55816d6fd0bd7115df485a185c.png";
-
 const axisLabel = (value?: string | null, isFr?: boolean) => {
   if (!value) return "Unknown";
   const key = value.toLowerCase().trim();
@@ -114,18 +112,35 @@ function PriorityIcon() {
   );
 }
 
+const getFirstSentence = (text?: string | null) => {
+  if (!text) return "";
+  const trimmed = text.trim();
+  const match = trimmed.match(/^[^.!?]+[.!?](\s|$)/);
+  if (match) {
+    return match[0].trim();
+  }
+  return trimmed;
+};
+
 export default function ReportHeroSection({ report, companyName, onBack, language }: Props) {
   const hero = report.hero;
   const summary = report.summary;
   const resolvedCompany = (companyName || hero.company_name || "Executive Report").toUpperCase();
-  const overview =
-    hero.hero_message?.trim() ||
-    summary.executive_summary_text?.trim() ||
-    `${resolvedCompany} is currently at ${hero.overall_maturity_band} maturity. ${axisLabel(hero.strongest_axis)} is the strongest area today, while ${axisLabel(hero.priority_axis)} needs the most attention next.`;
 
   const isFrench = language
     ? language.toLowerCase().startsWith("fr")
-    : (overview.toLowerCase().includes("démontre") || /\b(est|les|le|la|un|une|des|en|pour|dans|sur)\b/i.test(overview.toLowerCase()));
+    : (report.quick_wins_timeline?.language?.toLowerCase().startsWith("fr") || 
+       (hero.hero_message || summary.executive_summary_text || "").toLowerCase().includes("démontre") || 
+       /\b(est|les|le|la|un|une|des|en|pour|dans|sur)\b/i.test((hero.hero_message || summary.executive_summary_text || "").toLowerCase()));
+
+  const fallbackOverview = isFrench
+    ? `${resolvedCompany} est actuellement au niveau de maturité ${getMaturityBandDisplayName(hero.overall_maturity_band, true)}. L'axe ${axisLabel(hero.strongest_axis, true)} est la zone la plus forte aujourd'hui, tandis que l'axe ${axisLabel(hero.priority_axis, true)} nécessite le plus d'attention ensuite.`
+    : `${resolvedCompany} is currently at ${getMaturityBandDisplayName(hero.overall_maturity_band, false)} maturity. ${axisLabel(hero.strongest_axis, false)} is the strongest area today, while ${axisLabel(hero.priority_axis, false)} needs the most attention next.`;
+
+  const overview =
+    hero.hero_message?.trim() ||
+    summary.executive_summary_text?.trim() ||
+    fallbackOverview;
 
   // Explanations for the tooltips
   const bandKey = (hero.overall_maturity_band || "").toLowerCase().trim();
@@ -164,6 +179,14 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
     ? `Sur l'échelle de 3 niveaux de maturité, vous êtes au niveau ${overallLevelNum} ${overallMaturityBandLower}`
     : `On the 3-level maturity scale, you are at level ${overallLevelNum} ${overallMaturityBandLower}`;
 
+  const levelColors: Record<number, string> = {
+    1: "#ffd447",
+    2: "#00d4ff",
+    3: "#7c5cff",
+  };
+  const activeColor = levelColors[overallLevelNum] || "#00d4ff";
+  const overallMaturityBandName = getMaturityBandDisplayName(hero.overall_maturity_band || "Established", isFrench);
+
   const strongestLabelText = isFrench
     ? "C'est l'axe le plus fort selon vos réponses"
     : "This is the strongest axis according to your answers";
@@ -172,8 +195,11 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
     ? "C'est l'axe le plus prioritaire à traiter selon vos réponses"
     : "This is the highest priority axis to address according to your answers";
 
+
+
   return (
     <section className="relative overflow-hidden px-3 py-4 text-white sm:px-6 sm:py-6 lg:px-10 lg:py-8 print:px-0 print:py-0 print:text-black">
+      {/* Background gradients */}
       <div className="pointer-events-none absolute inset-0 opacity-60 print:hidden">
         <div className="absolute left-[18%] top-[28%] h-24 w-24 rounded-full bg-white/6 blur-3xl" />
         <div className="absolute left-[36%] top-[82%] h-20 w-20 rounded-full bg-white/5 blur-3xl" />
@@ -183,167 +209,184 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
       <div className="pointer-events-none absolute right-[86px] top-7 h-[250px] w-[250px] rounded-full border border-white/15 opacity-20 print:hidden" />
       <div className="pointer-events-none absolute bottom-[92px] left-[-178px] h-[460px] w-[460px] rounded-full border border-white/15 opacity-20 print:hidden" />
 
-      <div className="relative z-10 mx-auto grid min-h-[760px] w-full max-w-[1320px] gap-7 px-4 pb-5 pt-10 sm:px-6 lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,0.98fr)] lg:gap-7 lg:px-11 lg:pb-6 lg:pt-12 print:min-h-0 print:px-0 print:pt-0">
-        <div className="min-w-0 pt-16 lg:pt-2">
-          <div className="absolute right-0 top-0 z-20 flex flex-wrap items-center justify-end gap-3 print:hidden">
-            {onBack ? (
-              <button
-                type="button"
-                onClick={onBack}
-                className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/8 px-4 py-3 text-sm font-semibold text-white/92 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/12"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {isFrench ? "Retour" : "Back"}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#ffd447,rgba(255,255,255,0.94))] px-[18px] py-[13px] text-sm font-bold text-[#111318] shadow-[0_16px_28px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:brightness-105"
-            >
-              <Download className="h-4 w-4" />
-              {isFrench ? "Télécharger le PDF" : "Download PDF"}
-            </button>
-          </div>
+      {/* 3D Logos peeking in from left and right edges */}
+      <div className="pointer-events-none absolute left-[-180px] top-[10%] z-0 h-[360px] w-[360px] select-none opacity-[0.38] blur-[1px] print:hidden">
+        <img
+          src="/d87248c323a11fe6364ab034b73bea1e1c1e77f7.png"
+          alt=""
+          className="h-full w-full object-contain"
+        />
+      </div>
+      <div className="pointer-events-none absolute right-[-180px] top-[40%] z-0 h-[360px] w-[360px] select-none opacity-[0.38] blur-[1px] print:hidden">
+        <img
+          src="/d87248c323a11fe6364ab034b73bea1e1c1e77f7.png"
+          alt=""
+          className="h-full w-full object-contain animate-[aiOrbit_90s_linear_infinite]"
+        />
+      </div>
 
-          <div className="mb-7 inline-flex w-fit items-center rounded-full border border-white/12 bg-white/6 px-[16px] py-[8px] font-sans text-xs normal-case tracking-wide text-white/88 backdrop-blur-xl print:border-black/15 print:bg-transparent print:text-black/70">
-            <span>
-              {isFrench
-                ? "Ce rapport est généré sur la base des réponses de la conversation et des informations fournies"
-                : "This report is generated based on the conversation replies and information provided"}
-            </span>
-          </div>
+      <div className="relative z-10 mx-auto w-full max-w-[1320px] px-4 pb-5 pt-8 sm:px-6 lg:px-11 lg:pb-6 lg:pt-10 print:px-0 print:pt-0">
+        
+        {/* Sleek Split Header matching the reference image layout, themed to match ORION brand */}
+        <div className="relative mb-10">
 
-          <h1 className="max-w-[10ch] text-[clamp(3.8rem,7vw,6rem)] font-extrabold leading-[0.92] tracking-[-0.075em] text-white print:text-black">
-            {resolvedCompany}
-          </h1>
+          {/* The Glassmorphic Card (z-10, backdrop-blur-xl) */}
+          <div className="relative z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))] border border-white/8 rounded-[32px] p-8 md:p-10 lg:p-12 shadow-[0_24px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl text-white print:bg-white print:border-black/10 print:text-black">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 md:gap-12">
+              <div className="flex-1 min-w-0">
+                <span className="font-sans text-[0.72rem] font-black uppercase tracking-[0.2em] text-[#ffd447] print:text-black/60">
+                  {isFrench ? "DIAGNOSTIC EXPÉRIENCE CLIENT" : "CUSTOMER EXPERIENCE AUDIT"}
+                </span>
+                
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white mt-3 mb-4 print:text-black uppercase">
+                  {resolvedCompany}
+                </h1>
+                
+                <p className="text-[1.12rem] leading-relaxed text-white/70 max-w-[62ch] print:text-black/75 font-medium">
+                  {getFirstSentence(overview)}
+                </p>
+                
+                <div className="mt-6 flex flex-wrap items-center gap-3 print:hidden">
+                  {onBack && (
+                    <button
+                      type="button"
+                      onClick={onBack}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/5 px-4.5 py-2.5 text-xs font-bold text-white/90 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/10"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      {isFrench ? "Retour" : "Back"}
+                    </button>
+                  )}
 
-          <p className="mt-4 text-base tracking-[0.01em] text-white/60 print:text-black/60">
-            <span>{hero.sector_name || "Customer Experience"}</span>
-            {(hero.sector_name || hero.region) ? <span aria-hidden="true"> · </span> : null}
-            <span>{hero.region || "Global"}</span>
-          </p>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-2.5 rounded-xl bg-[#ffd447] px-6 py-3 text-sm font-bold text-[#121318] shadow-[0_8px_20px_rgba(255,212,71,0.2)] transition hover:-translate-y-0.5 hover:bg-[#e5be3f]"
+                  >
+                    <Download className="h-4 w-4" />
+                    {isFrench ? "Télécharger le PDF" : "Download PDF Report"}
+                  </button>
+                </div>
+              </div>
 
-          {(() => {
-            const sentences = overview
-              .split(/[.!?]\s+/)
-              .map(s => s.trim())
-              .filter(s => s.length > 3)
-              .map(s => s.endsWith('.') || s.endsWith('!') || s.endsWith('?') ? s : s + '.');
+              {/* Floating Glass Orb Level Indicator on the right */}
+              <div className="relative flex flex-col items-center justify-center shrink-0 self-center md:mr-6 print:hidden group/level select-none">
+                
+                {/* Dynamic Ambient Backlight Glow */}
+                <div
+                  className="absolute -inset-6 rounded-full opacity-[0.2] blur-[32px] transition-all duration-500 group-hover/level:opacity-[0.3]"
+                  style={{ backgroundColor: activeColor }}
+                />
+                
+                {/* Floating Container (synced with float keyframe) */}
+                <div className="relative w-36 h-36 md:w-40 md:h-40 flex items-center justify-center animate-[aiFloat_6s_ease-in-out_infinite]">
+                  
+                  {/* Glassmorphic 3D Sphere */}
+                  <div 
+                    className="relative z-10 w-28 h-28 md:w-32 md:h-32 rounded-full border border-white/18 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.03)_60%,rgba(255,255,255,0)_100%)] shadow-[inset_0_4px_12px_rgba(255,255,255,0.25),0_12px_24px_rgba(0,0,0,0.4)] backdrop-blur-md flex flex-col items-center justify-center text-center transition-all duration-500"
+                    style={{ 
+                      boxShadow: `inset 0 4px 12px rgba(255,255,255,0.25), 0 12px 24px rgba(0,0,0,0.4), 0 0 24px ${activeColor}22` 
+                    }}
+                  >
+                    {/* Glossy top reflection highlight */}
+                    <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-6 md:w-14 md:h-7 rounded-[50%] bg-gradient-to-b from-white/20 to-transparent blur-[0.5px]" />
+                    
+                    <span className="font-sans text-[0.62rem] md:text-[0.68rem] font-bold uppercase tracking-[0.25em] text-white/40 leading-none">
+                      {isFrench ? "NIVEAU" : "LEVEL"}
+                    </span>
+                    
+                    <span className="text-4xl md:text-5xl font-black text-white leading-none my-1 tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
+                      {overallLevelNum}
+                    </span>
+                    
+                    <span
+                      className="font-sans text-[0.55rem] md:text-[0.62rem] font-black uppercase tracking-[0.12em] transition-colors duration-500 text-center px-2 select-none"
+                      style={{ color: activeColor }}
+                    >
+                      {overallMaturityBandName}
+                    </span>
+                  </div>
 
-            const formatSentence = (s: string) => {
-              const words = s.split(/\s+/);
-              const boldCount = Math.min(4, words.length);
-              const boldPart = words.slice(0, boldCount).join(" ");
-              const restPart = words.slice(boldCount).join(" ");
-              return { boldPart, restPart };
-            };
-
-            return (
-              <>
-                {/* Web View: Structured Ticks without Cards */}
-                <div className="mt-7 max-w-[58ch] space-y-4 print:hidden">
-                  {sentences.map((sentence, idx) => {
-                    const { boldPart, restPart } = formatSentence(sentence);
-                    return (
-                      <div key={idx} className="flex items-start gap-3 group">
-                        <div className="flex-shrink-0 mt-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 transition-all duration-200 group-hover:scale-110 group-hover:bg-emerald-500/25 group-hover:border-emerald-500/40">
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-2.5 w-2.5"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </div>
-                        <p className="text-[1.02rem] leading-[1.68] text-slate-200 transition-colors duration-200 group-hover:text-white">
-                          <strong className="font-bold text-white transition-colors duration-200">{boldPart}</strong>{" "}
-                          {restPart}
-                        </p>
-                      </div>
-                    );
-                  })}
+                  {/* Synced Floating Glow Ring surrounding the sphere */}
+                  <div 
+                    className="absolute inset-0 rounded-full border border-white/5 opacity-40 transition-all duration-500"
+                    style={{ 
+                      borderColor: `${activeColor}22`,
+                      boxShadow: `0 0 20px ${activeColor}11`
+                    }}
+                  />
                 </div>
 
-                {/* Print View: Standard Paragraphs */}
-                <div className="hidden print:block mt-6 max-w-[58ch]">
-                  {sentences.map((sentence, idx) => (
-                    <p key={idx} className="text-[1.02rem] leading-[1.72] text-black/80 mb-2">
-                      {sentence}
-                    </p>
-                  ))}
-                </div>
-              </>
-            );
-          })()}
+                {/* Soft Elliptical Shadow underneath (synced with pulse keyframe) */}
+                <div 
+                  className="absolute bottom-[-10px] w-20 h-2.5 rounded-full opacity-[0.25] blur-[6px] transition-all duration-500 scale-x-125 animate-[aiPulse_6s_ease-in-out_infinite]"
+                  style={{ backgroundColor: activeColor }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="relative min-h-[440px] lg:min-h-[560px] print:hidden">
-          <img
-            className="pointer-events-none absolute right-[-12px] top-[-100px] z-10 w-full max-w-[560px] rotate-[-2deg] select-none drop-shadow-[0_28px_48px_rgba(0,0,0,0.28)] drop-shadow-[0_0_34px_rgba(255,255,255,0.08)]"
-            src={ORBIT_IMAGE_SRC}
-            alt=""
-          />
-        </div>
-
-        <div className="grid gap-4 lg:col-span-2 lg:grid-cols-3 print:break-inside-avoid">
-          <article className="flex min-h-[176px] flex-col justify-between gap-4 rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 backdrop-blur-[10px] print:border-black/10 print:bg-white print:text-black">
+        {/* 3 Premium Metric Cards starting directly here */}
+        <div className="grid gap-6 md:grid-cols-3 w-full print:break-inside-avoid">
+          
+          {/* Card 1: Actual Stage */}
+          <article className="flex min-h-[180px] flex-col justify-between gap-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 backdrop-blur-xl shadow-[0_16px_36px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-[#ffd447]/30 hover:shadow-[0_20px_48px_rgba(255,212,71,0.08)] group print:border-black/10 print:bg-white print:text-black">
             <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#ffd447_0%,#c8973f_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(135deg,#ffd447_0%,#c8973f_100%)] text-white shadow-[0_12px_24px_rgba(200,151,63,0.3)] transition-transform duration-300 group-hover:scale-105">
                 <StageIcon />
               </div>
-              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">
+              <p className="font-sans text-[0.88rem] font-black uppercase tracking-[0.1em] text-white/90 group-hover:text-white print:text-black/85">
                 {isFrench ? "Niveau Actuel" : "Actual Stage"}
               </p>
             </div>
-            <div className="min-h-[84px]">
-              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
-                <span>{getMaturityBandDisplayName(hero.overall_maturity_band, isFrench)}</span>
+            <div className="min-h-[84px] flex flex-col justify-end">
+              <p className="text-[clamp(1.55rem,2.4vw,2rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/70 group-hover:to-white">{getMaturityBandDisplayName(hero.overall_maturity_band, isFrench)}</span>
                 <InfoTooltip explanation={maturityExplanation} />
               </p>
-              <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{stageLabelText}</p>
+              <p className="mt-2 text-[0.92rem] leading-relaxed text-white/60 group-hover:text-white/80 transition-colors print:text-black/60">{stageLabelText}</p>
             </div>
           </article>
 
-          <article className="flex min-h-[176px] flex-col justify-between gap-4 rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 backdrop-blur-[10px] print:border-black/10 print:bg-white print:text-black">
+          {/* Card 2: Strongest Axis */}
+          <article className="flex min-h-[180px] flex-col justify-between gap-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 backdrop-blur-xl shadow-[0_16px_36px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-[#00d4ff]/30 hover:shadow-[0_20px_48px_rgba(0,212,255,0.08)] group print:border-black/10 print:bg-white print:text-black">
             <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#85eaff_0%,#00d4ff_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(135deg,#85eaff_0%,#00d4ff_100%)] text-white shadow-[0_12px_24px_rgba(0,212,255,0.3)] transition-transform duration-300 group-hover:scale-105">
                 <StrongestIcon />
               </div>
-              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">
+              <p className="font-sans text-[0.88rem] font-black uppercase tracking-[0.1em] text-white/90 group-hover:text-white print:text-black/85">
                 {isFrench ? "Axe le plus Fort" : "Strongest Axis"}
               </p>
             </div>
-            <div className="min-h-[84px]">
-              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
-                <span>{axisLabel(hero.strongest_axis, isFrench)}</span>
+            <div className="min-h-[84px] flex flex-col justify-end">
+              <p className="text-[clamp(1.55rem,2.4vw,2rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-white print:text-black flex items-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/70 group-hover:to-white">{axisLabel(hero.strongest_axis, isFrench)}</span>
                 <InfoTooltip explanation={strongestExplanation} />
               </p>
-              <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{strongestLabelText}</p>
+              <p className="mt-2 text-[0.92rem] leading-relaxed text-white/60 group-hover:text-white/80 transition-colors print:text-black/60">{strongestLabelText}</p>
             </div>
           </article>
 
-          <article className="flex min-h-[176px] flex-col justify-between gap-4 rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 backdrop-blur-[10px] print:border-black/10 print:bg-white print:text-black">
+          {/* Card 3: Priority Axis */}
+          <article className="flex min-h-[180px] flex-col justify-between gap-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 backdrop-blur-xl shadow-[0_16px_36px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-[#9f93ff]/30 hover:shadow-[0_20px_48px_rgba(124,92,255,0.08)] group print:border-black/10 print:bg-white print:text-black">
             <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[linear-gradient(135deg,#7c5cff_0%,#4d22df_100%)] text-white shadow-[0_12px_24px_rgba(0,0,0,0.22)]">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(135deg,#7c5cff_0%,#4d22df_100%)] text-white shadow-[0_12px_24px_rgba(77,34,223,0.3)] transition-transform duration-300 group-hover:scale-105">
                 <PriorityIcon />
               </div>
-              <p className="font-sans text-[0.92rem] font-extrabold uppercase tracking-[0.08em] text-white/90 print:text-black/85">
+              <p className="font-sans text-[0.88rem] font-black uppercase tracking-[0.1em] text-white/90 group-hover:text-white print:text-black/85">
                 {isFrench ? "Axe Prioritaire" : "Priority Axis"}
               </p>
             </div>
-            <div className="min-h-[84px]">
-              <p className="text-[clamp(1.45rem,2.4vw,1.9rem)] font-bold leading-[1.05] tracking-[-0.03em] text-[#ffe4eb] print:text-black flex items-center">
-                <span>{axisLabel(hero.priority_axis, isFrench)}</span>
+            <div className="min-h-[84px] flex flex-col justify-end">
+              <p className="text-[clamp(1.55rem,2.4vw,2rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-[#ffe4eb] print:text-black flex items-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#ffe4eb] via-white to-white/70 group-hover:to-white">{axisLabel(hero.priority_axis, isFrench)}</span>
                 <InfoTooltip explanation={priorityExplanation} />
               </p>
-              <p className="mt-2 text-[0.95rem] leading-relaxed text-white/70 print:text-black/60">{priorityLabelText}</p>
+              <p className="mt-2 text-[0.92rem] leading-relaxed text-white/60 group-hover:text-white/80 transition-colors print:text-black/60">{priorityLabelText}</p>
             </div>
           </article>
+          
         </div>
       </div>
     </section>

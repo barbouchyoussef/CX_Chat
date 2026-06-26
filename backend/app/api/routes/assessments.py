@@ -318,3 +318,65 @@ async def trace(
     if result is None:
         raise HTTPException(status_code=404, detail="Assessment not found")
     return result
+
+
+from pydantic import BaseModel
+
+class BenchmarkTestRequest(BaseModel):
+    sector: str
+    company_name: str
+    pain_points: list[dict] = []
+    language: str = "fr"
+
+@router.post("/benchmark-test")
+async def run_benchmark_test(
+    req: BenchmarkTestRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    from app.services.llm.core.facade_service import build_llm_service
+    from app.services.assessment.reporting.telecom_semantic_leaders_service import SemanticLeadersService
+
+    settings = get_settings()
+    llm = build_llm_service(settings=settings)
+
+    pain_points = req.pain_points
+    if not pain_points:
+        # Default seeded pain points corresponding to common capabilities and rubrics
+        pain_points = [
+            {
+                "capability": "Feedback collection",
+                "capability_description": "Capturing customer feedback through listening channels, surveys, complaint capture, and regular review routines.",
+                "action_hints": "Set one recurring feedback pulse and one weekly review routine.",
+                "rubric_description": "Feedback is collected inconsistently or through a few isolated channels, with weak logging, ownership, and review rhythm.",
+                "level3_action_hints": "Feedback becomes a normal input into service management, improving continuity between listening, decisions, and action."
+            },
+            {
+                "capability": "Measurement and continuous improvement",
+                "capability_description": "Tracking customer experience through dashboards, review cycles, owner linkage, and action-focused metrics.",
+                "action_hints": "Pick a small set of CX measures and review them on a fixed cadence.",
+                "rubric_description": "Measures are limited or disconnected from action, with little evidence of a regular improvement loop.",
+                "level3_action_hints": "Improvement activity becomes easier to prioritize and govern through connected CX, operational, and business outcomes."
+            },
+            {
+                "capability": "Decision-making",
+                "capability_description": "Using customer evidence in decision forums, prioritization reviews, and action planning.",
+                "action_hints": "Link customer decisions to named owners, actions, and follow-up checks.",
+                "rubric_description": "Customer evidence influences some decisions, but the practice is partial, siloed, or inconsistent across teams.",
+                "level3_action_hints": "Customer evidence has a stronger path into planning, helping teams prioritize resources around the highest-impact experience gaps."
+            }
+        ]
+
+    service = SemanticLeadersService(settings=settings, llm_service=llm)
+
+    try:
+        snapshot = await service.build_leaders_snapshot(
+            sector=req.sector,
+            respondent_company_name=req.company_name,
+            pain_points=pain_points,
+            language=req.language,
+            generation_mode="initial",
+        )
+        return snapshot
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+

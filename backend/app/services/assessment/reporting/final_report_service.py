@@ -422,6 +422,7 @@ class ReportBuilderService:
             sector=getattr(assessment.company.sector, "name", "Unknown"),
             respondent_company_name=normalize_text(getattr(assessment.company, "name", None)) or "You",
             pain_points=pain_points,
+            language=getattr(assessment, "language", "fr"),
         )
 
     async def debug_telecom_discovery_leaders(self, assessment_id: int) -> dict[str, Any] | None:
@@ -673,7 +674,7 @@ class ReportBuilderService:
                 )
             )
 
-        if not leaders:
+        if not leaders and snapshot.get("supported", True):
             return None
 
         return FinalReportLeadersSnapshot(
@@ -681,9 +682,9 @@ class ReportBuilderService:
             status=LEADERS_SNAPSHOT_STATUS_COMPLETED,
             sector=str(snapshot.get("sector") or sector),
             respondent_company_name=str(snapshot.get("respondent_company_name") or respondent_company_name),
-            message=None,
+            message=str(snapshot.get("reason") or snapshot.get("message") or "") or None,
             metrics=FinalReportLeadersSnapshotMetrics(**snapshot.get("metrics", {})) if isinstance(snapshot.get("metrics"), dict) else None,
-            leaders=leaders[:3],
+            leaders=leaders,
         )
 
     def _pending_leaders_snapshot(

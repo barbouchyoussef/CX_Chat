@@ -117,6 +117,8 @@ class SemanticLeadersService:
             for candidate in SECTOR_LEADER_CANDIDATES.get(sector_key, ())
             if normalize_text(candidate.company_name).lower() != normalized_respondent
         ]
+        candidates = await self._prioritize_candidates_via_ey(sector=sector, candidates=candidates)
+        
         self._metrics = {
             "candidates_considered": len(candidates),
             "candidates_evaluated": 0,
@@ -129,8 +131,20 @@ class SemanticLeadersService:
             "capability_coverage_count": 0,
         }
 
-        leaders: list[dict] = []
+        # Determine the CX sector terminology and sector label
+        sector_lower = (sector_key or "").lower()
+        if "telecom" in sector_lower:
+            sector_label = "telecommunications"
+        elif "health" in sector_lower:
+            sector_label = "healthcare"
+        elif "hospitality" in sector_lower or "travel" in sector_lower:
+            sector_label = "hospitality"
+        else:
+            sector_label = sector
+
+        # Evaluate static candidates from our whitelist
         candidate_debug: list[dict] = []
+        leaders: list[dict] = []
         for candidate in candidates:
             self._metrics["candidates_evaluated"] += 1
             leader = await self._evaluate_candidate(
@@ -164,14 +178,6 @@ class SemanticLeadersService:
 
         mistral_budget = max(0, int(self.settings.benchmark_max_mistral_calls_per_assessment))
         shortlist_count = min(len(leaders), max(3, mistral_budget))
-        logger.warning(
-            "benchmark leader curation budget sector=%s candidates=%s shortlist=%s mistral_budget=%s llm_present=%s",
-            sector,
-            len(leaders),
-            shortlist_count,
-            mistral_budget,
-            self.llm is not None,
-        )
         curated_pool: list[dict] = []
         for index, item in enumerate(leaders[:shortlist_count]):
             use_mistral = index < mistral_budget
@@ -185,8 +191,9 @@ class SemanticLeadersService:
             if curated:
                 curated_pool.append(curated)
 
-        total_mistral_calls = self._metrics.get("mistral_calls", 0)
         curated_leaders = self._select_final_leaders(curated_pool, pain_points=pain_points)
+        curated_leaders = curated_leaders[:3]
+
         self._metrics["capability_coverage_count"] = len(
             {
                 normalize_text(str(link.get("mapped_capability") or "")).strip().lower()
@@ -197,7 +204,7 @@ class SemanticLeadersService:
         )
 
         trimmed: list[dict] = []
-        for item in curated_leaders[:3]:
+        for item in curated_leaders:
             clean = dict(item)
             clean.pop("_semantic_score", None)
             clean.pop("_pre_curation_score", None)
@@ -209,6 +216,18 @@ class SemanticLeadersService:
             clean.pop("_document_assessments", None)
             clean.pop("_rejected_evidence", None)
             trimmed.append(clean)
+
+        # Generate and append the virtual EY Insights card (as Card 4)
+        ey_card = await self._generate_ey_insights_leader(
+            sector=sector,
+            sector_label=sector_label,
+            pain_points=pain_points,
+            language=language,
+        )
+        if ey_card:
+            trimmed.append(ey_card)
+
+        total_mistral_calls = self._metrics.get("mistral_calls", 0)
 
         payload = {
             "supported": True,
@@ -234,6 +253,191 @@ class SemanticLeadersService:
             payload["candidate_debug"] = candidate_debug
         return payload
 
+    async def _generate_ey_insights_leader(
+        self,
+        *,
+        sector: str,
+        sector_label: str,
+        pain_points: list[dict[str, str | None]],
+        language: str = "fr",
+    ) -> dict | None:
+        """
+        Queries site:ey.com for general sector insights and constructs a virtual leader card
+        representing EY Industry Insights with curated evidence links.
+        """
+        query = f'site:ey.com "{sector_label}" (customer OR client OR experience OR transformation OR strategy)'
+        logger.warning("Generating decoupled EY Insights card query=%r", query)
+        
+        try:
+            results = await self._web_search(query)
+        except Exception as exc:
+            logger.warning("EY Insights web search failed: %s", exc)
+            return None
+
+        if not results:
+            return None
+
+        is_french = (language or "").lower().startswith("fr")
+        target_lang = "French" if is_french else "English"
+
+        # Curate titles and why_relevant reasons via Mistral in a single call to remove corporate tagline clutter
+        raw_candidates = []
+        for idx, item in enumerate(results[:3], 1):
+            title = str(item.get("title") or "").strip()
+            summary = str(item.get("summary") or "").strip()
+            url = str(item.get("url") or "").strip()
+            raw_candidates.append(
+                f"{idx}. Title: {title}\n"
+                f"   Summary: {summary}\n"
+                f"   URL: {url}"
+            )
+        evidence_lines = "\n".join(raw_candidates)
+
+        summary_prompt = (
+            f"Review these general EY publication/case study results for the {sector} sector:\n\n"
+            f"{evidence_lines}\n\n"
+            f"Generate a professional curated package for the EY Insights card. "
+            f"Return strict JSON with this shape:\n"
+            f'{{"leader_summary": "one fluid sentence under 140 characters", "links": [{{"url": "...", "label": "...", "why_relevant": "..."}}]}}\n\n'
+            f"Rules:\n"
+            f"- Write all text values ('leader_summary', 'label', 'why_relevant') entirely in {target_lang}.\n"
+            f"- For 'leader_summary': write a one-sentence summary of the main customer experience recommendations/approaches from EY for this sector. Keep it natural, professional, and strictly under 140 characters.\n"
+            f"- For each link's 'label': clean the title to be a concise, professional description of the case study/report (strictly under 80 characters). Do NOT include corporate suffixes like '| EY - Global', '| EY - US', '| EY', or branding boilerplates.\n"
+            f"- For each link's 'why_relevant': write a specific, single-sentence explanation of what the article demonstrates. Do NOT include search boilerplate tagline texts (like 'the better the question the better the answer', 'building a better working world').\n"
+            f"- Match each input URL exactly."
+        )
+
+        parsed = {}
+        if self.llm:
+            try:
+                system_content = f"You are a precise business analyst. Respond entirely in {target_lang}. Output JSON only."
+                response = await self.llm.gateway.chat_messages(
+                    [
+                        {"role": "system", "content": system_content},
+                        {"role": "user", "content": summary_prompt},
+                    ],
+                    rate_budget_scope="benchmark",
+                )
+                self._metrics["mistral_calls"] = self._metrics.get("mistral_calls", 0) + 1
+                parsed = self._parse_json_object(response)
+            except Exception as e:
+                logger.warning("Failed to generate LLM curation for EY Insights card: %s", e)
+
+        leader_summary = parsed.get("leader_summary") if isinstance(parsed, dict) else None
+        if not leader_summary:
+            if is_french:
+                leader_summary = f"EY propose des analyses stratégiques et des retours d'expérience pour le secteur {sector}."
+            else:
+                leader_summary = f"EY provides strategic analysis and experience insights for the {sector} sector."
+
+        # Limit summary length strictly
+        if len(leader_summary) > 140:
+            leader_summary = leader_summary[:137] + "..."
+
+        # Build curated links list
+        evidence_links = []
+        parsed_links = parsed.get("links") if isinstance(parsed, dict) else None
+        
+        llm_links_by_url = {}
+        if isinstance(parsed_links, list):
+            for link in parsed_links:
+                if isinstance(link, dict) and link.get("url"):
+                    llm_links_by_url[link["url"].strip()] = link
+
+        for item in results[:3]:
+            title = str(item.get("title") or "").strip()
+            url = str(item.get("url") or "").strip()
+            summary = str(item.get("summary") or "").strip()
+            
+            source_title = self._clean_source_title(raw_title=title, url=url) or "EY"
+            
+            llm_link = llm_links_by_url.get(url)
+            if llm_link:
+                label = str(llm_link.get("label") or "").strip()
+                why_relevant = str(llm_link.get("why_relevant") or "").strip()
+            else:
+                label = ""
+                why_relevant = ""
+
+            if not label:
+                label = self._clean_source_title(raw_title=title, url=url) or title
+                for suffix in [" | EY - Global", " | EY - US", " | EY - UK", " | EY - Taiwan", " | EY", " - EY"]:
+                    if label.endswith(suffix):
+                        label = label[:-len(suffix)].strip()
+                if len(label) > 80:
+                    label = label[:77] + "..."
+
+            if not why_relevant:
+                why_relevant = summary
+                tagline_phrases = [
+                    "the better the question the better the answer",
+                    "building a better working world",
+                    "the world works case study",
+                    "case study the better the question"
+                ]
+                for phrase in tagline_phrases:
+                    why_relevant = re.sub(phrase, "", why_relevant, flags=re.IGNORECASE)
+                why_relevant = why_relevant.strip()
+                if len(why_relevant) > 120:
+                    why_relevant = why_relevant[:117] + "..."
+
+            evidence_links.append({
+                "label": label,
+                "url": url,
+                "source_title": source_title,
+                "mapped_capability": "Industry Benchmark",
+                "why_relevant": why_relevant,
+            })
+
+        return {
+            "key": "ey-insights",
+            "company_name": "Perspectives EY" if is_french else "EY Insights",
+            "logo_url": "https://www.ey.com/favicon.ico",
+            "leader_summary": leader_summary,
+            "evidence_links": evidence_links,
+        }
+
+    async def _prioritize_candidates_via_ey(
+        self,
+        *,
+        sector: str,
+        candidates: list[LeaderCandidate],
+    ) -> list[LeaderCandidate]:
+        """
+        Queries site:ey.com to see which of our pre-configured candidates are mentioned
+        in connection with customer experience/transformation in that sector.
+        Returns the candidates reordered with those mentioned at the top.
+        """
+        query = f'site:ey.com ("customer experience" OR "transformation") AND "{sector}"'
+        logger.warning("Querying EY for candidate prioritization query=%r", query)
+        
+        try:
+            ey_results = await self._web_search(query)
+        except Exception as exc:
+            logger.warning("EY candidate prioritization search failed: %s", exc)
+            return candidates
+
+        # Extract all text from results (title + summary)
+        combined_text = ""
+        for item in ey_results:
+            title = str(item.get("title") or "").lower()
+            summary = str(item.get("summary") or "").lower()
+            combined_text += f" {title} {summary}"
+
+        # Match candidate names (case-insensitive)
+        mentioned_keys = set()
+        for candidate in candidates:
+            name_lower = candidate.company_name.lower()
+            if name_lower in combined_text:
+                mentioned_keys.add(candidate.key)
+                logger.warning("EY Prioritization Match: candidate %s is mentioned in EY articles", candidate.company_name)
+
+        # Reorder candidates: mentioned ones first, then others
+        prioritized = [c for c in candidates if c.key in mentioned_keys]
+        fallback = [c for c in candidates if c.key not in mentioned_keys]
+        
+        return prioritized + fallback
+
     async def _evaluate_candidate(
         self,
         *,
@@ -246,6 +450,7 @@ class SemanticLeadersService:
     ) -> dict | None:
         search_queries = self._build_search_queries(
             company_name=candidate.company_name,
+            domain=candidate.domain,
             search_context=candidate.search_context,
             sector=sector,
             sector_key=sector_key,
@@ -306,6 +511,25 @@ class SemanticLeadersService:
             url = str(document.get("url") or "").strip()
             if not url or url in unique_urls:
                 continue
+
+            # Ensure the document actually mentions the competitor brand name
+            comp_name_lower = candidate.company_name.lower()
+            comp_clean = re.sub(r"[^a-z0-9]+", "", comp_name_lower)
+            title_lower = str(document.get("title") or "").lower()
+            summary_lower = str(document.get("summary") or "").lower()
+            url_lower = url.lower()
+
+            name_mentioned = (
+                comp_name_lower in title_lower
+                or comp_name_lower in summary_lower
+                or comp_clean in re.sub(r"[^a-z0-9]+", "", title_lower)
+                or comp_clean in re.sub(r"[^a-z0-9]+", "", summary_lower)
+                or comp_clean in url_lower
+            )
+            if not name_mentioned:
+                # Skip generic pages/software vendor "traps" that don't mention the competitor
+                continue
+
             if self._is_duplicate_document(semantic_dedup_cache, document):
                 semantic_dedup_skips += 1
                 continue
@@ -392,6 +616,7 @@ class SemanticLeadersService:
         self,
         *,
         company_name: str,
+        domain: str | None = None,
         search_context: str,
         sector: str,
         sector_key: str,
@@ -401,18 +626,47 @@ class SemanticLeadersService:
         search_focus = self._pain_point_retrieval_focus(pain_points, sector_key=sector_key)
         context = search_context.strip()
         context_clause = f" {company_name} is a {context}." if context else ""
-        primary_query = (
-            f"Find public case studies, detailed reports, or implementation evidence showing how {company_name} handles "
-            f"{pain_summary} in {sector} through {search_focus}. Prefer official material and credible third-party analysis "
-            f"with concrete operating practices, service routines, decision workflows, or measurable improvements. "
-            f"Prefer sources from 2023 or newer.{context_clause}"
+
+        # Determine the CX sector terminology and sector label
+        sector_lower = (sector_key or "").lower()
+        if "health" in sector_lower:
+            cx_term = '"patient experience" OR "patient care"'
+            sector_label = "healthcare"
+        elif "hospitality" in sector_lower or "travel" in sector_lower:
+            cx_term = '"guest experience" OR "customer care"'
+            sector_label = "hospitality"
+        elif "telecom" in sector_lower:
+            cx_term = '"customer experience" OR "customer care"'
+            sector_label = "telecommunications"
+        else:
+            cx_term = '"customer experience" OR "customer care"'
+            sector_label = sector
+
+        queries: list[str] = []
+
+        # 1. Priority 1: Forrester, Gartner, Qualtrics, Ipsos, NielsenIQ, and VoC sources
+        queries.append(
+            f'"{company_name}" (site:forrester.com OR site:gartner.com OR site:qualtrics.com OR site:ipsos.com OR '
+            f'site:nielseniq.com OR site:nielsen.com OR site:medallia.com OR site:verint.com) '
+            f'({cx_term} OR "customer feedback" OR "feedback loops" OR "customer service strategy" OR '
+            f'"continuous improvement" OR "satisfaction metrics" OR "Voice of the Customer" OR "VoC")'
         )
-        fallback_query = (
+
+        # 2. Priority 2: Main website of the competitor
+        if domain:
+            queries.append(
+                f'site:{domain} ({cx_term} OR "customer feedback" OR "feedback loops" OR '
+                f'"customer service strategy" OR "continuous improvement" OR "satisfaction metrics")'
+            )
+
+        # 3. Fallback search (general web search)
+        queries.append(
             f"Find public examples, case studies, or reports showing how {company_name} improves customer experience in {sector} "
             f"through {pain_summary}. Focus on concrete operating practices, customer feedback handling, issue resolution, "
             f"decision routines, or measurable service improvements.{context_clause}"
         )
-        return [primary_query, fallback_query]
+
+        return queries
 
     def _build_rerank_query(
         self,
@@ -477,12 +731,186 @@ class SemanticLeadersService:
                 return merged
         return merged
 
+    def _is_credible_source(self, url: str, title: str, summary: str | None = None) -> bool:
+        from urllib.parse import urlparse
+        import re
+        try:
+            parsed = urlparse(url)
+            host = parsed.netloc.lower().removeprefix("www.")
+            path = parsed.path.lower()
+            url_lower = url.lower()
+        except Exception:
+            return False
+
+        # Exclude non-English/non-French scripts (CJK, Cyrillic, Arabic)
+        non_lat_pattern = re.compile(
+            r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af\u0400-\u04ff\u0600-\u06ff]'
+        )
+        if non_lat_pattern.search(title) or non_lat_pattern.search(url):
+            return False
+        if summary and non_lat_pattern.search(summary):
+            return False
+
+        # Exclude foreign language subdomains (e.g. ja.confluence..., de.support...)
+        host_parts = host.split(".")
+        if len(host_parts) >= 3:
+            subdomain = host_parts[0]
+            if len(subdomain) == 2 and subdomain not in {"en", "fr"}:
+                return False
+
+        # Exclude development, test, staging, demo, sandbox, and local subdomains
+        test_subdomains = {"test", "www-test", "staging", "dev", "stage", "demo", "sandbox", "admin", "localhost"}
+        for part in host_parts[:-2]:
+            if part.lower() in test_subdomains:
+                return False
+
+        unreliable_hosts = {
+            # Complaint & review platforms
+            "bbb.org", "trustpilot.com", "yelp.com", "glassdoor.com", "complaintsboard.com",
+            "dearcustomercare.com", "consumeraffairs.com", "sitejabber.com", "productreview.com.au",
+            "gethuman.com", "complainthub.org", "pissedconsumer.com",
+            # Forums, crowd-sourced content & wikis
+            "quora.com", "reddit.com", "slideshare.net", "issuu.com", "scribd.com", "studocu.com",
+            "coursehero.com", "buypapers.club", "wikipedia.org", "wikihow.com",
+            # Social platforms & app distribution
+            "facebook.com", "twitter.com", "instagram.com", "youtube.com", "linkedin.com",
+            "apps.apple.com", "play.google.com", "justuseapp.com",
+            # Low-quality SEO farms, local blogs, essay mills
+            "fastercapital.com", "moldstud.com", "suaramerdeka.com",
+            # Tech forums & blog communities (to filter out dev-only posts and translation noise)
+            "csdn.net", "51cto.com", "cnblogs.com", "qiita.com", "zhihu.com", "oschina.net",
+            # Press release directories and SEO news syndicates
+            "londonprnews.com", "openpr.com", "prlog.org", "prwire.com", "einnews.com",
+            "einpresswire.com", "pressreleasepoint.com", "prnews.io", "onlineprnews.com",
+            "1888pressrelease.com", "pr-inside.com", "openpr.co.uk", "prnob.com"
+        }
+        for bad in unreliable_hosts:
+            if bad in host or host.endswith(f".{bad}"):
+                return False
+
+        # Exclude SEO press release networks and customer service helplines in URL
+        spam_patterns = {
+            "press-release", "pressrelease", "news-release", "newsrelease",
+            "prwire", "pr-wire", "prnews", "pr-news", "einnews", "einpresswire",
+            "openpr", "prlog", "helpline", "toll-free", "tollfree", "toll-free-helpline",
+            "customer-service-phone-number", "customer-care-number", "returns-department",
+            "phone-number", "hotline", "contact-number", "helpline-number", "phone-directory"
+        }
+        for pattern in spam_patterns:
+            if pattern in url_lower:
+                return False
+
+        # Help desks, complaint portals, contact-us pages
+        help_portal_paths = [
+            "/complaints", "/feedback", "/contact-us", "/support", "/help",
+            "make-a-complaint", "complaint-handling", "/contact", "-mandarin",
+            "-spanish", "-chinese", "/faq", "faq"
+        ]
+        for path_term in help_portal_paths:
+            if path_term in path or path_term in url_lower:
+                return False
+
+        # Forums, communities, user Q&A, and discussions (Reddit-style discussion threads)
+        discussion_patterns = [
+            "/forum", "/community", "/discussion", "/answers", "/comment",
+            "community.", "forum.", "forums.", "answers.", "discussion.", "discussions."
+        ]
+        for term in discussion_patterns:
+            if term in url_lower or term in host:
+                return False
+
+        # Legal policies, cookies, conditions, privacy declarations
+        legal_and_privacy_paths = [
+            "/privacy", "/terms", "/legal", "/conditions", "/cookie", "policy", "modal",
+            "datenschutz", "declaration-de-confidentialite", "conditions-generales"
+        ]
+        for legal_term in legal_and_privacy_paths:
+            if legal_term in path or legal_term in url_lower:
+                return False
+
+        # Exclude temporary media uploads, drafts, gated asset vaults, and directory uploads
+        asset_vault_paths = [
+            "/wp-content/uploads/", "/content/dam/", "/assets/pdf/", "/gated/",
+            "/secure/", "/private/", "/draft/", "/wp-content/plugins/"
+        ]
+        for asset_term in asset_vault_paths:
+            if asset_term in path or asset_term in url_lower:
+                return False
+
+        # Exclude consumer-facing transactional, listing, booking, and account management paths
+        consumer_transactional_paths = [
+            "/rooms/", "/stay/", "/booking/", "/trips/", "/rentals/", "/listings/", "/detail/",
+            "/shop/", "/plans/", "/activate", "/refill", "/billing", "/my-account",
+            "/accounts/", "/loans/", "/mortgages/", "/login", "/apply", "/cards", "/checkout",
+            "/boutique/", "/offres/", "/forfaits/", "/facture", "/compte", "/connexion", "/reserver", "/chambres"
+        ]
+        for term in consumer_transactional_paths:
+            if term in path or term in url_lower:
+                return False
+
+        # Exclude partner, merchant, seller, host, and vendor help/guide/resource portals
+        partner_guide_paths = [
+            "/hosting/", "/host/", "/hosts/", "/seller", "/merchant", "/partner", "/vendor",
+            "/guide/", "/guides/", "/resources/hosting", "/resources/seller", "/resources/merchant",
+            "/help-center", "/support-center"
+        ]
+        for term in partner_guide_paths:
+            if term in path or term in url_lower:
+                return False
+
+        # Exclude foreign language directories (since reports are English/French)
+        foreign_lang_pattern = re.compile(
+            r'/(ar|es|ru|de|nl|hi|ja|zh|ko|it|pt|tr|pl|sv|no|fi|da|el|he|id|th|vi|cs|hu|ro|sk|bg)/',
+            re.IGNORECASE
+        )
+        if foreign_lang_pattern.search(url_lower):
+            return False
+
+        # Exclude German, Spanish, Portuguese, Italian, and Dutch titles using stop words
+        title_lower = normalize_text(title).lower()
+        german_stops = {"und", "ist", "sind", "mit", "von", "bei", "oder", "nicht", "das", "ein", "eine", "einer", "eines", "einem", "einen", "dem", "den", "des"}
+        spanish_stops = {"con", "para", "por", "del", "los", "las", "una", "como", "pero"}
+        italian_stops = {"con", "per", "del", "dei", "gli", "una", "come", "ma"}
+        portuguese_stops = {"com", "para", "por", "uma", "como", "pela", "pelo", "este", "esta", "mais", "suporte"}
+        dutch_stops = {"en", "van", "een", "met", "voor", "op", "die", "dat", "in", "is"}
+
+        words = re.findall(r"\b[a-zßäöüáéíóúñãõçêâô]+\b", title_lower)
+        german_count = sum(1 for w in words if w in german_stops)
+        spanish_count = sum(1 for w in words if w in spanish_stops)
+        italian_count = sum(1 for w in words if w in italian_stops)
+        portuguese_count = sum(1 for w in words if w in portuguese_stops)
+        dutch_count = sum(1 for w in words if w in dutch_stops)
+
+        if german_count >= 2 or "für" in words or "hervorragende" in title_lower or "auszeichnung" in title_lower:
+            return False
+        if spanish_count >= 2:
+            return False
+        if italian_count >= 2:
+            return False
+        if portuguese_count >= 2 or any(w in words for w in {"guia", "produto", "servico", "serviço", "atendimento", "cliente"}):
+            return False
+        if dutch_count >= 3:
+            return False
+
+        # Exclude titles suggesting phone directories or complaints forums
+        unreliable_terms = {
+            "privacy policy", "ratings & reviews", "customer service phone number", "is safe or legit",
+            "frequently asked questions", "faq", "complaints", "customer care number", "contact number",
+            "helpline", "toll-free", "toll free", "tollfree", "hotline", "phone number", "telephone number",
+            "customer service number", "press release", "news release", "press-release", "pr wire", "pr-wire"
+        }
+        for term in unreliable_terms:
+            if term in title_lower:
+                return False
+
+        return True
+
     async def _web_search(self, query: str) -> list[dict]:
         endpoint = self.settings.langsearch_base_url.rstrip("/") + "/web-search"
         payload = {
             "query": query,
             "summary": True,
-            "count": 6,
+            "count": 10,
         }
         self._metrics["web_search_calls"] = self._metrics.get("web_search_calls", 0) + 1
         try:
@@ -499,6 +927,8 @@ class SemanticLeadersService:
             summary = normalize_text(str(value.get("summary") or value.get("snippet") or "")).strip()
             site_name = normalize_text(str(value.get("siteName") or "")).strip() or None
             if not title or not url:
+                continue
+            if not self._is_credible_source(url, title, summary):
                 continue
             items.append(
                 {
@@ -1001,11 +1431,13 @@ class SemanticLeadersService:
             "trustworthiness. Prefer the evidence that provides clearer operating proof, stronger specificity, and more "
             "credible benchmark detail when two sources claim similar things.\n\n"
             "Return strict JSON with this shape:\n"
-            '{"leader_summary":"one short sentence under 110 characters","document_assessments":[{"index":1,"matched_capability":"...","match_confidence":0.0,"match_reason":"...","evidence_type":"implementation case study","operating_specificity":0.0,"source_authority":0.0,"measurable_outcome_clarity":0.0,"indirectness_risk":0.0,"keep_recommendation":true,"why_relevant":"...","rewrite_label":"..."}]}\n'
+            '{"leader_summary":"one fluid sentence under 140 characters","document_assessments":[{"index":1,"matched_capability":"...","match_confidence":0.0,"match_reason":"...","evidence_type":"implementation case study","operating_specificity":0.0,"source_authority":0.0,"measurable_outcome_clarity":0.0,"indirectness_risk":0.0,"keep_recommendation":true,"why_relevant":"...","rewrite_label":"..."}]}\n'
             "Rules:\n"
             "- assess every document index provided\n"
             f"- leader_summary must mention the 1 to 2 strongest respondent gaps it addresses, especially among: {strongest_gaps}\n"
-            "- leader_summary must be concise enough to fit a small report chip without truncation\n"
+            "- leader_summary must be concise, fluid, and strictly under 140 characters\n"
+            "- leader_summary must capture *how* tools or techniques are used in a natural sentence, rather than listing them (e.g. 'T-Mobile utilise son modèle de Team of Experts pour résoudre...', NOT 'Utilise Team of Experts, chat et téléphone')\n"
+            "- Do NOT mention backend cloud architecture, AWS SageMaker, database servers, or machine learning infrastructure\n"
             "- matched_capability must match one of the respondent pain points when possible\n"
             "- match_confidence, operating_specificity, source_authority, measurable_outcome_clarity, and indirectness_risk must be numbers from 0 to 1\n"
             "- evidence_type must be one of: implementation case study, operational report, executive interview, annual/reporting disclosure, news/commentary, product/vendor case study, generic marketing / low-substance overview\n"
@@ -1013,7 +1445,7 @@ class SemanticLeadersService:
             "- source_authority should reflect benchmark trustworthiness and substance, not brand fame alone\n"
             "- when similar documents support the same claim, score the more substantive and benchmark-trustworthy one higher and reject the weaker one when appropriate\n"
             "- why_relevant must explain in one short sentence how the evidence addresses that respondent gap\n"
-            "- rewrite_label must stay faithful to the evidence and emphasize only the concrete practice or outcome explicitly shown\n"
+            "- rewrite_label must be a very light, short description strictly under 80 characters emphasizing only the concrete practice or outcome explicitly shown (e.g., 'Modèle Team of Experts pour le support client', NOT a long explanation)\n"
             "- do not invent facts, names, metrics, or governance details\n"
             "- do not upgrade a broad strategic narrative into an operating mechanism if the source does not clearly show that mechanism\n"
             "- prefer implementation case studies, concrete transformation programs, named tooling, measured outcomes, and formal operating routines when they are actually described\n\n"
@@ -1035,9 +1467,17 @@ class SemanticLeadersService:
                 min(len(raw_links), 5),
                 sector,
             )
-            system_content = "You are a precise benchmark curator. Output JSON only."
-            if (language or "").lower().startswith("fr"):
-                system_content += "\nCRITICAL: All generated text values (like 'leader_summary', 'why_relevant', 'rewrite_label') MUST be written entirely in French. Do NOT translate JSON keys, URLs, or company names."
+            target_lang = "French" if (language or "").lower().startswith("fr") else "English"
+            system_content = (
+                f"You are a precise benchmark curator. Output JSON only.\n"
+                f"All generated text values (like 'leader_summary', 'why_relevant', 'rewrite_label') MUST be written entirely in {target_lang}. Do NOT translate JSON keys, URLs, or company names.\n\n"
+                f"CRITICAL guidelines for text summaries and labels:\n"
+                f"1. Write in a fluid, natural, and user-friendly tone suitable for a professional business report. "
+                f"DO NOT write dry, robotic, comma-separated lists of tools (e.g. do NOT write 'Utilise Virtual Artist, chatbots et bornes'). Instead, frame it as a meaningful sentence showing *how* they are used (e.g., 'Sephora associe son outil Virtual Artist et sa communauté Beauty Insider pour guider ses clients').\n"
+                f"2. Focus strictly on customer-facing CX/support techniques (e.g., support models, digital platforms, chatbots, user forums). Do NOT mention backend cloud infrastructure, server hosting, machine learning frameworks, or data engineering tools (like AWS SageMaker, database servers).\n"
+                f"3. Do NOT use generic boilerplate statements (like 'améliore la satisfaction', 'gère l\'expérience client', 'optimise la collecte de retours', or 'improves satisfaction', 'manages customer experience').\n"
+                f"4. The 'leader_summary' MUST be under 140 characters."
+            )
             content = await self.llm.gateway.chat_messages(
                 [
                     {
@@ -1110,20 +1550,29 @@ class SemanticLeadersService:
         pain_points: list[dict[str, str | None]],
         language: str = "fr",
     ) -> list[dict[str, str | None]]:
-        return [
-            {
-                "label": self._fallback_evidence_label(link, language=language),
-                "url": str(link.get("url") or ""),
-                "source_title": self._clean_source_title(
-                    raw_title=str(link.get("source_title") or link.get("title") or ""),
-                    url=str(link.get("url") or ""),
-                ),
-                "mapped_capability": self._best_matching_capability(link=link, pain_points=pain_points),
-                "why_relevant": self._fallback_relevance_reason(link=link, pain_points=pain_points, language=language),
-            }
-            for link in raw_links[:3]
-            if str(link.get("url") or "").strip()
-        ]
+        links = []
+        for link in raw_links:
+            if not str(link.get("url") or "").strip():
+                continue
+            cap = self._best_matching_capability(link=link, pain_points=pain_points)
+            if not cap:
+                # Exclude links that do not align with any assessed customer experience capability
+                continue
+            links.append(
+                {
+                    "label": self._fallback_evidence_label(link, language=language),
+                    "url": str(link.get("url") or ""),
+                    "source_title": self._clean_source_title(
+                        raw_title=str(link.get("source_title") or link.get("title") or ""),
+                        url=str(link.get("url") or ""),
+                    ),
+                    "mapped_capability": cap,
+                    "why_relevant": self._fallback_relevance_reason(link=link, pain_points=pain_points, language=language),
+                }
+            )
+            if len(links) >= 3:
+                break
+        return links
 
     def _normalize_document_assessments(
         self,
@@ -1682,15 +2131,18 @@ class SemanticLeadersService:
 
     def _fallback_evidence_label(self, link: dict[str, str | None], language: str = "fr") -> str:
         title = self._clean_evidence_text(str(link.get("title") or link.get("source_title") or ""))
+        if title:
+            if len(title) > 90:
+                title = title[:90].rsplit(" ", 1)[0].strip(" ,;:-") + "..."
+            return title
         summary = self._clean_evidence_text(str(link.get("summary") or ""))
-        capability = self._clean_evidence_text(str(link.get("mapped_capability") or ""))
-        if capability and summary:
-            return self._clean_evidence_text(f"{capability}: {summary}")
-        if title and summary:
-            return self._clean_evidence_text(f"{title}: {summary}")
+        if summary:
+            if len(summary) > 90:
+                summary = summary[:90].rsplit(" ", 1)[0].strip(" ,;:-") + "..."
+            return summary
         if (language or "").lower().startswith("fr"):
-            return summary or title or "Des elements de reference publics ont ete identifies."
-        return summary or title or "Public benchmark evidence was identified."
+            return "Eléments de référence publics"
+        return "Public benchmark evidence"
 
     def _best_matching_capability(
         self,
@@ -1731,16 +2183,29 @@ class SemanticLeadersService:
     ) -> str | None:
         is_french = (language or "").lower().startswith("fr")
         capability = self._best_matching_capability(link=link, pain_points=pain_points)
-        summary = self._clean_evidence_text(str(link.get("summary") or ""))
-        if capability and summary:
+        if not capability:
             if is_french:
-                return self._clean_evidence_text(f"Cette référence soutient {self._fr_capability_label(capability)} via {summary}")
-            return self._clean_evidence_text(f"This evidence supports {capability} through {summary}")
-        if capability:
-            if is_french:
-                return self._clean_evidence_text(f"Cette référence est très pertinente pour {self._fr_capability_label(capability)}.")
-            return self._clean_evidence_text(f"This evidence is most relevant to {capability}.")
-        return None
+                return "Cette référence présente des pratiques sectorielles d'excellence en matière d'expérience client."
+            return "This reference presents industry best practices for optimizing customer experience."
+
+        cap_key = normalize_text(capability).lower().strip()
+        if is_french:
+            cap_label = self._fr_capability_label(capability)
+            if "feedback" in cap_key or "retour" in cap_key:
+                return f"Cette référence met en évidence des pratiques concrètes pour {cap_label}."
+            elif "measure" in cap_key or "mesure" in cap_key or "improve" in cap_key:
+                return f"Cette référence illustre l'évaluation des indicateurs de performance liés à {cap_label}."
+            elif "decision" in cap_key:
+                return f"Cette référence montre comment les insights clients soutiennent {cap_label}."
+            return f"Cette référence présente des éléments de preuve à l'appui de {cap_label}."
+        else:
+            if "feedback" in cap_key or "retour" in cap_key:
+                return f"This reference demonstrates concrete practices for {capability.lower()}."
+            elif "measure" in cap_key or "mesure" in cap_key or "improve" in cap_key:
+                return f"This reference illustrates key metrics and performance monitoring for {capability.lower()}."
+            elif "decision" in cap_key:
+                return f"This reference shows how customer evidence supports {capability.lower()}."
+            return f"This reference provides evidence supporting key processes in {capability.lower()}."
 
 
     def _resolve_mapped_capability(
@@ -1821,6 +2286,15 @@ class SemanticLeadersService:
         intersection = len(left_tokens & right_tokens)
         baseline = max(1, min(len(left_tokens), len(right_tokens)))
         return intersection / baseline
+
+    def _trim_to_limit(self, text: str, limit: int) -> str:
+        cleaned = self._clean_evidence_text(text or "")
+        if len(cleaned) <= limit:
+            return cleaned
+        shortened = cleaned[:limit - 3].rsplit(" ", 1)[0].strip(" ,;:-")
+        if not shortened:
+            shortened = cleaned[:limit - 3]
+        return shortened + "..."
 
 
 class TelecomSemanticLeadersService(SemanticLeadersService):
