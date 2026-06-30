@@ -10,9 +10,9 @@ type HowItWorksProps = {
 
 const TRANSLATIONS = {
   fr: {
-    category: "MÉTHODOLOGIE ORION",
+    category: "MÉTHODOLOGIE D'ÉVALUATION",
     heading: "Trois prismes. Une seule réalité",
-    subtitle: "Chaque organisation a ses zones d'ombre. ORION évalue votre maturité sous trois angles complémentaires pour dresser un diagnostic précis et objectif.",
+    subtitle: "Chaque organisation a ses zones d'ombre. Notre diagnostic évalue votre maturité sous trois angles complémentaires pour dresser un bilan précis et objectif.",
     axisLabel: "AXE",
     axes: [
       {
@@ -36,9 +36,9 @@ const TRANSLATIONS = {
     ],
   },
   en: {
-    category: "HOW ORION THINKS",
+    category: "HOW THE ASSESSMENT WORKS",
     heading: "Three lenses. One truth",
-    subtitle: "Most organizations have blind spots. ORION looks at your organization from three angles to build a complete, honest picture of where you stand.",
+    subtitle: "Most organizations have blind spots. The diagnostic looks at your organization from three angles to build a complete, honest picture of where you stand.",
     axisLabel: "AXIS",
     axes: [
       {

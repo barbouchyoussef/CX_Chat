@@ -111,21 +111,24 @@
 .report-leaders-shell .comp-chip {
   width: 100%;
   min-height: 110px;
-  padding: 18px 18px 16px;
-  border-radius: 20px;
+  padding: 20px;
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)), rgba(8, 11, 20, 0.14);
   color: inherit;
   cursor: pointer;
   text-align: left;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), border-color 300ms ease, box-shadow 300ms ease, background 300ms ease;
   backdrop-filter: blur(10px);
 }
-.report-leaders-shell .comp-chip:hover,
-.report-leaders-shell .comp-chip.active {
+.report-leaders-shell .comp-chip:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.18);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)), rgba(8, 11, 20, 0.18);
+}
+.report-leaders-shell .comp-chip.active {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04)), rgba(8, 11, 20, 0.22);
 }
 .report-leaders-shell .chip-head {
   display: flex;
@@ -134,13 +137,23 @@
   gap: 12px;
   margin-bottom: 14px;
 }
-.report-leaders-shell .chip-emoji {
-  font-size: 1.35rem;
-  line-height: 1;
+.report-leaders-shell .chip-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: #fff;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.report-leaders-shell .comp-chip:hover .chip-logo-container,
+.report-leaders-shell .comp-chip.active .chip-logo-container {
+  transform: scale(1.06);
 }
 .report-leaders-shell .chip-name {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #fff;
@@ -156,7 +169,7 @@
   overflow: hidden;
 }
 .report-leaders-shell .drawer {
-  border-radius: 22px;
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)), rgba(8, 11, 20, 0.16);
   padding: 20px 22px 22px;

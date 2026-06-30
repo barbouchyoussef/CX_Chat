@@ -165,13 +165,13 @@ export default function ReportHeroSection({ report, companyName, onBack, languag
   const activeColor = levelColors[overallLevelNum] || "#00d4ff";
   const overallMaturityBandName = getMaturityBandDisplayName(hero.overall_maturity_band || "Established", isFrench);
 
-  const strongestLabelText = isFrench
+  const strongestLabelText = hero.strongest_axis_description || (isFrench
     ? "C'est l'axe le plus fort selon vos réponses"
-    : "This is the strongest axis according to your answers";
+    : "This is the strongest axis according to your answers");
 
-  const priorityLabelText = isFrench
+  const priorityLabelText = hero.priority_axis_description || (isFrench
     ? "C'est l'axe le plus prioritaire à traiter selon vos réponses"
-    : "This is the highest priority axis to address according to your answers";
+    : "This is the highest priority axis to address according to your answers");
 
 
 

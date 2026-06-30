@@ -11,9 +11,11 @@ export type FinalReportHero = {
   strongest_axis?: string | null;
   strongest_axis_level?: number | null;
   strongest_axis_level_label?: string | null;
+  strongest_axis_description?: string | null;
   priority_axis?: string | null;
   priority_axis_level?: number | null;
   priority_axis_level_label?: string | null;
+  priority_axis_description?: string | null;
 };
 
 export type FinalReportSummary = {

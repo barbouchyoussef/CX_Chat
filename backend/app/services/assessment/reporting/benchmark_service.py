@@ -699,17 +699,17 @@ class BenchmarkService:
         queries = [
             (
                 f"Find public case studies, benchmark articles, or credible examples about customer experience in the {sector} sector "
-                f"for {size} companies, especially around {capability_hint or 'core CX practices'} and {evidence_hint or 'observable CX evidence'}."
+                f"for {size} companies, especially around {capability_hint or 'core CX practices'} and {evidence_hint or 'observable CX evidence'}. english"
             ),
             (
                 f"Find customer experience best practices in {sector} that relate to {pain_hint or 'common customer pain points'} "
-                f"and show how organizations improved them in practice."
+                f"and show how organizations improved them in practice. english"
             ),
             (
                 f"Find public examples of CX operating models in {sector}, especially around {priority_axis or 'priority customer experience themes'} "
-                f"and {capability_hint or 'practical service design capabilities'}."
+                f"and {capability_hint or 'practical service design capabilities'}. english"
             ),
-            f"Find recent customer experience innovation examples in the {sector} sector from 2025 or 2026.",
+            f"Find recent customer experience innovation examples in the {sector} sector from 2025 or 2026. english",
         ]
         return [re.sub(r"\s+", " ", query).strip() for query in queries if query.strip()]
 

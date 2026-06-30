@@ -12,7 +12,7 @@ const TRANSLATIONS = {
     headingPart2: "vous cherchez de la clarté.",
     subHeadingPart1: "Vous ne repartez pas avec un score,",
     subHeadingPart2: "vous repartez avec une feuille de route.",
-    lead: "À l'issue du diagnostic, ORION structure l'ensemble de vos retours pour dresser une cartographie fidèle et actionnable de votre organisation.",
+    lead: "À l'issue du diagnostic, notre plateforme structure l'ensemble de vos retours pour dresser une cartographie fidèle et actionnable de votre organisation.",
     features: [
       {
         step: "1",
@@ -52,14 +52,14 @@ const TRANSLATIONS = {
     peerMedian: "Médiane sectorielle",
     bestInClass: "Meilleur de sa catégorie",
     recommendedFocus: "Actions prioritaires",
-    recommendationText: "ORION centralise vos priorités majeures en un seul endroit pour aligner rapidement vos équipes sur les premières actions.",
+    recommendationText: "Le diagnostic centralise vos priorités majeures en un seul endroit pour aligner rapidement vos équipes sur les premières actions.",
   },
   en: {
     headingPart1: "You don’t leave with answers",
     headingPart2: "You leave with clarity",
     subHeadingPart1: "You don’t leave with a score",
     subHeadingPart2: "You leave with a strategy",
-    lead: "At the end of the conversation, ORION synthesizes everything into a structured picture of where your organization truly stands.",
+    lead: "At the end of the conversation, the platform synthesizes everything into a structured picture of where your organization truly stands.",
     features: [
       {
         step: "1",

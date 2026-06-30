@@ -273,8 +273,8 @@ class SemanticLeadersService:
         presentations = []
 
         # 1. Always include master deck "all.pptx"
-        all_label = "Présentation Méthodologie Globale ORION CX" if is_french else "ORION CX Global Methodology Master Framework"
-        all_why = "Guide de référence de la méthodologie d'évaluation ORION CX et des piliers de maturité." if is_french else "Master reference guide detailing the ORION CX assessment methodology and maturity pillars."
+        all_label = "Présentation Méthodologie Globale EY" if is_french else "EY Customer Experience Global Methodology Master Framework"
+        all_why = "Guide de référence de la méthodologie d'évaluation de l'expérience client EY et des piliers de maturité." if is_french else "Master reference guide detailing the EY Customer Experience assessment methodology and maturity pillars."
         presentations.append({
             "label": all_label,
             "url": "/assets/all.pptx",
@@ -320,7 +320,7 @@ class SemanticLeadersService:
         results = []
 
         if dynamic_count > 0:
-            query = f'site:ey.com "{sector_label}" (customer OR client OR experience OR transformation OR strategy)'
+            query = f'site:ey.com/en "{sector_label}" (customer OR client OR experience OR transformation OR strategy) english'
             logger.warning("Generating decoupled EY Insights card query=%r", query)
             try:
                 results = await self._web_search(query)
@@ -457,7 +457,7 @@ class SemanticLeadersService:
         in connection with customer experience/transformation in that sector.
         Returns the candidates reordered with those mentioned at the top.
         """
-        query = f'site:ey.com ("customer experience" OR "transformation") AND "{sector}"'
+        query = f'site:ey.com/en ("customer experience" OR "transformation") AND "{sector}" english'
         logger.warning("Querying EY for candidate prioritization query=%r", query)
         
         try:
@@ -705,14 +705,14 @@ class SemanticLeadersService:
         if domain:
             queries.append(
                 f'site:{domain} ({cx_term} OR "customer feedback" OR "feedback loops" OR '
-                f'"customer service strategy" OR "continuous improvement" OR "satisfaction metrics")'
+                f'"customer service strategy" OR "continuous improvement" OR "satisfaction metrics") english'
             )
 
         # 3. Fallback search (general web search)
         queries.append(
             f"Find public examples, case studies, or reports showing how {company_name} improves customer experience in {sector} "
             f"through {pain_summary}. Focus on concrete operating practices, customer feedback handling, issue resolution, "
-            f"decision routines, or measurable service improvements.{context_clause}"
+            f"decision routines, or measurable service improvements.{context_clause} english"
         )
 
         return queries
@@ -1297,6 +1297,7 @@ class SemanticLeadersService:
             "software": "technology",
             "public services": "public_services",
             "public sector": "public_sector",
+            "public": "public_sector",
         }
         return sector_aliases.get(normalized)
 

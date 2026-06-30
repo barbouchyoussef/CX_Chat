@@ -13,6 +13,8 @@ export const capabilityLinks: Record<string, string> = {
   "Feedback collection": "https://www.qualtrics.com/articles/customer-experience/what-is-voice-of-customer/",
   "Collecte des retours clients": "https://www.qualtrics.com/articles/customer-experience/what-is-voice-of-customer/",
   
+  "Customer experience culture": "https://hbr.org/2018/10/6-ways-to-build-a-customer-centric-culture",
+  "Culture de l'expérience client": "https://hbr.org/2018/10/6-ways-to-build-a-customer-centric-culture",
   "CX culture": "https://hbr.org/2018/10/6-ways-to-build-a-customer-centric-culture",
   "Culture CX": "https://hbr.org/2018/10/6-ways-to-build-a-customer-centric-culture",
   

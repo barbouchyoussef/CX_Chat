@@ -43,7 +43,7 @@ export const MATURITY_CARDS = {
 };
 
 export const STATIC_CAPABILITIES = [
-  { key: "cx culture", axis: "manage", en: "CX culture", fr: "Culture CX" },
+  { key: "cx culture", axis: "manage", en: "Customer experience culture", fr: "Culture de l'expérience client" },
   { key: "ownership and governance", axis: "manage", en: "Ownership & governance", fr: "Ownership & gouvernance" },
   { key: "decision-making", axis: "manage", en: "Decision-making", fr: "Prise de décision" },
   { key: "feedback collection", axis: "analyze", en: "Feedback collection", fr: "Collecte des retours" },

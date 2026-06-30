@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import NavBar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Features from "./components/Features";
@@ -6,12 +6,32 @@ import HowItWorks from "./components/HowItWorks";
 import CoreFeaturesShowcase from "./components/CoreFeaturesShowcase";
 import CTASection from "./components/CTASection";
 import Footer from "./components/Footer";
-import AssessmentChatStatic from "./components/ui/assessment-chat-static";
-import AdminDashboard from "./components/ui/admin-dashboard";
-import AdminAssessmentDetail from "./components/ui/admin-assessment-detail";
-import AdminAssessmentReport from "./components/ui/admin-assessment-report";
-import CustomizedTimeline from "./components/CustomizedTimeline";
-import BenchmarkTester from "./components/ui/benchmark-tester";
+
+// Lazy-loaded sub-pages to optimize initial landing bundle size
+const AssessmentChatStatic = lazy(() => import("./components/ui/assessment-chat-static"));
+const AdminDashboard = lazy(() => import("./components/ui/admin-dashboard"));
+const AdminAssessmentDetail = lazy(() => import("./components/ui/admin-assessment-detail"));
+const AdminAssessmentReport = lazy(() => import("./components/ui/admin-assessment-report"));
+const CustomizedTimeline = lazy(() => import("./components/CustomizedTimeline"));
+const BenchmarkTester = lazy(() => import("./components/ui/benchmark-tester"));
+
+function RouteLoader() {
+  return (
+    <div className="flex h-screen w-screen items-center justify-center bg-[#0F1015]">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="relative h-12 w-12">
+          {/* Outer elegant spinning gradient ring */}
+          <div className="absolute inset-0 rounded-full border-2 border-t-[#C5A04F] border-r-transparent border-b-[#3858E9] border-l-transparent animate-spin" />
+          {/* Inner pulse */}
+          <div className="absolute inset-2 rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(197,160,79,0.9),rgba(56,88,233,0.4))] animate-pulse" />
+        </div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.25em] text-[#A0AEC0]/60 animate-pulse">
+          Loading
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [showChat, setShowChat] = useState(false);
@@ -41,49 +61,59 @@ export default function App() {
           background: "#f8fafc",
         }}
       >
-        <CustomizedTimeline />
+        <Suspense fallback={<RouteLoader />}>
+          <CustomizedTimeline />
+        </Suspense>
       </main>
     );
   }
 
   if (showAdmin) {
-    if (adminView === "details" && selectedAssessmentId) {
-      return <AdminAssessmentDetail assessmentId={selectedAssessmentId} onBack={() => setAdminView("dashboard")} />;
-    }
-    if (adminView === "report" && selectedAssessmentId) {
-      return <AdminAssessmentReport assessmentId={selectedAssessmentId} onBack={() => setAdminView("dashboard")} />;
-    }
     return (
-      <AdminDashboard
-        onBack={() => {
-          window.history.pushState({}, "", "/");
-          setPathname("/");
-        }}
-        onOpenAssessmentDetails={(assessmentId) => {
-          setSelectedAssessmentId(assessmentId);
-          setAdminView("details");
-        }}
-        onOpenAssessmentReport={(assessmentId) => {
-          setSelectedAssessmentId(assessmentId);
-          setAdminView("report");
-        }}
-      />
+      <Suspense fallback={<RouteLoader />}>
+        {adminView === "details" && selectedAssessmentId ? (
+          <AdminAssessmentDetail assessmentId={selectedAssessmentId} onBack={() => setAdminView("dashboard")} />
+        ) : adminView === "report" && selectedAssessmentId ? (
+          <AdminAssessmentReport assessmentId={selectedAssessmentId} onBack={() => setAdminView("dashboard")} />
+        ) : (
+          <AdminDashboard
+            onBack={() => {
+              window.history.pushState({}, "", "/");
+              setPathname("/");
+            }}
+            onOpenAssessmentDetails={(assessmentId) => {
+              setSelectedAssessmentId(assessmentId);
+              setAdminView("details");
+            }}
+            onOpenAssessmentReport={(assessmentId) => {
+              setSelectedAssessmentId(assessmentId);
+              setAdminView("report");
+            }}
+          />
+        )}
+      </Suspense>
     );
   }
 
   if (showBenchmarkTester) {
     return (
-      <BenchmarkTester
-        onBack={() => {
-          window.history.pushState({}, "", "/");
-          setPathname("/");
-        }}
-      />
+      <Suspense fallback={<RouteLoader />}>
+        <BenchmarkTester
+          onBack={() => {
+            window.history.pushState({}, "", "/");
+            setPathname("/");
+          }}
+        />
+      </Suspense>
     );
   }
 
   if (showChat) {
-    return <AssessmentChatStatic onBack={() => setShowChat(false)} language={language} />;
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <AssessmentChatStatic onBack={() => setShowChat(false)} language={language} />
+      </Suspense>
+    );
   }
 
   return (

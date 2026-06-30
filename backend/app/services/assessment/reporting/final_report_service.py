@@ -328,8 +328,55 @@ class ReportBuilderService:
             executive_summary_text=synthesis.get("executive_summary"),
             priority_message_text=synthesis.get("priority_message"),
         )
+        
+        strongest_key = strongest.axis.lower().strip() if strongest.axis else None
+        priority_key = priority.axis.lower().strip() if priority.axis else None
+        is_fr = (getattr(assessment, "language", "fr") or "").lower().startswith("fr")
+        lang_code = "fr" if is_fr else "en"
+
+        axis_short_copies = {
+            "manage": {
+                "strongest": {
+                    "en": "You have structured governance, clear ownership, and consistent processes.",
+                    "fr": "Vous disposez d'une gouvernance structurée, de responsabilités claires et de processus établis.",
+                },
+                "priority": {
+                    "en": "Establish formal governance and clear ownership for customer experience.",
+                    "fr": "Formaliser la gouvernance et définir des responsabilités claires pour l'expérience client.",
+                }
+            },
+            "analyze": {
+                "strongest": {
+                    "en": "Customer data and feedback are consistently turned into actionable insights.",
+                    "fr": "Les données et retours clients sont systématiquement transformés en insights actionnables.",
+                },
+                "priority": {
+                    "en": "Build consistent customer listening channels and structured insight generation.",
+                    "fr": "Développer des canaux d'écoute client homogènes et structurer la génération d'insights.",
+                }
+            },
+            "improve": {
+                "strongest": {
+                    "en": "Improvements are systematically implemented and embedded into operations.",
+                    "fr": "Les améliorations sont systématiquement déployées et intégrées aux opérations.",
+                },
+                "priority": {
+                    "en": "Take consistent action on feedback and close the customer loop systematically.",
+                    "fr": "Agir sur les retours d'expérience et boucler la boucle client de manière systématique.",
+                }
+            }
+        }
+
+        strongest_desc = None
+        if strongest_key and strongest_key in axis_short_copies:
+            strongest_desc = axis_short_copies[strongest_key]["strongest"][lang_code]
+
+        priority_desc = None
+        if priority_key and priority_key in axis_short_copies:
+            priority_desc = axis_short_copies[priority_key]["priority"][lang_code]
+
         hero = FinalReportHero(
-            report_title="CX Maturity Report",
+            report_title="Rapport de maturité de l'expérience client" if is_fr else "Customer Experience Maturity Report",
             report_date_label=report_date_label,
             company_name=company_name,
             sector_name=sector_name,
@@ -346,9 +393,11 @@ class ReportBuilderService:
             strongest_axis=strongest.axis if strongest.axis != "N/A" else None,
             strongest_axis_level=strongest.axis_level,
             strongest_axis_level_label=self._level_label(strongest.axis_level),
+            strongest_axis_description=strongest_desc,
             priority_axis=priority.axis if priority.axis != "N/A" else None,
             priority_axis_level=priority.axis_level,
             priority_axis_level_label=self._level_label(priority.axis_level),
+            priority_axis_description=priority_desc,
         )
 
         benchmarks: list[FinalReportBenchmarkItem] = []
@@ -947,7 +996,7 @@ class ReportBuilderService:
             "items": candidates[:4],
         }
         system_prompt = (
-            "You write section-4 quick wins for a CX maturity report. "
+            "You write section-4 quick wins for a customer experience maturity report. "
             "Return JSON only with an object containing an `items` array. "
             "No markdown. No benchmark references. No consultant filler."
         ) + language_directive(language)
@@ -961,7 +1010,7 @@ class ReportBuilderService:
             "- Do not generate `after_text`; the backend derives and localizes that separately from the quick-win template.\n"
             "- Use only the provided inputs.\n"
             "- Never mention competitors, benchmarks, or sources.\n"
-            "- Keep owner concise, like 'CX Lead' or 'Operations Manager'.\n"
+            "- Keep owner concise, like 'Customer Experience Lead' or 'Operations Manager'.\n"
             "Return JSON in this shape:\n"
             "{\"items\": [{\"step\": 1, \"timeline_label\": \"Week 1\", \"title\": \"...\", \"owner\": \"...\", \"today_text\": \"...\"}]}\n\n"
             f"Input:\n{json.dumps(payload, ensure_ascii=True)}"
@@ -1066,21 +1115,21 @@ class ReportBuilderService:
             "journey visibility": "la visibilite des parcours",
             "measurement and continuous improvement": "la mesure et l'amelioration continue",
             "acting on pain points": "le traitement des points de douleur",
-            "cx culture": "la culture CX",
+            "cx culture": "la culture de l'expérience client",
         }
         return labels.get(key, capability)
 
     def _fr_quick_win_title_map(self) -> dict[str, str]:
         return {
             "decision-making": "Lancer une revue decisionnelle client",
-            "ownership and governance": "Formaliser les revues CX transverses",
+            "ownership and governance": "Formaliser les revues d'expérience client transverses",
             "feedback collection": "Structurer la revue des retours clients",
             "use of insights": "Prioriser les irritants par impact client",
             "channel consistency": "Corriger les principaux ecarts multicanaux",
             "journey visibility": "Cartographier les parcours et nommer les owners",
-            "measurement and continuous improvement": "Nommer les owners des indicateurs CX",
+            "measurement and continuous improvement": "Nommer les owners des indicateurs d'expérience client",
             "acting on pain points": "Ajouter une verification des causes racines",
-            "cx culture": "Coacher les equipes sur les moments CX",
+            "cx culture": "Coacher les équipes sur les moments d'expérience client",
         }
 
     def _fr_quick_win_today_map(self) -> dict[str, str]:
@@ -1093,39 +1142,39 @@ class ReportBuilderService:
             "journey visibility": "Les equipes ameliorent des points de contact isoles, sans vision partagee du parcours.",
             "measurement and continuous improvement": "Des indicateurs existent, mais ils ne sont pas encore relies a des owners, decisions ou plans de suivi.",
             "acting on pain points": "Les irritants sont traites de facon reactive, sans backlog, owner ou discipline de cloture suffisamment stable.",
-            "cx culture": "Les attentes CX ne sont pas encore renforcees par des habitudes, du coaching ou des routines communes.",
+            "cx culture": "Les attentes d'expérience client ne sont pas encore renforcées par des habitudes, du coaching ou des routines communes.",
         }
 
     def _localize_quick_win_after_text(self, after_text: str, candidate: dict[str, Any]) -> str:
         key = normalize_text(after_text).lower().strip()
         exact_map = {
-            "customer-facing teams get a shared service baseline, reducing inconsistent behaviors and making cx expectations easier to coach.": "Les equipes en contact client disposent d'un socle de service commun, ce qui reduit les comportements incoherents et facilite le coaching CX.",
+            "customer-facing teams get a shared service baseline, reducing inconsistent behaviors and making cx expectations easier to coach.": "Les équipes en contact client disposent d'un socle de service commun, ce qui réduit les comportements incohérents et facilite le coaching de l'expérience client.",
             "customer-focused behaviors become more repeatable through team routines, qa feedback, and visible reinforcement.": "Les comportements orientes client deviennent plus repetables grace aux routines d'equipe, aux retours qualite et au renforcement visible.",
             "teams can connect daily behaviors to measurable customer outcomes, strengthening accountability and cultural consistency.": "Les equipes relient les comportements quotidiens a des resultats client mesurables, ce qui renforce la responsabilisation et la coherence culturelle.",
             "customer issues stop depending only on informal follow-up because ownership, escalation, and next actions become visible.": "Les problemes clients ne dependent plus seulement du suivi informel, car les owners, escalades et prochaines actions deviennent visibles.",
-            "cross-functional teams gain a clearer operating rhythm for customer issues, reducing dropped actions and fragmented accountability.": "Les equipes transverses gagnent un rythme de pilotage plus clair des problemes clients, ce qui reduit les actions oubliees et la responsabilite fragmentee.",
-            "cx governance becomes a decision mechanism that connects ownership, investment choices, and measurable customer outcomes.": "La gouvernance CX devient un mecanisme de decision reliant ownership, choix d'investissement et resultats client mesurables.",
-            "customer evidence gets a defined place in operational decisions, reducing purely reactive or internally driven prioritization.": "Les preuves client trouvent une place claire dans les decisions operationnelles, ce qui reduit les priorites purement reactives ou internes.",
-            "customer feedback becomes more actionable because decisions are connected to owners, next steps, and visible follow-up.": "Les retours clients deviennent plus actionnables, car les decisions sont reliees a des owners, des prochaines etapes et un suivi visible.",
-            "customer evidence has a stronger path into planning, helping teams prioritize resources around the highest-impact experience gaps.": "Les preuves client alimentent mieux la planification et aident les equipes a prioriser les ressources sur les ecarts d'experience les plus critiques.",
-            "feedback capture becomes less ad hoc, giving teams a repeatable source of customer signals to review and act on.": "La collecte des retours devient moins ad hoc et donne aux equipes une source repetable de signaux client a analyser et traiter.",
-            "teams gain broader and more comparable feedback coverage, improving visibility across the main customer touchpoints.": "Les equipes obtiennent une couverture de feedback plus large et comparable, ce qui ameliore la visibilite sur les principaux points de contact.",
-            "feedback becomes a normal input into service management, improving continuity between listening, decisions, and action.": "Le feedback devient une entree normale du pilotage du service, ce qui renforce la continuite entre ecoute, decision et action.",
-            "customer comments become easier to interpret because repeated issues are grouped into themes instead of handled only case by case.": "Les commentaires clients deviennent plus faciles a interpreter, car les problemes recurrents sont regroupes par themes plutot que traites au cas par cas.",
-            "insight reviews become more decision-ready by connecting repeated themes to causes, impact, and prioritization logic.": "Les revues d'insights deviennent plus utiles pour la decision en reliant themes recurrents, causes, impact et logique de priorisation.",
-            "customer insight becomes a stronger management input, helping teams focus improvement effort where it can shift outcomes.": "L'insight client devient un intrant de management plus fort et aide les equipes a concentrer les efforts la ou ils peuvent changer les resultats.",
-            "customers receive more consistent information and handoffs because teams have a shared baseline for channel behaviour.": "Les clients recoivent des informations et passages de relais plus coherents, car les equipes disposent d'un socle commun de comportement par canal.",
-            "cross-channel friction becomes easier to spot and resolve, reducing repeat contacts and inconsistent customer experiences.": "Les frictions multicanales deviennent plus faciles a reperer et corriger, ce qui reduit les contacts repetes et les experiences incoherentes.",
-            "channel management shifts from local fixes to a more joined-up experience with clearer standards and monitoring.": "Le pilotage des canaux passe de corrections locales a une experience plus coherente, avec des standards et un suivi plus clairs.",
-            "teams gain a shared view of the most important journeys, making pain points easier to locate and discuss together.": "Les equipes disposent d'une vision partagee des parcours les plus importants, ce qui facilite l'identification et la discussion des irritants.",
-            "journey visibility becomes more operational because teams regularly review touchpoints, friction, and ownership.": "La visibilite parcours devient plus operationnelle, car les equipes revoient regulierement points de contact, frictions et ownership.",
-            "journey architecture becomes a practical planning tool, helping leaders connect improvement decisions to customer moments.": "L'architecture des parcours devient un outil de planification concret, reliant les decisions d'amelioration aux moments client.",
-            "teams gain a basic improvement rhythm by tracking a focused set of cx measures and discussing what changed.": "Les equipes installent un premier rythme d'amelioration en suivant quelques mesures CX ciblees et en discutant ce qui evolue.",
-            "measurement becomes more useful because metric movement triggers ownership, action review, and follow-up.": "La mesure devient plus utile, car l'evolution des indicateurs declenche ownership, revue d'action et suivi.",
-            "improvement activity becomes easier to prioritize and govern through connected cx, operational, and business outcomes.": "Les actions d'amelioration deviennent plus faciles a prioriser et piloter grace au lien entre resultats CX, operationnels et business.",
-            "recurring pain points are less likely to be closed superficially because teams check causes before moving on.": "Les irritants recurrents risquent moins d'etre clos superficiellement, car les equipes verifient les causes avant de passer a la suite.",
-            "pain-point handling becomes more structured through review routines, owners, and clearer action follow-through.": "Le traitement des irritants devient plus structure grace aux routines de revue, aux owners et a un meilleur suivi des actions.",
-            "teams move from reactive fixes toward earlier detection and more systematic prevention of recurring customer issues.": "Les equipes passent de corrections reactives a une detection plus precoce et une prevention plus systematique des problemes clients recurrents.",
+            "cross-functional teams gain a clearer operating rhythm for customer issues, reducing dropped actions and fragmented accountability.": "Les équipes transverses gagnent un rythme de pilotage plus clair des problèmes clients, ce qui réduit les actions oubliées et la responsabilité fragmentée.",
+            "cx governance becomes a decision mechanism that connects ownership, investment choices, and measurable customer outcomes.": "La gouvernance de l'expérience client devient un mécanisme de décision reliant la responsabilité, les choix d'investissement et les résultats client mesurables.",
+            "customer evidence gets a defined place in operational decisions, reducing purely reactive or internally driven prioritization.": "Les preuves client trouvent une place claire dans les décisions opérationnelles, ce qui réduit les priorités purement réactives ou internes.",
+            "customer feedback becomes more actionable because decisions are connected to owners, next steps, and visible follow-up.": "Les retours clients deviennent plus actionnables, car les décisions sont reliées à des owners, des prochaines étapes et un suivi visible.",
+            "customer evidence has a stronger path into planning, helping teams prioritize resources around the highest-impact experience gaps.": "Les preuves client alimentent mieux la planification et aident les équipes à prioriser les ressources sur les écarts d'expérience les plus critiques.",
+            "feedback capture becomes less ad hoc, giving teams a repeatable source of customer signals to review and act on.": "La collecte des retours devient moins ad hoc et donne aux équipes une source répétable de signaux client à analyser et traiter.",
+            "teams gain broader and more comparable feedback coverage, improving visibility across the main customer touchpoints.": "Les équipes obtiennent une couverture de feedback plus large et comparable, ce qui améliore la visibilité sur les principaux points de contact.",
+            "feedback becomes a normal input into service management, improving continuity between listening, decisions, and action.": "Le feedback devient une entrée normale du pilotage du service, ce qui renforce la continuité entre écoute, décision et action.",
+            "customer comments become easier to interpret because repeated issues are grouped into themes instead of handled only case by case.": "Les commentaires clients deviennent plus faciles à interpréter, car les problèmes récurrents sont regroupés par thèmes plutôt que traités au cas par cas.",
+            "insight reviews become more decision-ready by connecting repeated themes to causes, impact, and prioritization logic.": "Les revues d'insights deviennent plus utiles pour la décision en reliant thèmes récurrents, causes, impact et logique de priorisation.",
+            "customer insight becomes a stronger management input, helping teams focus improvement effort where it can shift outcomes.": "L'insight client devient un intrant de management plus fort et aide les équipes à concentrer les efforts là où ils peuvent changer les résultats.",
+            "customers receive more consistent information and handoffs because teams have a shared baseline for channel behaviour.": "Les clients reçoivent des informations et passages de relais plus cohérents, car les équipes disposent d'un socle commun de comportement par canal.",
+            "cross-channel friction becomes easier to spot and resolve, reducing repeat contacts and inconsistent customer experiences.": "Les frictions multicanales deviennent plus faciles à repérer et corriger, ce qui réduit les contacts répétés et les expériences incohérentes.",
+            "channel management shifts from local fixes to a more joined-up experience with clearer standards and monitoring.": "Le pilotage des canaux passe de corrections locales à une expérience plus cohérente, avec des standards et un suivi plus clairs.",
+            "teams gain a shared view of the most important journeys, making pain points easier to locate and discuss together.": "Les équipes disposent d'une vision partagée des parcours les plus importants, ce qui facilite l'identification et la discussion des irritants.",
+            "journey visibility becomes more operational because teams regularly review touchpoints, friction, and ownership.": "La visibilité parcours devient plus opérationnelle, car les équipes revoient régulièrement points de contact, frictions et ownership.",
+            "journey architecture becomes a practical planning tool, helping leaders connect improvement decisions to customer moments.": "L'architecture des parcours devient un outil de planification concret, reliant les décisions d'amélioration aux moments client.",
+            "teams gain a basic improvement rhythm by tracking a focused set of cx measures and discussing what changed.": "Les équipes installent un premier rythme d'amélioration en suivant quelques mesures d'expérience client ciblées et en discutant ce qui évolue.",
+            "measurement becomes more useful because metric movement triggers ownership, action review, and follow-up.": "La mesure devient plus utile, car l'évolution des indicateurs déclenche ownership, revue d'action et suivi.",
+            "improvement activity becomes easier to prioritize and govern through connected cx, operational, and business outcomes.": "Les actions d'amélioration deviennent plus faciles à prioriser et piloter grâce au lien entre résultats d'expérience client, opérationnels et commerciaux.",
+            "recurring pain points are less likely to be closed superficially because teams check causes before moving on.": "Les irritants récurrents risquent moins d'être clos superficiellement, car les équipes vérifient les causes avant de passer à la suite.",
+            "pain-point handling becomes more structured through review routines, owners, and clearer action follow-through.": "Le traitement des irritants devient plus structuré grâce aux routines de revue, aux owners et à un meilleur suivi des actions.",
+            "teams move from reactive fixes toward earlier detection and more systematic prevention of recurring customer issues.": "Les équipes passent de corrections réactives à une détection plus précoce et une prévention plus systématique des problèmes clients récurrents.",
         }
         if key in exact_map:
             return exact_map[key]
@@ -1165,7 +1214,14 @@ class ReportBuilderService:
             -round(float(confidence), 4),
         )
 
-    def _normalize_quick_win_owner_label(self, *, raw_owner: str, axis: str, capability: str) -> str:
+    def _normalize_quick_win_owner_label(
+        self,
+        *,
+        raw_owner: str,
+        axis: str,
+        capability: str,
+        language: str = "fr",
+    ) -> str:
         normalized = normalize_text(raw_owner).strip()
         lowered = normalized.lower()
         capability_text = normalize_text(capability).lower()
@@ -1178,45 +1234,54 @@ class ReportBuilderService:
                 "decision making",
             )
         )
+        is_fr = self._is_french(language)
+
+        cx_lead_label = "Responsable Expérience Client" if is_fr else "Customer Experience Lead"
+
         if governance_capability and not any(
             term in lowered
             for term in ("operation", "support", "marketing", "digital", "product", "people", "insight", "analytic")
         ):
-            return "CX Lead"
+            return cx_lead_label
+
         owner_map = (
-            (("cx", "customer experience"), "CX Lead"),
-            (("insight", "analytics", "data"), "Insights Lead"),
-            (("operation", "service operation"), "Operations Lead"),
-            (("support",), "Support Lead"),
-            (("transform", "program"), "Transformation Lead"),
-            (("market",), "Marketing Lead"),
-            (("digital",), "Digital Lead"),
-            (("people", "hr", "training", "learning"), "People Lead"),
-            (("product",), "Product Lead"),
+            (("cx", "customer experience"), cx_lead_label),
+            (("insight", "analytics", "data"), "Responsable Insights Client" if is_fr else "Insights Lead"),
+            (("operation", "service operation"), "Responsable Opérations" if is_fr else "Operations Lead"),
+            (("support",), "Responsable Support" if is_fr else "Support Lead"),
+            (("transform", "program"), "Responsable Transformation" if is_fr else "Transformation Lead"),
+            (("market",), "Responsable Marketing" if is_fr else "Marketing Lead"),
+            (("digital",), "Responsable Digital" if is_fr else "Digital Lead"),
+            (("people", "hr", "training", "learning"), "Responsable Ressources Humaines" if is_fr else "People Lead"),
+            (("product",), "Responsable Produit" if is_fr else "Product Lead"),
         )
         for terms, label in owner_map:
             if any(term in lowered for term in terms):
-                if governance_capability and label == "Operations Lead":
-                    return "CX Lead"
+                if governance_capability and label == ("Responsable Opérations" if is_fr else "Operations Lead"):
+                    return cx_lead_label
                 return label
         if lowered in {"leadership", "management", "team", "business", "company"} or len(normalized.split()) > 4:
-            return "CX Lead" if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability)
+            return cx_lead_label if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability, language=language)
         if normalized:
-            return "CX Lead" if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability)
-        return "CX Lead" if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability)
+            clean_owner = normalized
+            if "cx" in lowered:
+                clean_owner = re.sub(r"\bcx\b", "expérience client" if is_fr else "customer experience", clean_owner, flags=re.IGNORECASE)
+                clean_owner = re.sub(r"\bCX\b", "Expérience Client" if is_fr else "Customer Experience", clean_owner)
+            return clean_owner
+        return cx_lead_label if governance_capability else self._fallback_quick_win_owner(axis=axis, capability=capability, language=language)
 
     def _fallback_quick_win_title(self, candidate: dict[str, Any], language: str = "fr") -> str:
         capability_text = normalize_text(str(candidate.get("capability_raw") or candidate.get("capability") or "")).lower()
         title_map = self._fr_quick_win_title_map() if self._is_french(language) else {
             "decision-making": "Launch monthly customer decision review",
-            "ownership and governance": "Formalize cross-functional CX reviews",
+            "ownership and governance": "Formalize cross-functional Customer Experience reviews",
             "feedback collection": "Set weekly CRM feedback review",
             "use of insights": "Review top issues by customer impact",
             "channel consistency": "Fix top three channel handoff gaps",
             "journey visibility": "Map top journeys and assign owners",
-            "measurement and continuous improvement": "Assign owners to core CX metrics",
+            "measurement and continuous improvement": "Assign owners to core Customer Experience metrics",
             "acting on pain points": "Add root-cause step before closure",
-            "cx culture": "Coach teams on key CX moments",
+            "cx culture": "Coach teams on key Customer Experience moments",
         }
         if capability_text in title_map:
             return title_map[capability_text]
@@ -1378,18 +1443,19 @@ class ReportBuilderService:
     def _after_text_key(self, text: str) -> str:
         return re.sub(r"\s+", " ", normalize_text(text).lower()).strip()
 
-    def _fallback_quick_win_owner(self, *, axis: str, capability: str) -> str:
+    def _fallback_quick_win_owner(self, *, axis: str, capability: str, language: str = "fr") -> str:
         capability_text = normalize_text(capability).lower()
         axis_key = self._normalize_axis_key(axis)
+        is_fr = self._is_french(language)
         if "journey" in capability_text or "channel" in capability_text:
-            return "CX Lead"
+            return "Responsable Expérience Client" if is_fr else "Customer Experience Lead"
         if "feedback" in capability_text or axis_key == "analyze":
-            return "Insights Lead"
+            return "Responsable Insights Client" if is_fr else "Insights Lead"
         if axis_key == "manage":
-            return "Operations Manager"
+            return "Directeur des Opérations" if is_fr else "Operations Manager"
         if axis_key == "improve":
-            return "Transformation Lead"
-        return "CX Lead"
+            return "Responsable Transformation" if is_fr else "Transformation Lead"
+        return "Responsable Expérience Client" if is_fr else "Customer Experience Lead"
 
     async def _telecom_benchmark_pain_points(self, assessment_id: int) -> list[dict[str, Any]]:
         capability_rows = await self.capabilities.list_all_for_assessment(assessment_id=assessment_id)
@@ -2086,10 +2152,12 @@ class ReportBuilderService:
 
     def _translate_capability_name(self, capability: str, language: str | None) -> str:
         if not self._is_french(language):
+            if capability.lower().strip() == "cx culture":
+                return "Customer experience culture"
             return capability
         key = normalize_text(capability).lower().strip()
         labels = {
-            "cx culture": "Culture CX",
+            "cx culture": "Culture de l'expérience client",
             "decision-making": "Prise de décision",
             "ownership and governance": "Ownership et gouvernance",
             "feedback collection": "Collecte des retours clients",

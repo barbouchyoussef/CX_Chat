@@ -14,9 +14,11 @@ class FinalReportHero(BaseModel):
     strongest_axis: str | None = None
     strongest_axis_level: int | None = None
     strongest_axis_level_label: str | None = None
+    strongest_axis_description: str | None = None
     priority_axis: str | None = None
     priority_axis_level: int | None = None
     priority_axis_level_label: str | None = None
+    priority_axis_description: str | None = None
 
 
 class FinalReportSummary(BaseModel):

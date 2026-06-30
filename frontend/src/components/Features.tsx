@@ -11,7 +11,7 @@ const TRANSLATIONS = {
     features: [
       {
         title: "Adaptatif par nature",
-        desc: "ORION écoute avant d'interroger. L'échange s'adapte dynamiquement à vos réponses, rompant avec la rigidité des questionnaires classiques.",
+        desc: "Notre assistant écoute avant d'interroger. L'échange s'adapte dynamiquement à vos réponses, rompant avec la rigidité des questionnaires classiques.",
       },
       {
         title: "Positionné face à vos pairs",
@@ -19,7 +19,7 @@ const TRANSLATIONS = {
       },
       {
         title: "De l'analyse à l'action",
-        desc: "Vous ne recevez pas un simple rapport de plus. ORION vous fournit une feuille de route priorisée identifiant vos points de blocage et les actions concrètes sur lesquelles concentrer vos efforts.",
+        desc: "Vous ne recevez pas un simple rapport de plus. Notre diagnostic vous fournit une feuille de route priorisée identifiant vos points de blocage et les actions concrètes sur lesquelles concentrer vos efforts.",
       },
     ],
   },
@@ -28,7 +28,7 @@ const TRANSLATIONS = {
     features: [
       {
         title: "Adaptive by nature",
-        desc: "ORION listens before it asks. Every conversation follows your answers, not a predetermined script.",
+        desc: "The assistant listens before it asks. Every conversation follows your answers, not a predetermined script.",
       },
       {
         title: "Benchmarked to your reality",

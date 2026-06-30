@@ -21,17 +21,17 @@ function HeroRobotFallback() {
 const TRANSLATIONS = {
   fr: {
     bannerLabel: "Chaque interaction est décisive",
-    bannerDesc: "ORION révèle l'aptitude de votre organisation à transformer ces moments en fidélité, croissance et impact.",
+    bannerDesc: "Découvrez l'aptitude de votre organisation à transformer ces moments en fidélité, croissance et impact.",
     heading: "Derrière chaque client fidèle se cache une organisation mature",
-    subtitle: "Mesurez la maturité de votre expérience client avec ORION et identifiez les leviers clés pour franchir un cap.",
-    cta: "Lancer mon diagnostic avec ORION",
+    subtitle: "Mesurez la maturité de votre expérience client et identifiez les leviers clés pour franchir un cap.",
+    cta: "Lancer mon diagnostic de maturité",
   },
   en: {
     bannerLabel: "Every interaction is a make-or-break moment",
-    bannerDesc: "ORION reveals how mature your organization is at turning those moments into loyalty, growth, and impact.",
+    bannerDesc: "Discover how mature your organization is at turning those moments into loyalty, growth, and impact.",
     heading: "Behind every loyal customer is a mature organization",
-    subtitle: "Find out where yours stands with ORION  and discover what it takes to get to the next level.",
-    cta: "Ask ORION where you stand",
+    subtitle: "Find out where yours stands and discover what it takes to get to the next level.",
+    cta: "Start your assessment",
   },
 };
 

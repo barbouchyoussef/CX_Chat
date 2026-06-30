@@ -138,11 +138,11 @@ class TelecomDiscoveryLeadersService:
             (
                 f"Find telecom companies with public case studies, reports, or articles showing strong customer experience "
                 f"practices relevant to these gaps: {benchmark_brief}. Prefer concrete operating practices, feedback loops, "
-                f"service assurance, customer support, journey improvements, analytics, and decision-making examples."
+                f"service assurance, customer support, journey improvements, analytics, and decision-making examples. english"
             ),
             (
                 f"Which telecom companies publicly demonstrate strong customer-experience practices for these topics: "
-                f"{benchmark_brief}? Find recent case studies, operational examples, and detailed benchmark articles."
+                f"{benchmark_brief}? Find recent case studies, operational examples, and detailed benchmark articles. english"
             ),
         ]
 
@@ -392,17 +392,17 @@ class TelecomDiscoveryLeadersService:
             (
                 f"Find {company_name}'s documented operating practices, case studies, and detailed reports on "
                 f"{pain_summary} in {sector}. Look for evidence of customer feedback handling, service assurance, "
-                f"decision-making, analytics, self-service, or customer-support improvements. Prefer sources from 2023 or newer."
+                f"decision-making, analytics, self-service, or customer-support improvements. Prefer sources from 2023 or newer. english"
             ),
             (
                 f"Find recent public case studies or detailed articles showing how {company_name} improves customer experience "
                 f"in {sector}, especially through feedback loops, service assurance, customer support, self-service, analytics, "
-                f"or decision-making practices related to {pain_summary}. Prefer concrete examples over company background."
+                f"or decision-making practices related to {pain_summary}. Prefer concrete examples over company background. english"
             ),
             (
                 f"Find official or third-party evidence of how {company_name} handles customer feedback, pain-point resolution, "
                 f"service assurance, or customer-informed decisions in {sector}. Prefer concrete operating examples, case studies, "
-                f"or transformation evidence instead of company profile pages."
+                f"or transformation evidence instead of company profile pages. english"
             ),
         ]
 

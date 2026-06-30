@@ -28,8 +28,8 @@ const normalizeAxis = (value: string | null | undefined) => (value ?? "").trim()
 
 const getInitialGreeting = (lang: string) =>
   lang === "fr"
-    ? "Bonjour, je suis ORION. Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose. C'est là que j'interviens."
-    : "Hello, I’m ORION. If you’re here, it means your organization is ready to take an honest look at the experience it delivers. That’s where I come in.";
+    ? "Bonjour, je suis l'assistant EY. Si vous êtes ici, cela signifie que votre organisation est prête à porter un regard honnête sur l'expérience qu'elle propose. C'est là que j'interviens."
+    : "Hello, I’m the EY assistant. If you’re here, it means your organization is ready to take an honest look at the experience it delivers. That’s where I come in.";
 
 const getAssessmentStartIntro = (lang: string) =>
   lang === "fr"
@@ -218,7 +218,21 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
     const response = await fetch(`${API_BASE_URL}/reference/options`);
     if (!response.ok) throw new Error("Failed to fetch options");
     const payload = await response.json();
-    setSectorOptions(payload.sectors ?? []);
+    
+    const allowedSectorCodes = new Set([
+      "retail",
+      "ecommerce",
+      "banking",
+      "insurance",
+      "telecom",
+      "healthcare",
+      "travel",
+      "saas",
+      "public"
+    ]);
+    const filteredSectors = (payload.sectors ?? []).filter((s: any) => allowedSectorCodes.has(s.code));
+    
+    setSectorOptions(filteredSectors);
     setSizeOptions(payload.company_sizes ?? []);
     setRegionOptions(payload.regions ?? []);
     return payload as { sectors: Option[]; company_sizes: Option[]; regions: Option[] };
@@ -565,10 +579,10 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
           >
             <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-violet-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-700">
               <Sparkles className="h-4 w-4" />
-              {language === "fr" ? "Évaluation ORION" : "Orion Assessment"}
+              {language === "fr" ? "Évaluation EY" : "EY Assessment"}
             </div>
             <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              {language === "fr" ? "Bonjour, je suis ORION." : "Hello, I’m ORION."}
+              {language === "fr" ? "Bonjour, je suis l'assistant EY." : "Hello, I’m the EY assistant."}
             </h1>
             <p className="mt-5 text-base leading-7 text-slate-600 whitespace-pre-line">
               {language === "fr"
@@ -817,7 +831,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
               <Sparkles className="h-5 w-5 text-violet-500" />
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">
-                  {language === "fr" ? "Discuter avec Orion" : "Chat with Orion"}
+                  {language === "fr" ? "Assistant EY" : "EY Assistant"}
                 </h2>
                 <p className="text-xs text-slate-500">
                   {assessment
@@ -869,7 +883,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                       >
                         {!msg.isUser ? (
                           <div className="mr-2 mt-1 shrink-0">
-                            <Avatar chatbot size={30} alt="Orion Assistant avatar" />
+                            <Avatar chatbot size={30} alt="EY Assistant avatar" />
                           </div>
                         ) : null}
 
@@ -891,7 +905,7 @@ export default function AssessmentChatStatic({ onBack, language = "fr" }: Props)
                     {isTyping ? (
                       <div className="flex justify-start">
                         <div className="mr-2 mt-1 shrink-0">
-                          <Avatar chatbot size={30} alt="Orion Assistant avatar" />
+                          <Avatar chatbot size={30} alt="EY Assistant avatar" />
                         </div>
                         <motion.div
                           initial={{ opacity: 0, y: 8 }}
