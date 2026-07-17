@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { 
-  ArrowLeft, Printer, AlertTriangle, Sparkles, BookOpen, Layers, Users, 
+  ArrowLeft, ArrowRight, Printer, AlertTriangle, Sparkles, BookOpen, Layers, Users, 
   Compass, CheckCircle2, RefreshCw, ChevronRight, Building2, Target, 
   MessageSquareText, Settings2, TrendingUp, Search, Wrench, Flag,
   Trash2, Pencil, Plus, Save, X, Circle, FileSpreadsheet, StickyNote,
@@ -54,6 +54,7 @@ type SectionKey = "introduction" | "manage" | "analyze" | "improve" | "closure";
 
 export default function ClientInterviewHub({ onBack }: Props) {
   const [step, setStep] = useState<"form" | "loading" | "result">("form");
+  const [formStep, setFormStep] = useState(1);
   const [assessments, setAssessments] = useState<AssessmentItem[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string>("scratch");
 
@@ -215,11 +216,13 @@ export default function ClientInterviewHub({ onBack }: Props) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading saved guide.");
       setStep("form");
+      setFormStep(1);
     }
   };
 
   // Pre-fill fields when assessment changes
   useEffect(() => {
+    setFormStep(1);
     if (selectedAssessmentId === "scratch") {
       setCompanyName("");
       setSector("");
@@ -260,12 +263,17 @@ export default function ClientInterviewHub({ onBack }: Props) {
     return () => clearInterval(interval);
   }, [step, loaderTexts.length]);
 
-  const handleGenerate = async () => {
+  const goToStep2 = () => {
+    setError(null);
     if (!companyName.trim()) {
       setError(isFrench ? "Veuillez saisir le nom de l'entreprise." : "Please enter a company name.");
       return;
     }
+    setFormStep(2);
+  };
 
+  const goToStep3 = () => {
+    setError(null);
     if (profile === "Other") {
       if (!customProfileName.trim()) {
         setError(isFrench ? "Veuillez saisir le nom du profil personnalisé." : "Please enter a custom profile name.");
@@ -273,6 +281,28 @@ export default function ClientInterviewHub({ onBack }: Props) {
       }
       if (!customProfileDesc.trim()) {
         setError(isFrench ? "Veuillez saisir la description du profil personnalisé." : "Please enter custom profile specifications.");
+        return;
+      }
+    }
+    setFormStep(3);
+  };
+
+  const handleGenerate = async () => {
+    if (!companyName.trim()) {
+      setError(isFrench ? "Veuillez saisir le nom de l'entreprise." : "Please enter a company name.");
+      setFormStep(1);
+      return;
+    }
+
+    if (profile === "Other") {
+      if (!customProfileName.trim()) {
+        setError(isFrench ? "Veuillez saisir le nom du profil personnalisé." : "Please enter a custom profile name.");
+        setFormStep(2);
+        return;
+      }
+      if (!customProfileDesc.trim()) {
+        setError(isFrench ? "Veuillez saisir la description du profil personnalisé." : "Please enter custom profile specifications.");
+        setFormStep(2);
         return;
       }
     }
@@ -773,7 +803,7 @@ export default function ClientInterviewHub({ onBack }: Props) {
     <header className="bg-white border-b border-slate-200/80 px-6 py-4 flex items-center justify-between sticky top-0 z-30 backdrop-blur-sm bg-white/95 no-print">
       <div className="flex items-center gap-3">
         <button
-          onClick={step === "result" ? () => setStep("form") : onBack}
+          onClick={step === "result" ? () => { setStep("form"); setFormStep(1); } : onBack}
           className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -814,6 +844,7 @@ export default function ClientInterviewHub({ onBack }: Props) {
   );
 
   // ============================= FORM VIEW =============================
+  // ============================= FORM VIEW =============================
   if (step === "form") {
     return (
       <div className="min-h-screen bg-[#F7F8FA] text-slate-800 font-sans pb-16">
@@ -824,30 +855,61 @@ export default function ClientInterviewHub({ onBack }: Props) {
           {/* Step Indicators */}
           <div className="flex items-center gap-2 mb-8">
             {[
-              { n: "1", label: isFrench ? "Source & Entreprise" : "Source & Company" },
-              { n: "2", label: isFrench ? "Profil cible" : "Target Persona" },
-              { n: "3", label: isFrench ? "Génération" : "Generate" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-3.5 py-1.5 shadow-sm">
-                  <span className="h-5 w-5 rounded-full bg-slate-900 text-white text-[10px] font-bold flex items-center justify-center">{s.n}</span>
-                  <span className="text-xs font-semibold text-slate-700">{s.label}</span>
+              { n: 1, label: isFrench ? "Source & Entreprise" : "Source & Company" },
+              { n: 2, label: isFrench ? "Profil cible" : "Target Persona" },
+              { n: 3, label: isFrench ? "Génération" : "Generate" },
+            ].map((s, i) => {
+              const isActive = formStep === s.n;
+              const isCompleted = formStep > s.n;
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 bg-white border rounded-full px-3.5 py-1.5 shadow-sm transition-all duration-200 ${
+                    isActive 
+                      ? "border-[#C5A04F] ring-2 ring-[#C5A04F]/20 bg-[#C5A04F]/5" 
+                      : isCompleted 
+                        ? "border-emerald-500 bg-emerald-50/20" 
+                        : "border-slate-200 opacity-60"
+                  }`}>
+                    <span className={`h-5 w-5 rounded-full text-[10px] font-bold flex items-center justify-center transition-all duration-200 ${
+                      isActive 
+                        ? "bg-[#C5A04F] text-white" 
+                        : isCompleted 
+                          ? "bg-emerald-500 text-white" 
+                          : "bg-slate-200 text-slate-500"
+                    }`}>{isCompleted ? "✓" : s.n}</span>
+                    <span className={`text-xs font-semibold transition-all duration-200 ${
+                      isActive 
+                        ? "text-slate-900 font-bold" 
+                        : isCompleted 
+                          ? "text-emerald-800" 
+                          : "text-slate-400"
+                    }`}>{s.label}</span>
+                  </div>
+                  {i < 2 && <ChevronRight className="h-3.5 w-3.5 text-slate-300" />}
                 </div>
-                {i < 2 && <ChevronRight className="h-3.5 w-3.5 text-slate-300" />}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Main Form Layout */}
           <div className="space-y-6">
             
             {/* Section 1: Data Source & Company Details */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <div className={`bg-white border rounded-2xl shadow-sm overflow-hidden transition-all duration-300 ${
+              formStep === 1 
+                ? "border-slate-300 shadow-md ring-1 ring-slate-200" 
+                : "border-slate-200 opacity-90"
+            }`}>
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-slate-400" />
                   {isFrench ? "Étape 1 — Source de données & informations entreprise" : "Step 1 — Data Source & Company Information"}
                 </h3>
+                {formStep > 1 && (
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase tracking-wide">
+                    {isFrench ? "Complété" : "Completed"}
+                  </span>
+                )}
               </div>
               <div className="p-6">
                 {/* Selector Block */}
@@ -903,53 +965,82 @@ export default function ClientInterviewHub({ onBack }: Props) {
                   )}
                 </div>
 
-                  {/* Assessment Details Badge */}
-                  {selectedAssessment && (
-                    <div className="mb-5 rounded-lg bg-emerald-50 border border-emerald-200/60 p-3.5 flex items-center gap-3 max-w-md">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-                      <div className="text-xs">
-                        <p className="font-bold text-emerald-800">{labels.insightTitle}</p>
-                        <p className="text-emerald-600 mt-0.5">
-                          {labels.insightStatus}: <span className="font-mono uppercase">{selectedAssessment.status}</span>
-                          {selectedAssessment.overall_maturity_band && (
-                            <> · {labels.insightMaturity}: <span className="font-bold">{selectedAssessment.overall_maturity_band}</span></>
-                          )}
-                        </p>
-                      </div>
+                {/* Assessment Details Badge */}
+                {selectedAssessment && (
+                  <div className="mb-5 rounded-lg bg-emerald-50 border border-emerald-200/60 p-3.5 flex items-center gap-3 max-w-md">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                    <div className="text-xs">
+                      <p className="font-bold text-emerald-800">{labels.insightTitle}</p>
+                      <p className="text-emerald-600 mt-0.5">
+                        {labels.insightStatus}: <span className="font-mono uppercase">{selectedAssessment.status}</span>
+                        {selectedAssessment.overall_maturity_band && (
+                          <> · {labels.insightMaturity}: <span className="font-bold">{selectedAssessment.overall_maturity_band}</span></>
+                        )}
+                      </p>
                     </div>
-                  )}
-
-                  {/* Company Fields Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                      { label: labels.companyLabel + " *", value: companyName, setter: setCompanyName, ph: "Tunisie Telecom" },
-                      { label: labels.sectorLabel, value: sector, setter: setSector, ph: "Telecom, Banking..." },
-                      { label: labels.sizeLabel, value: size, setter: setSize, ph: "PME, Enterprise..." },
-                      { label: labels.regionLabel, value: region, setter: setRegion, ph: "Africa, Europe..." },
-                    ].map((f, i) => (
-                      <div key={i} className="flex flex-col gap-1">
-                        <label className="text-[11px] font-semibold text-slate-500">{f.label}</label>
-                        <input
-                          type="text"
-                          value={f.value}
-                          onChange={(e) => f.setter(e.target.value)}
-                          disabled={selectedAssessmentId !== "scratch"}
-                          placeholder={f.ph}
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-300 disabled:bg-slate-50 disabled:text-slate-400 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 focus:outline-none transition-all"
-                        />
-                      </div>
-                    ))}
                   </div>
-                </div>
-              </div>
+                )}
 
-              {/* Section 2: Persona Selection */}
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                {/* Company Fields Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: labels.companyLabel + " *", value: companyName, setter: setCompanyName, ph: "Tunisie Telecom" },
+                    { label: labels.sectorLabel, value: sector, setter: setSector, ph: "Telecom, Banking..." },
+                    { label: labels.sizeLabel, value: size, setter: setSize, ph: "PME, Enterprise..." },
+                    { label: labels.regionLabel, value: region, setter: setRegion, ph: "Africa, Europe..." },
+                  ].map((f, i) => (
+                    <div key={i} className="flex flex-col gap-1">
+                      <label className="text-[11px] font-semibold text-slate-500">{f.label}</label>
+                      <input
+                        type="text"
+                        value={f.value}
+                        onChange={(e) => f.setter(e.target.value)}
+                        disabled={selectedAssessmentId !== "scratch"}
+                        placeholder={f.ph}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-300 disabled:bg-slate-50 disabled:text-slate-400 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 focus:outline-none transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {formStep === 1 && (
+                  <div className="mt-6 border-t border-slate-100 pt-6 flex flex-col items-end gap-3">
+                    {error && (
+                      <div className="w-full rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                        {error}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={goToStep2}
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-5 py-3 text-sm font-bold text-white shadow-sm transition active:scale-[0.99]"
+                    >
+                      {isFrench ? "Continuer vers l'Étape 2" : "Continue to Step 2"}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Section 2: Persona Selection */}
+            {formStep >= 2 && (
+              <div className={`bg-white border rounded-2xl shadow-sm overflow-hidden transition-all duration-300 animate-fadeIn ${
+                formStep === 2 
+                  ? "border-slate-300 shadow-md ring-1 ring-slate-200" 
+                  : "border-slate-200 opacity-90"
+              }`}>
+                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                     <Users className="h-4 w-4 text-slate-400" />
                     {isFrench ? "Étape 2 — Profil de l'interlocuteur" : "Step 2 — Target Stakeholder Persona"}
                   </h3>
+                  {formStep > 2 && (
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase tracking-wide">
+                      {isFrench ? "Complété" : "Completed"}
+                    </span>
+                  )}
                 </div>
                 <div className="p-6">
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1028,43 +1119,87 @@ export default function ClientInterviewHub({ onBack }: Props) {
                       </div>
                     </div>
                   )}
+
+                  {formStep === 2 && (
+                    <div className="mt-6 border-t border-slate-100 pt-6 flex flex-col gap-3">
+                      {error && (
+                        <div className="w-full rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 shrink-0" />
+                          {error}
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <button
+                          type="button"
+                          onClick={() => { setError(null); setFormStep(1); }}
+                          className="text-xs font-bold uppercase tracking-wide text-slate-500 hover:text-slate-800 transition"
+                        >
+                          {isFrench ? "Retour à l'Étape 1" : "Back to Step 1"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={goToStep3}
+                          className="flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-5 py-3 text-sm font-bold text-white shadow-sm transition active:scale-[0.99]"
+                        >
+                          {isFrench ? "Continuer vers l'Étape 3" : "Continue to Step 3"}
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
 
             {/* Section 3: Custom Remarks & Generate */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <Compass className="h-4 w-4 text-slate-400" />
-                  {isFrench ? "Étape 3 — Contexte & remarques" : "Step 3 — Context & Remarks"}
-                </h3>
-              </div>
-              <div className="p-6 space-y-5">
-                <textarea
-                  value={customContext}
-                  onChange={(e) => setCustomContext(e.target.value)}
-                  placeholder={labels.contextPlaceholder}
-                  rows={4}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-300 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 focus:outline-none resize-none transition-all"
-                />
+            {formStep >= 3 && (
+              <div className={`bg-white border rounded-2xl shadow-sm overflow-hidden transition-all duration-300 animate-fadeIn ${
+                formStep === 3 
+                  ? "border-slate-300 shadow-md ring-1 ring-slate-200" 
+                  : "border-slate-200 opacity-90"
+              }`}>
+                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <Compass className="h-4 w-4 text-slate-400" />
+                    {isFrench ? "Étape 3 — Contexte & remarques" : "Step 3 — Context & Remarks"}
+                  </h3>
+                </div>
+                <div className="p-6 space-y-5">
+                  <textarea
+                    value={customContext}
+                    onChange={(e) => setCustomContext(e.target.value)}
+                    placeholder={labels.contextPlaceholder}
+                    rows={4}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-300 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 focus:outline-none resize-none transition-all"
+                  />
 
-                {error && (
-                  <div className="rounded-lg border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 shrink-0" />
-                    {error}
+                  {error && (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="mt-6 border-t border-slate-100 pt-6 flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={() => { setError(null); setFormStep(2); }}
+                      className="text-xs font-bold uppercase tracking-wide text-slate-500 hover:text-slate-800 transition"
+                    >
+                      {isFrench ? "Retour à l'Étape 2" : "Back to Step 2"}
+                    </button>
+                    <button
+                      onClick={handleGenerate}
+                      className="flex items-center gap-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 active:scale-[0.995] transition-all"
+                    >
+                      <Sparkles className="h-4.5 w-4.5 text-yellow-400" />
+                      {labels.generate}
+                    </button>
                   </div>
-                )}
 
-                <button
-                  onClick={handleGenerate}
-                  className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 py-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 active:scale-[0.995] transition-all"
-                >
-                  <Sparkles className="h-4.5 w-4.5 text-yellow-400" />
-                  {labels.generate}
-                </button>
-
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
 
@@ -1072,7 +1207,6 @@ export default function ClientInterviewHub({ onBack }: Props) {
       </div>
     );
   }
-  // ============================= LOADING VIEW =============================
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-slate-955 text-white font-sans flex items-center justify-center p-6">
