@@ -19,7 +19,7 @@
 }
 
 .nav__inner {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 0 var(--spacing-xl);
     display: flex;
@@ -55,7 +55,7 @@
 .nav__links {
     display: flex;
     align-items: center;
-    gap: var(--spacing-2xl);
+    gap: 20px;
     margin-left: auto;
 }
 

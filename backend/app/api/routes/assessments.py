@@ -24,6 +24,12 @@ from app.schemas.recommendations import (
     AssessmentTraceResponse,
     RecommendationOutputsResponse,
 )
+from app.schemas.interview_guide import (
+    InterviewGuideResponse,
+    GenerateInterviewGuideRequest,
+    SaveInterviewGuideRequest,
+    InterviewGuideListItem,
+)
 from app.services.assessment import (
     AssessmentConversationService,
     AssessmentReportingService,
@@ -270,6 +276,17 @@ async def final_report(
     return result
 
 
+@router.post("/interview-guide/generate", response_model=InterviewGuideResponse)
+async def generate_interview_guide(
+    req: GenerateInterviewGuideRequest,
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
+) -> InterviewGuideResponse:
+    result = await reporting.get_interview_guide(req)
+    if result is None:
+        raise HTTPException(status_code=400, detail="Unable to generate interview guide. Verify parameters.")
+    return result
+
+
 @router.get("/{assessment_id}/competitive-first-layer-debug")
 async def competitive_first_layer_debug(
     assessment_id: int,
@@ -379,4 +396,36 @@ async def run_benchmark_test(
         return snapshot
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/interview-guide/save")
+async def save_interview_guide(
+    req: SaveInterviewGuideRequest,
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
+) -> dict:
+    return await reporting.save_interview_guide(req)
+
+
+@router.get("/interview-guide/list", response_model=list[InterviewGuideListItem])
+async def list_interview_guides(
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
+) -> list[InterviewGuideListItem]:
+    return await reporting.list_interview_guides()
+
+
+@router.get("/interview-guide/{guide_id}", response_model=InterviewGuideResponse)
+async def get_saved_interview_guide(
+    guide_id: int,
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
+) -> InterviewGuideResponse:
+    guide = await reporting.get_saved_interview_guide(guide_id)
+    if guide is None:
+        raise HTTPException(status_code=404, detail="Interview guide not found")
+    
+    # Expose the payload parsed as InterviewGuideResponse
+    # The payload is stored as JSONB which matches the InterviewGuideResponse schema structure
+    # We inject the saved guide ID into the payload so the frontend knows its DB primary key
+    payload = dict(guide.payload)
+    payload["id"] = guide.id
+    return payload
 

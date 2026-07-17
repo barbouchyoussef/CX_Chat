@@ -58,15 +58,26 @@ export default function Navbar({ onStartConversation, language = "en", onLanguag
             {t.synthesis}
           </a>
           <a
-            href="/test-benchmarks"
+            href="/client-interview-hub"
             onClick={(e) => {
               e.preventDefault();
-              window.history.pushState({}, "", "/test-benchmarks");
+              window.history.pushState({}, "", "/client-interview-hub");
               window.dispatchEvent(new Event("popstate"));
             }}
-            className="nav__link font-semibold text-indigo-600 hover:text-indigo-700"
+            className="nav__link font-semibold text-amber-600 hover:text-amber-700"
           >
-            Sandbox
+            Interview Hub
+          </a>
+          <a
+            href="/social-scraping"
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.pushState({}, "", "/social-scraping");
+              window.dispatchEvent(new Event("popstate"));
+            }}
+            className="nav__link font-semibold text-emerald-600 hover:text-emerald-700"
+          >
+            Social Scraping
           </a>
           <button type="button" className="nav__cta" onClick={onStartConversation}>
             {t.cta}

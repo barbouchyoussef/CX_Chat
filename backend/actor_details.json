@@ -1,0 +1,180 @@
+{
+  "data": {
+    "id": "Xb8osYTtOjlsgI6k9",
+    "userId": "R6HCFYaZNqjQA9ZWx",
+    "name": "Google-Maps-Reviews-Scraper",
+    "username": "compass",
+    "description": "Extract all reviews of Google Maps places using place URLs. Get review text, published date, response from owner, review URL, and reviewer's details. Download scraped data, run the scraper via API, schedule and monitor runs or integrate with other tools.",
+    "isPublic": true,
+    "createdAt": "2022-02-17T15:59:17.870Z",
+    "modifiedAt": "2026-07-15T09:19:35.537Z",
+    "taggedBuilds": {
+      "latest": {
+        "buildId": "VGkjuqs09Sf4dcJT3",
+        "finishedAt": "2026-07-15T09:19:35.537Z",
+        "buildNumberInt": 482,
+        "buildNumber": "0.0.482"
+      }
+    },
+    "stats": {
+      "totalBuilds": 2818,
+      "totalRuns": 137034460,
+      "totalUsers": 47436,
+      "totalUsers7Days": 2503,
+      "totalUsers30Days": 5296,
+      "totalUsers90Days": 9514,
+      "lastRunStartedAt": "2026-07-15T14:16:01.096Z",
+      "publicActorRunStats30Days": {
+        "ABORTED": 7164,
+        "FAILED": 11275,
+        "SUCCEEDED": 12949240,
+        "TIMED-OUT": 12741,
+        "TOTAL": 12980420
+      },
+      "totalMetamorphs": 2,
+      "actorReviewCount": 183,
+      "actorReviewRating": 4.827729431343516,
+      "bookmarkCount": 712
+    },
+    "versions": [
+      {
+        "versionNumber": "0.0",
+        "sourceType": "GIT_REPO",
+        "buildTag": "latest"
+      },
+      {
+        "versionNumber": "0.99",
+        "sourceType": "GIT_REPO",
+        "buildTag": null
+      },
+      {
+        "versionNumber": "1.0",
+        "sourceType": "GIT_REPO",
+        "buildTag": "output-schema"
+      }
+    ],
+    "defaultRunOptions": {
+      "build": "latest",
+      "timeoutSecs": 36000,
+      "memoryMbytes": 1024,
+      "maxItems": null,
+      "maxTotalChargeUsd": null
+    },
+    "exampleRunInput": {
+      "body": "{ \"helloWorld\": 123 }",
+      "contentType": "application/json; charset=utf-8"
+    },
+    "categories": [
+      "ECOMMERCE",
+      "TRAVEL"
+    ],
+    "isDeprecated": false,
+    "title": "Google Maps Reviews Scraper",
+    "pictureUrl": "https://apify-image-uploads-prod.s3.amazonaws.com/Xb8osYTtOjlsgI6k9/f6L3vmKhgziuYaycf-Google_Maps_Reviews_Scraper.png",
+    "seoTitle": "Google Maps Reviews Scraper",
+    "seoDescription": "Google Maps Reviews Scraper extracts all reviews for a single location on Google Maps. Just enter the URL of the place and get a dataset of all reviews.",
+    "pricingInfos": [
+      {
+        "pricingModel": "FLAT_PRICE_PER_MONTH",
+        "pricePerUnitUsd": 30,
+        "trialMinutes": 20160,
+        "createdAt": "2022-03-14T06:57:42.624Z",
+        "startedAt": "2022-03-14T06:57:42.624Z",
+        "apifyMarginPercentage": 0
+      },
+      {
+        "pricingModel": "PRICE_PER_DATASET_ITEM",
+        "pricePerUnitUsd": 0.0005,
+        "reasonForChange": "",
+        "unitName": "reviews",
+        "startedAt": "2024-08-15T00:00:00.000Z",
+        "createdAt": "2024-08-01T08:37:56.581Z",
+        "apifyMarginPercentage": 0.2,
+        "notifiedAboutFutureChangeAt": "2024-08-01T08:38:20.075Z",
+        "notifiedAboutChangeAt": "2024-08-15T00:09:19.252Z"
+      },
+      {
+        "pricingModel": "PRICE_PER_DATASET_ITEM",
+        "tieredPricing": {
+          "FREE": {
+            "tieredPricePerUnitUsd": 0.0006
+          },
+          "BRONZE": {
+            "tieredPricePerUnitUsd": 0.0005
+          },
+          "SILVER": {
+            "tieredPricePerUnitUsd": 0.00045
+          },
+          "GOLD": {
+            "tieredPricePerUnitUsd": 0.00035
+          },
+          "PLATINUM": {
+            "tieredPricePerUnitUsd": 0.00025
+          },
+          "DIAMOND": {
+            "tieredPricePerUnitUsd": 0.0002
+          }
+        },
+        "reasonForChange": "Introducing Apify Store discounts.",
+        "unitName": "review",
+        "startedAt": "2025-06-27T10:28:00.000Z",
+        "createdAt": "2025-06-27T10:28:00.000Z",
+        "apifyMarginPercentage": 0.2,
+        "notifiedAboutChangeAt": "2025-06-27T10:28:00.000Z"
+      },
+      {
+        "minimalMaxTotalChargeUsd": null,
+        "pricingModel": "PAY_PER_EVENT",
+        "isPriceChangeNotificationSuppressed": true,
+        "pricingPerEvent": {
+          "actorChargeEvents": {
+            "review-scraped": {
+              "eventTitle": "Scraped review",
+              "eventDescription": "Cost per individual review scraped.",
+              "isOneTimeEvent": false,
+              "eventTieredPricingUsd": {
+                "FREE": {
+                  "tieredEventPriceUsd": 0.0006
+                },
+                "BRONZE": {
+                  "tieredEventPriceUsd": 0.00045
+                },
+                "SILVER": {
+                  "tieredEventPriceUsd": 0.0004
+                },
+                "GOLD": {
+                  "tieredEventPriceUsd": 0.0003
+                },
+                "PLATINUM": {
+                  "tieredEventPriceUsd": 0.0002
+                },
+                "DIAMOND": {
+                  "tieredEventPriceUsd": 0.00015
+                }
+              },
+              "isPrimaryEvent": true
+            },
+            "apify-actor-start": {
+              "eventTitle": "Actor Start",
+              "eventDescription": "Charged when the Actor starts running. Number of events charged depends on Actor memory (one event per GB, minimum one event).",
+              "isOneTimeEvent": true,
+              "eventPriceUsd": 5e-05
+            }
+          }
+        },
+        "createdAt": "2026-03-13T12:57:35.676Z",
+        "startedAt": "2026-03-13T12:57:35.676Z",
+        "apifyMarginPercentage": 0.2
+      }
+    ],
+    "notice": "NONE",
+    "isCritical": true,
+    "isGeneric": false,
+    "hasNoDataset": false,
+    "isSourceCodeHidden": true,
+    "standbyUrl": null,
+    "actorPermissionLevel": "LIMITED_PERMISSIONS",
+    "readmeSummary": "## Google Maps Review Scraper\n\nGoogle Maps Review Scraper extracts structured review and place data from Google Maps for full‑text and semantic search: it scrapes review text and translations, star ratings, publish timestamps, review identifiers and URLs, reviewer metadata (name, contribution count, profile photo, local guide status), owner responses, attached review images, review context and detailed per‑service ratings, and place metadata (categories, category type, geolocation, aggregate score, total review count, title and address components). The Actor can target Google‑native reviews or include third‑party review sources, scales to large result sets, and outputs uniform, record‑level review and place data useful for sentiment analysis, classification, indexing, and downstream analytics.\n\n## Use cases\n\n- Customer sentiment analysis from Google Maps reviews  \n- Competitor analysis by comparing review content and ratings  \n- Market research to discover customer expectations, trends, and needs  \n- Lead generation from location and reviewer data  \n- Reputation monitoring and response tracking using owner replies and timestamps  \n- Product or service improvement via aggregated review feedback and detailed ratings  \n- Content generation using authentic customer quotes and translated review text  \n- Brand monitoring across multiple locations and category performance comparison",
+    "deploymentKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDf5wvqafk5JvP0pCGm4V51CWzJmuHPuXnCYYrZ23IOzf6kwXI4bGFPs93Dv3fGzSDXus0kUZYJRoCndxTECI3ync1OxNa5imi3s127LTh6sfSESSjUJ7J5dKRhSpQhxvNNnNhs4QvYfoLGcfwb+MojZqsWNxwlG9sZrzHqrZeOySaEa4XcGGEtwvRd2/jEADTocyxjr9CyUH9QjxX7i7szsUoikuWQfCqGtxs78XCPm9Z22Lwq3tQHKdMppAfMxLr5+DKhGZHNhqkrci0L8jz4xPReaKfAbFlgRC2qmaARI2TkJ/9pBEDUehps3tMbpSNvqmFnvr9cf2NwptwpTp4L \n"
+  }
+}

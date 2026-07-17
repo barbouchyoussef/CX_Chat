@@ -45,18 +45,6 @@ const Footer: React.FC<FooterProps> = ({
             </div>
             <div className="mt-4 flex gap-3 md:justify-end items-center">
               <a
-                href="/test-benchmarks"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.history.pushState({}, "", "/test-benchmarks");
-                  window.dispatchEvent(new Event("popstate"));
-                }}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
-              >
-                Benchmark Sandbox
-              </a>
-              <span className="text-gray-700">|</span>
-              <a
                 href="/admin"
                 onClick={(e) => {
                   e.preventDefault();

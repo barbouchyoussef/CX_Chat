@@ -16,6 +16,7 @@ from app.db.models.maturity_level import MaturityLevel
 from app.db.models.recommendation_output import RecommendationOutput
 from app.db.models.region import Region
 from app.db.models.sector import Sector
+from app.db.models.interview_guide import InterviewGuide
 
 __all__ = [
     "Assessment",
@@ -36,4 +37,5 @@ __all__ = [
     "RecommendationOutput",
     "Region",
     "Sector",
+    "InterviewGuide",
 ]

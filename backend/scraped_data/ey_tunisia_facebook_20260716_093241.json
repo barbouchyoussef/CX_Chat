@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2026-07-16T09:32:41.595Z",
+    "input": {
+      "url": "https://www.facebook.com/EYCareersTunisia/posts/pfbid02CPYGBSQcpJ5hRtym4z5ewqSbSXzqmXxNqEp2dQ1UTo5bQhrp1gMU4J9GquyTuuy2l",
+      "limit_records": 10,
+      "comments_sort": ""
+    },
+    "error": "This post has no comments.",
+    "error_code": "dead_page"
+  },
+  {
+    "timestamp": "2026-07-16T09:32:44.006Z",
+    "input": {
+      "url": "https://www.facebook.com/EYCareersTunisia/posts/pfbid0qHqjHnF2GsvdmJsmvNDU4bYjSvEZeobEvd8i5kA2WNoPQ4ZJrkLfM9p1gxjyTGAQl",
+      "limit_records": 10,
+      "comments_sort": ""
+    },
+    "error": "This post has no comments.",
+    "error_code": "dead_page"
+  }
+]

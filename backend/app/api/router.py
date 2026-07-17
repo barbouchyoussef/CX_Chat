@@ -8,6 +8,7 @@ from app.api.routes.consultations import router as consultations_router
 from app.api.routes.admin_reference import router as admin_reference_router
 from app.api.routes.admin_capability import router as admin_capability_router
 from app.api.routes.admin_analytics import router as admin_analytics_router
+from app.api.routes.scraping import router as scraping_router
 
 api_router = APIRouter()
 api_router.include_router(health_router, tags=["health"])
@@ -18,3 +19,4 @@ api_router.include_router(consultations_router, tags=["consultations"])
 api_router.include_router(admin_reference_router, tags=["admin-reference"])
 api_router.include_router(admin_capability_router, tags=["admin-capability"])
 api_router.include_router(admin_analytics_router, tags=["admin-analytics"])
+api_router.include_router(scraping_router, tags=["scraping"])

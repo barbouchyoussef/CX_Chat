@@ -1,0 +1,1659 @@
+{
+  "brand_name": "tunisie telecom",
+  "scraped_at": "2026-07-15T15:15:38.518987+00:00",
+  "platforms": [
+    {
+      "platform": "Google Maps",
+      "status": "success",
+      "review_count": 95,
+      "reviews": [
+        {
+          "platform": "Google Maps",
+          "author": "Ahlem Amiri",
+          "text": "Pas possible de contacter le service technique!",
+          "rating": 1.0,
+          "date": "2026-05-05T10:23:16.409Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT205M1UyeDRTMU01VkcxSldWWkxibGRKUlRORVVsRRAB!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CAIQACodChtycF9oOm93U2x4S1M5VG1JWVZLbldJRTNEUlE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Support client",
+              "Accessibilité"
+            ],
+            "complaint_category": "Accès au service technique"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Saber Hachani",
+          "text": "Service null",
+          "rating": 1.0,
+          "date": "2026-03-31T10:43:21.381Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2t4Tk9HVjFUbkZCTkdNMGNUbDJlamxWYUdwelJrRRAB!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CAIQACodChtycF9oOkxNOGV1TnFBNGM0cTl2ejlVaGpzRkE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Zohra Ben Salah",
+          "text": "Service nul",
+          "rating": 1.0,
+          "date": "2026-01-17T08:08:41.649Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT25BNU5uZ3dWbE4zTmxod2JrRXdYMlpFTldweE5sRRAB!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CAIQACodChtycF9oOnA5NngwVlN3NlhwbkEwX2ZENWpxNlE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Agili souheil",
+          "text": "Num ghayr mobarmaj b chabaka mafhemtech a3lech 7atino 🤔",
+          "rating": 1.0,
+          "date": "2025-12-03T09:33:29.692Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT25sT2FreGpSRXd6VVRaSVJtSmtTWEZOUjNkelYyYxAB!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CAIQACodChtycF9oOnlOakxjREwzUTZIRmJkSXFNR3dzV2c%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.95,
+            "themes": [
+              "Problème technique",
+              "Communication"
+            ],
+            "complaint_category": "Problème réseau"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "neder hentati",
+          "text": "Service null 0 connection khalsa w matekhdemch vraiment hasbiallah",
+          "rating": 1.0,
+          "date": "2025-06-14T19:44:10.636Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VQeVF4c093LUpTcFRREAE!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CIHM0ogKEPyQxsOw-JSpTQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Problème technique",
+              "Communication"
+            ],
+            "complaint_category": "Coupure de connexion"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mohamed Aziz Hermassi",
+          "text": "I wonder what do they get paid for...",
+          "rating": 1.0,
+          "date": "2025-04-14T12:44:39.853Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnTUNvMFBmZU5BEAE!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CIHM0ogKEICAgMCo0PfeNA%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.97,
+            "themes": [
+              "Qualité de service",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Incompétence du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Tarek Benghazaiel",
+          "text": "Zéro",
+          "rating": 1.0,
+          "date": "2024-08-08T11:49:23.353Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURibllfaXNRRRAB!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CIHM0ogKEICAgIDbnY_isQE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "omar mouelhi",
+          "text": "Trés long",
+          "rating": 1.0,
+          "date": "2024-02-12T10:18:42.387Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNkNUxHSjZ3RRAB!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CIHM0ogKEICAgICd5LGJ6wE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Attente"
+            ],
+            "complaint_category": "Temps d'attente"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "fertani med afif",
+          "text": "Zéro",
+          "rating": 1.0,
+          "date": "2022-08-29T08:55:12.161Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUR1ODY3MDVBRRAB!2m1!1s0x0:0x25b1451fd15852f8!3m1!1s2@1:CIHM0ogKEICAgIDu86705AE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "nabli cyrine",
+          "text": "si je pouvais mettre zéro étoile je mettrai, responsable arrogante impolie service catastrophique !!!!",
+          "rating": 1.0,
+          "date": "2026-05-25T13:54:03.567Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2t4RGJHTlZReTFQVEdsMldHOTZVRTV2ZEVsaVpHYxAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOkxDbGNVQy1PTGl2WG96UE5vdEliZGc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Accueil client",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Attitude du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "amine aljane",
+          "text": "Service deplorable. Ken tsakroha khir la3bed eli yekhdmou feha mayesl7ou fi chay.",
+          "rating": 1.0,
+          "date": "2026-05-16T09:17:59.181Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT25ob1pDMXNRMHhXVWpaTk1rcE9Nemh0UVdOSlNrRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOnhoZC1sQ0xWUjZNMkpOMzhtQWNJSkE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Incompétence du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mahamdi",
+          "text": "Agence d'une inefficacité exceptionnelle !! Ils se contentent de noter des réclamations sans suivi et sans aucun sens des responsabilités. Aucune efficacité, pas d3 professionnalisme.",
+          "rating": 1.0,
+          "date": "2026-05-14T11:44:22.443Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT214MFZHNDFiMWhyT1ZGSWNXRlJXbnBMTlZCUmEwRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOmx0VG41b1hrOVFIcWFRWnpLNVBRa0E%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Efficacité",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Manque de suivi"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Sghir mohamed adel",
+          "text": "Service agréable",
+          "rating": 5.0,
+          "date": "2026-01-03T16:46:02.177Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT25kdVVuQlNkMTkxVEhjMVVXRXdWVGx1ZVU4elFXYxAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOnduUnBSd191THc1UWEwVTlueU8zQWc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Accueil client"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Manel negra",
+          "text": "Very bad service",
+          "rating": 1.0,
+          "date": "2025-11-06T10:36:33.387Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2pCQ2FDMXZRMXBJWVhwV2NVUktOVkZRU0dWdVUzYxAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOjBCaC1vQ1pIYXpWcURKNVFQSGVuU3c%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Imad Sulaiman",
+          "text": "خدمة بطيئة وانتظار طويل اغلب الأوقات يحرق الأعصاب",
+          "rating": 1.0,
+          "date": "2025-09-18T08:38:17.142Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2t0MVNUQnZNa05KZERocVN6QXpiME15ZFdwNFpVRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOkt1STBvMkNJdDhqSzAzb0MydWp4ZUE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.97,
+            "themes": [
+              "Attente",
+              "Problème technique"
+            ],
+            "complaint_category": "Temps d'attente"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Soundes Slim",
+          "text": "Responsable arrogante et impolie\nservice trop nul",
+          "rating": 1.0,
+          "date": "2025-07-25T14:11:15.186Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT21ablFuQjNTbEpmYWpGd1YxUkdXRTFIVVMxNGJrRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOmZnQnB3SlJfajFwV1RGWE1HUS14bkE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Accueil client",
+              "Qualité de service"
+            ],
+            "complaint_category": "Attitude du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "arij ben naceur",
+          "text": "Je me permets de vous écrire pour exprimer ma profonde insatisfaction concernant l'interruption de mon service Internet, qui dure maintenant depuis trois jours. En tant que télétravailleur, cette situation a des conséquences sérieuses sur mon activité professionnelle et engendre des difficultés considérables.\n\nJe paie pour un service qui, malheureusement, ne répond pas à mes attentes, et ce n'est pas la première fois que je rencontre ce type de problème. J'estime qu'il est inacceptable de subir de telles interruptions sans explication ni solution rapide de votre part.\n\nDe plus, lorsque j'ai envisagé de rompre mon contrat en raison de ces désagréments récurrents, j'ai été confronté à des tentatives de persuasion qui ne font qu'aggraver ma frustration.\n\nJe vous demande donc de bien vouloir prendre en compte ma réclamation et de m'informer des mesures que vous comptez mettre en place pour résoudre cette situation dans les plus brefs délais. J'attends également un geste commercial en compensation des désagréments subis.",
+          "rating": 1.0,
+          "date": "2025-07-21T09:44:39.951Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xSM1QwbHFja1pJVkd4cFptUlhkVzQwVURKWGRuYxAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOlR3T0lqckZIVGxpZmRXdW40UDJXdnc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Communication",
+              "Support client"
+            ],
+            "complaint_category": "Coupure de service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Nessrine EL AID",
+          "text": "Service médiocre, aucune considération pour le client et la responsable de l’agence s’est montrée particulièrement irrespectueuse avec un ton totalement inacceptable à l’exception de la dame voilée elle a sauvé mon expérience",
+          "rating": 1.0,
+          "date": "2025-07-04T08:41:14.631Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT25GR2MyeFJRelZPUTA4NE9VSXhjbW95VlhkQlNWRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOnFGc2xRQzVOQ084OUIxcmoyVXdBSVE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Accueil client",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Attitude du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Moez Benchaabane",
+          "text": "Tu passe une heure pour payer une facture",
+          "rating": 2.0,
+          "date": "2025-06-25T17:20:41.561Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2tWQ1ExZ3lWblpPYVVWM2FIVnVUMWxKYjJKQ1RtYxAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOkVCQ1gyVnZOaUV3aHVuT1lJb2JCTmc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.95,
+            "themes": [
+              "Attente",
+              "Processus administratif"
+            ],
+            "complaint_category": "Temps d'attente"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mabrouka Aouamri",
+          "text": "عندي قريب جمعتين نستنا في شكون يرجعلي الانترنت قال شنوة يريقلو في الفيبر، حتى رقم متاح تكلموا مفماش علاش هكا علاش ؟ واحد خدمتو ضاعت و هو يستنى\nحسبي الله فيكم",
+          "rating": 1.0,
+          "date": "2025-06-20T11:26:01.011Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT21scGRqY3lTMkZMYURaVFJsSTVWbEV6YVROU1pXYxAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CAIQACodChtycF9oOmlpdjcyS2FLaDZTRlI5VlEzaTNSZWc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.97,
+            "themes": [
+              "Problème technique",
+              "Communication"
+            ],
+            "complaint_category": "Coupure de connexion"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Sana Aloui",
+          "text": "Service client inutile",
+          "rating": 1.0,
+          "date": "2025-05-30T15:44:17.956Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VMYmE3N3Yta2ZPR2hRRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKELba77v-kfOGhQE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Support client"
+            ],
+            "complaint_category": "Inefficacité du service client"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Firas Jarraya",
+          "text": "Employés incompétents laxistes et non-chalants",
+          "rating": 1.0,
+          "date": "2024-11-15T19:33:13.798Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUQzb2NTWGhBRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgID3ocSXhAE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Professionnalisme",
+              "Qualité de service"
+            ],
+            "complaint_category": "Incompétence du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Aymen Mrayhi",
+          "text": "Mais quel service ces jours.\nIl n ya aucune information fiable.\nAbsence presque totale de la bonne entrprenariat.",
+          "rating": 4.0,
+          "date": "2024-09-18T14:58:16.498Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURIMWVmQWx3RRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgIDH1efAlwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.85,
+            "themes": [
+              "Organisation",
+              "Information"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Dian Diallo",
+          "text": "Ça fait une semaine que j’attends un technicien de Tunisie Telecom pour venir finaliser l’installation de la Fibre Optique à la maison, mais personne n’est venu. Pas de réponse au téléphone. Et quand tu vas à l’agence elle est tout le temps fermée.\nService lamentable.",
+          "rating": 1.0,
+          "date": "2024-07-24T02:04:04.397Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNialBLb2pRRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICbjPKojQE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Attente"
+            ],
+            "complaint_category": "Retard d'intervention"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "med ali baccouche",
+          "text": "Service nul toujours مزروبين ديما باش يروحو اتقول واحد يخدم عندهم",
+          "rating": 1.0,
+          "date": "2024-07-09T12:50:42.585Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNycGJuMUNREAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICrpbn1CQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Nassim Bouraoui",
+          "text": "Moyenne",
+          "rating": 3.0,
+          "date": "2024-05-30T07:38:39.347Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUN6eUt5MlJREAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICzyKy2RQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "neutral",
+            "confidence": 0.9,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Meddeb Ahmed",
+          "text": "Service zbela. Personnel incompétent (même pas taaref takra fatoura!!!!)ou zid tejbed aaleya bel merte7 .khsara se3a el cadre moderne.",
+          "rating": 1.0,
+          "date": "2024-01-29T09:48:03.498Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUN0MUp1Nk9nEAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICt1Ju6Og%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Professionnalisme",
+              "Support client"
+            ],
+            "complaint_category": "Incompétence du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ghazi DH",
+          "text": "excellent fibre optique!\ntemps de raccordement record",
+          "rating": 5.0,
+          "date": "2023-09-15T09:35:15.007Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNaOWUzWnVnRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICZ9e3ZugE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Qualité de service",
+              "Technologie"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "FaZe Luffy",
+          "text": "Depuis 3 mois j’attends que Tunisie Telecom  ouvre la ligne internet du fibre optique je les ai contacté et ils m’ont dis “monsieur demain on va ouvrir la ligne ” depuis 3 mois j’entends cette même phrase. Et j’espère que j’attends pas 3 mois encore une fois! Rue maya jribi ennasr2",
+          "rating": 1.0,
+          "date": "2023-09-04T10:16:26.482Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNaaEtmb0ZREAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICZhKfoFQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Attente"
+            ],
+            "complaint_category": "Retard d'activation"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Abderraouf Chabchoub",
+          "text": "Service lamentable, mon modem est très lent et mon internet est coupée , je fais une réclamation depuis 5 jours et j'attends toujours, aucune réponse",
+          "rating": 1.0,
+          "date": "2023-06-20T13:08:08.594Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNKMkp2TFNBEAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICJ2JvLSA%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Problème technique",
+              "Support client"
+            ],
+            "complaint_category": "Lenteur de résolution"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "oueslati wafa",
+          "text": "Le pire service en Tunisie. C'est carrément de l'arnaque",
+          "rating": 1.0,
+          "date": "2023-06-02T12:47:16.795Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUR4bFBXSWJnEAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgIDxlPWIbg%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service",
+              "Prix"
+            ],
+            "complaint_category": "Arnaque"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Sam Gamon",
+          "text": "Kompetentes Personal\nFreundlich und hilfsbereit\nGeht dort hin",
+          "rating": 5.0,
+          "date": "2023-03-11T17:51:56.502Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURoaWFDWDN3RRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgIDhiaCX3wE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Accueil client",
+              "Professionnalisme"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ilyes Hb",
+          "text": "Nice place and good service",
+          "rating": 4.0,
+          "date": "2023-02-11T09:14:07.518Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNoLXYyYU9REAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICh-v2aOQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.9,
+            "themes": [
+              "Accueil client",
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Wassim Lahbib",
+          "text": "Service hyper lent et ne répond pas aux téléphone",
+          "rating": 1.0,
+          "date": "2023-01-05T15:06:38.783Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNCLTlERDNnRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICB-9DD3gE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Support client",
+              "Attente"
+            ],
+            "complaint_category": "Temps de réponse"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "KHIARI Med Amine",
+          "text": "Horaires communiqués de 8:00 à 17:30 maintenant 17:11 l’agence est déjà fermé !!!",
+          "rating": 1.0,
+          "date": "2022-10-18T16:16:56.285Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURlazdpYXJ3RRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgIDek7iarwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.97,
+            "themes": [
+              "Horaires",
+              "Accessibilité"
+            ],
+            "complaint_category": "Fermeture prématurée"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mehdi Ben Gharbia",
+          "text": "Cadre agréable, bien décoré, mais l’attente est un peu longue.",
+          "rating": 4.0,
+          "date": "2022-10-04T12:20:50.809Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURlN0lLZG9BRRAB!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgIDe7IKdoAE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.85,
+            "themes": [
+              "Cadre",
+              "Attente"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Aziz",
+          "text": "Mauvais service, service client inutile et personnnel incompétant. Fuyez",
+          "rating": 1.0,
+          "date": "2022-09-09T11:25:41.557Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNlZ3Z1UEJBEAE!2m1!1s0x0:0xe21ff71a130cfcba!3m1!1s2@1:CIHM0ogKEICAgICegvuPBA%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Support client",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Incompétence du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Raja Ouachani",
+          "text": "Good service, the system is well organized. Every customer receives a number for their turn, which makes the process smooth and fair.",
+          "rating": 5.0,
+          "date": "2026-04-21T16:43:08.515Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2tWblQxVlNlWEpXU2pSRFNscFhZVjl6UkZKdFdsRRAB!2m1!1s0x0:0x3ce7919e4b858be3!3m1!1s2@1:CAIQACodChtycF9oOkVnT1VSeXJWSjRDSlpXYV9zRFJtWlE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Organisation",
+              "Accueil client"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "meher labidi",
+          "text": "Un très bon service merci",
+          "rating": 5.0,
+          "date": "2024-10-07T16:02:29.686Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSURudWFMTGVREAE!2m1!1s0x0:0x3ce7919e4b858be3!3m1!1s2@1:CIHM0ogKEICAgIDnuaLLeQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Anouar Abidi",
+          "text": "Très mauvais service",
+          "rating": 1.0,
+          "date": "2022-09-27T11:20:43.081Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNlci1haXNRRRAB!2m1!1s0x0:0x3ce7919e4b858be3!3m1!1s2@1:CIHM0ogKEICAgICer-aisQE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "N a b i l",
+          "text": "👍👍👍👍👍👍👍",
+          "rating": 4.0,
+          "date": "2021-04-13T22:38:40.270Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNLOVpIb3lBRRAB!2m1!1s0x0:0x3ce7919e4b858be3!3m1!1s2@1:CIHM0ogKEICAgICK9ZHoyAE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.8,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "khaoula mhimdi",
+          "text": "Un beau immobilier 🏢🧡",
+          "rating": 5.0,
+          "date": "2019-03-13T11:53:16.886Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURvNUxQNzV3RRAB!2m1!1s0x0:0x3ce7919e4b858be3!3m1!1s2@1:CIHM0ogKEICAgIDo5LP75wE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.7,
+            "themes": [
+              "Cadre"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "TAREK NOURI",
+          "text": "Bien",
+          "rating": 4.0,
+          "date": "2017-04-26T20:54:42.936Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUN3NjZxcGJBEAE!2m1!1s0x0:0x3ce7919e4b858be3!3m1!1s2@1:CIHM0ogKEICAgICw66qpbA%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.85,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Jaâfar Cherni",
+          "text": "joli societé",
+          "rating": 4.0,
+          "date": "2016-09-15T22:43:51.904Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUN3dzRTYnpRRRAB!2m1!1s0x0:0x3ce7919e4b858be3!3m1!1s2@1:CIHM0ogKEICAgICww4SbzQE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.8,
+            "themes": [
+              "Cadre"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Bilél ZAYANI",
+          "text": "Très serviable et souriant.",
+          "rating": 5.0,
+          "date": "2026-05-18T13:28:54.183Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT205TVRGWXlkVlJZVWtwV01YSkZTbVp4UzJWbmRVRRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CAIQACodChtycF9oOm9MTFYydVRYUkpWMXJFSmZxS2VndUE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Accueil client",
+              "Professionnalisme"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "dhekra bargaoui",
+          "text": "Kn jit najm n3adi 0 nejma rani 3adit 3ana chhar w nos ma9sousa cnx 3ala ases bch yet3ada el fibre w ma7ab 7ad yet3adelna mn telecom ychoufha nkalmou chkoun y9olna mch concerne kalmou el fournisseur dam 9albna tsal 3al internet ne5dmou beha 7asbi allah w ne3ma el wakil",
+          "rating": 1.0,
+          "date": "2026-04-10T20:33:50.013Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2pOU1N5MURSbWRJWjA0dFpHZE5hMEV4VjNCRFJWRRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CAIQACodChtycF9oOjNSSy1DRmdIZ04tZGdNa0ExV3BDRVE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.97,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Communication"
+            ],
+            "complaint_category": "Retard d'installation"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Raul T. A.",
+          "text": "Fueron muy amables y me resolvieron mi problema con los datos prepago internet.",
+          "rating": 5.0,
+          "date": "2025-11-22T20:24:23.179Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xWS2NuTTNia1ZLVWtGUGVtUjNNVVpHTFdVMk5uYxAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CAIQACodChtycF9oOlVKcnM3bkVKUkFPemR3MUZGLWU2Nnc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Support client",
+              "Résolution de problème"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "W O",
+          "text": "People are nice there. In general it's sometimes complicated with their weird policies. At least the internet fibre optique is good.",
+          "rating": 4.0,
+          "date": "2025-09-03T14:13:55.915Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT21KVVZVZEpVMmgzZFZsSldHRmtZVTFaU3pSMVFsRRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CAIQACodChtycF9oOmJUVUdJU2h3dVlJWGFkYU1ZSzR1QlE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.85,
+            "themes": [
+              "Accueil client",
+              "Technologie"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "YOSSER BELHASSEN",
+          "text": "Correct",
+          "rating": 3.0,
+          "date": "2025-05-23T20:44:22.316Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VNVFB2LUdSamJDVVZREAE!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEMTPv-GRjbCUVQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "neutral",
+            "confidence": 0.9,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ahmed Khallouli",
+          "text": "Service excellent",
+          "rating": 5.0,
+          "date": "2025-05-21T15:44:32.160Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJaTl1dW0teHBTeVBnEAE!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEIi9uum-xpSyPg%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ridha",
+          "text": "Accueil déplorable, service commercial non chalant, personnel n'est pas a l'écoute enfin j'y mettrais plus les pieds un manque total de professionnalisme",
+          "rating": 1.0,
+          "date": "2025-05-06T17:16:54.409Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VLVHY3c3FNa1B2WC1RRRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEKTv7sqMkPvX-QE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Accueil client",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Attitude du personnel"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ben Aziza Sahbi",
+          "text": "Service technique 0 panne coupure internet topnet pas encore résolu depuis un mois graaaave",
+          "rating": 1.0,
+          "date": "2025-03-21T12:19:22.557Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnTUN3dS1Mcmh3RRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEICAgMCwu-LrhwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Problème technique",
+              "Support client"
+            ],
+            "complaint_category": "Lenteur de résolution"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Woodley Jean MICHEL TV",
+          "text": "☎️",
+          "rating": 3.0,
+          "date": "2022-07-22T12:00:37.693Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUN1ak1TTEp3EAE!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEICAgICujMSLJw%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "neutral",
+            "confidence": 0.7,
+            "themes": [
+              "Communication"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "zied louati",
+          "text": "Des voleurs, ma connexion internet n'a jamais fonctionné ça fait déjà un mois et il n'ont pas voulu régler le problème ni me faire une résiliation de contrat.\nAttention avant de de s'engager et éviter un contrat avec TT",
+          "rating": 1.0,
+          "date": "2022-06-27T12:45:14.213Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURPLU1yXzFnRRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEICAgIDO-Mr_1gE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Prix"
+            ],
+            "complaint_category": "Résiliation de contrat"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Brahim KALLEL",
+          "text": "Bien accueilli et personnel  à l'écoute,",
+          "rating": 5.0,
+          "date": "2022-05-28T11:10:34.108Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUQyajY3R2xBRRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEICAgID2j67GlAE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Accueil client",
+              "Professionnalisme"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "fourat essid",
+          "text": "Service attentif, professionnel et à l’écoute des citoyens",
+          "rating": 5.0,
+          "date": "2022-04-13T23:00:02.454Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUMyOUtDcG53RRAB!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEICAgIC29KCpnwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.98,
+            "themes": [
+              "Accueil client",
+              "Professionnalisme"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "bourabaa Mohamed",
+          "text": "Peux mieux faire",
+          "rating": 5.0,
+          "date": "2016-12-19T13:04:41.355Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUN3OHFUclZ3EAE!2m1!1s0x0:0x6a401481f7a46ce1!3m1!1s2@1:CIHM0ogKEICAgICw8qTrVw%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.8,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Hichem Brick",
+          "text": "Service nulle pas sérieux",
+          "rating": 1.0,
+          "date": "2026-04-07T19:25:48.721Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT21oU2FIVXdiM2hrYlhwbVJUTkNjRXRoUjFWYVNGRRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CAIQACodChtycF9oOmhSaHUwb3hkbXpmRTNCcEthR1VaSFE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Manque de sérieux"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Justine Bahwe",
+          "text": "Très mauvaise expérience avec l’agent Tunisie Telecom à l’aéroport. Il était en pleine conversation personnelle pendant qu’il préparait mon e-SIM, qui au final ne fonctionnait pas. J’ai dû aller dans une autre agence pour régler le problème. En plus, il m’a fait payer plus que le prix réel de la carte SIM et de la recharge internet, sans me rendre la différence. Un service non professionnel et décevant.",
+          "rating": 1.0,
+          "date": "2025-12-08T09:23:16.560Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xSWWVFVnRhRmxITTBWYWVUVlhUWFZEZDBrd1ZVRRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CAIQACodChtycF9oOlRYeEVtaFlHM0VaeTVXTXVDd0kwVUE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Accueil client",
+              "Prix",
+              "Problème technique"
+            ],
+            "complaint_category": "Arnaque"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Amine FOURATI",
+          "text": "Une demande de portabilité qui n est toujours pas traité apres 3 semaines",
+          "rating": 1.0,
+          "date": "2025-09-02T10:20:34.693Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2tGWmFHbHFVM1ZzU2xCT2NFMVVNRzV4VFdOUVozYxAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CAIQACodChtycF9oOkFZaGlqU3VsSlBOcE1UMG5xTWNQZ3c%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Support client",
+              "Attente"
+            ],
+            "complaint_category": "Retard de traitement"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "NAIEF HAMIDA",
+          "text": "Service null",
+          "rating": 1.0,
+          "date": "2024-08-26T10:48:59.324Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUQ3eGJuS1NnEAE!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgID7xbnKSg%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mondher Mansouri",
+          "text": "Qualité de service très médiocre",
+          "rating": 1.0,
+          "date": "2024-02-21T20:18:31.504Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURkdk8zTWt3RRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgIDdvO3MkwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "jean najme",
+          "text": "كان فما اقل من نجمة نحطها سرفيس حموم انترنات مقصوصة شهرين كل يوم نطلبهم ميجيوش",
+          "rating": 1.0,
+          "date": "2022-11-01T17:51:36.974Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUMtMnNMa2RnEAE!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgIC-2sLkdg%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.97,
+            "themes": [
+              "Problème technique",
+              "Support client"
+            ],
+            "complaint_category": "Coupure de connexion"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "zied louati",
+          "text": "Le service Internet le plus médiocre. Des gens qui ne sont pas sérieux, en plus des voleurs. Un conseil, choisissez un autre fournisseur.",
+          "rating": 1.0,
+          "date": "2022-06-28T15:04:22.766Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSURPMUpIaWRREAE!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgIDO1JHidQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service",
+              "Prix"
+            ],
+            "complaint_category": "Arnaque"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "fertani med afif",
+          "text": "3 semaines pour un souci technique !!!!\nIls ne répondent jamais au téléphone.\nService médiocre.",
+          "rating": 1.0,
+          "date": "2022-05-21T10:44:09.075Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUQyOWEyWnh3RRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgID29a2ZxwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Attente"
+            ],
+            "complaint_category": "Lenteur de résolution"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mohamed Abbes",
+          "text": "Service nul comme tous les services publics.",
+          "rating": 1.0,
+          "date": "2022-03-24T11:43:54.282Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURXenJXVzdnRRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgIDWzrWW7gE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Majid Swissi",
+          "text": "Un service zéro traduisant un etat d'esprits équivalant irresponsable largement répandi",
+          "rating": 1.0,
+          "date": "2021-09-26T21:04:33.090Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUQ2bXV5MmZBEAE!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgID6muy2fA%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service",
+              "Professionnalisme"
+            ],
+            "complaint_category": "Manque de responsabilité"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "nader tub",
+          "text": "Service 0",
+          "rating": 1.0,
+          "date": "2021-09-20T14:02:27.128Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUQ2LVBTcmp3RRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgID6-PSrjwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Yassine Mahalli",
+          "text": "Qualité de service zéro",
+          "rating": 1.0,
+          "date": "2021-05-15T07:02:46.348Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURLbGUtWHZRRRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgIDKle-XvQE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Med Amine Ghannouchi",
+          "text": "So bad service",
+          "rating": 1.0,
+          "date": "2021-01-27T16:46:46.911Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUN5dXNlWVR3EAE!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgICyuseYTw%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mohamedali Sakkouhi",
+          "text": "Dålig service",
+          "rating": 1.0,
+          "date": "2020-09-16T20:44:59.567Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURDak9DZWtRRRAB!2m1!1s0x0:0xaeb09ce087f13d17!3m1!1s2@1:CIHM0ogKEICAgIDCjOCekQE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.95,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": "Qualité globale du service"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "ahmed khanfir",
+          "text": "Pas d'intrrnet, mais il faut payer quand meme... Reclamation ou pas, ça change Rien... Ne perdez pas votre temps, abonnez vous ailleurs...",
+          "rating": 1.0,
+          "date": "2026-01-02T16:18:00.403Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xWU1RtbFFjSEZUTTNKSmIwd3pXblpEVlZSdFRrRRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOlVSTmlQcHFTM3JJb0wzWnZDVVRtTkE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Prix",
+              "Support client"
+            ],
+            "complaint_category": "Facturation injustifiée"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Jamil Khangui",
+          "text": "عملت جو",
+          "rating": 5.0,
+          "date": "2025-11-09T22:46:31.562Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xFeU5USkVjRTh6ZVd4T2VESlhZWGN5TFdGRmFXYxAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOlEyNTJEcE8zeWxOeDJXYXcyLWFFaWc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.7,
+            "themes": [
+              "Cadre"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Yassin Neji",
+          "text": "Is there anyway that i can not make any star for sharing my baddest experience at this place believe me you will wast more then 7days waiting for nothing they have mistake my number for another one  and made me wait for a week now the service is so bad the internet is so slow and the people are no respectful do not go there believe me.",
+          "rating": 1.0,
+          "date": "2025-10-14T09:07:48.637Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2psalEweHFkSFJIU1dnNFIwc3lXamRGVTBWblJVRRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOjljQ0xqdHRHSWg4R0syWjdFU0VnRUE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Attente"
+            ],
+            "complaint_category": "Erreur administrative"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "zek Ali",
+          "text": "مكان مزدحم دائما.. شباكين فقط من يعمل",
+          "rating": 2.0,
+          "date": "2025-08-22T00:16:31.907Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT21OM09FRk5Ua1JRVm01b1oydE1NbGxWUjFaSmRYYxAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOmN3OEFNTkRQVm5oZ2tMMllVR1ZJdXc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.95,
+            "themes": [
+              "Attente",
+              "Organisation"
+            ],
+            "complaint_category": "Surcharge de l'agence"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Abderraouf GHERISSI, Ph.D",
+          "text": "Average services",
+          "rating": 3.0,
+          "date": "2025-08-10T07:42:05.166Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT25WemNESlpjV0Y2Ym1kbVZsSnNYMUpoZFRabWRFRRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOnVzcDJZcWF6bmdmVlJsX1JhdTZmdEE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "neutral",
+            "confidence": 0.9,
+            "themes": [
+              "Qualité de service"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "fathi glim",
+          "text": "Je suis aux Jardins de Carthage. L'internet lague depuis quelques jours et aujourd'hui il y'en a plus. Veuillez  procéder à savoir les origines de la panne et les réparer par la suite dans les plus brefs délais. Cordialement !",
+          "rating": 1.0,
+          "date": "2025-07-03T12:47:31.110Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xoV1lXeE9aMEpEYm1SUWVUQmFNbE5ETUZOMlJXYxAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOlhWYWxOZ0JDbmRQeTBaMlNDMFN2RWc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Problème technique",
+              "Support client"
+            ],
+            "complaint_category": "Coupure de connexion"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Cyrine Ben Ayed",
+          "text": "It has now been over a week since my internet connection stopped working, and Tunisie Telecom has done absolutely nothing to resolve the issue. Every single day, I call customer support and get the same scripted response like parrots: “We are aware of the issue, it will be fixed soon.” No timeline, no updates, no alternative solution offered — just vague promises.\n\nThis level of unprofessionalism and mediocrity is unacceptable in 2025. It’s shocking how a national provider can operate with such disregard for its clients’ basic needs.\n\nZero accountability. Zero transparency. Zero efficiency.",
+          "rating": 1.0,
+          "date": "2025-07-01T20:56:26.737Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xoNWFVbDNaazR5TUdOaldXcFVWblpYUlRGVVJrRRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOlh5aUl3Zk4yMGNjWWpUVnZXRTFURkE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Communication"
+            ],
+            "complaint_category": "Manque de transparence"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Aziz Ben-Rhouma",
+          "text": "Service halla ou hlilla ! Pas de réseaux internet chez moi depuis des mois et quand je vais les voir pour résilier le contrat, ils me disent que la résiliation se fait sur une autre agence alors qu’hier l’agence de Ariana m’ont dit tant que tu n’as pas le modem on ne peut pas le faire. Communication : 0. Et en plus on me demande de payer 2 mois alors que c’est la fin du mois…",
+          "rating": 1.0,
+          "date": "2025-06-25T08:57:28.004Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT25Kdk9FeGhjRk5vVDB4d05YZGtUM293VWpCNE1XYxAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CAIQACodChtycF9oOnJvOExhcFNoT0xwNXdkT3owUjB4MWc%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.99,
+            "themes": [
+              "Problème technique",
+              "Support client",
+              "Prix"
+            ],
+            "complaint_category": "Résiliation de contrat"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ben Aziza Sahbi",
+          "text": "Service technique 0 panne coupure internet depuis un mois pas encore résolu graaaaave",
+          "rating": 1.0,
+          "date": "2025-03-21T12:20:33.690Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnTUN3dTdMc1pnEAE!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgMCwu7LsZg%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Problème technique",
+              "Support client"
+            ],
+            "complaint_category": "Lenteur de résolution"
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mahjoub El Jed",
+          "text": "Any office or public facilities in this country is not accurately listed on google.. so google is not reliable in tunisia… it is as if it doesnt exist mr google",
+          "rating": 1.0,
+          "date": "2025-03-17T13:44:46.431Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnTUN3d3ZYRzh3RRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgMCwwvXG8wE%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Sara Longo",
+          "text": "Qualité de service nul\ndes  mois d’attente pour qu'on me regle 'a fibre deja payée\nProblème non encore résolu\nPlusieurs relances au service technique mais sans suite..",
+          "rating": 1.0,
+          "date": "2025-02-11T11:24:51.133Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnTURBZy1xRnl3RRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgMDAg-qFywE%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Alia Tahir",
+          "text": "Very organized. Good service.",
+          "rating": 5.0,
+          "date": "2025-02-02T20:32:26.908Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnTUNBMVpTRUlBEAE!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgMCA1ZSEIA%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ahmed Khallouli",
+          "text": "Services excellent... A méditer...",
+          "rating": 5.0,
+          "date": "2025-01-13T15:52:10.871Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNfektQVmZnEAE!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgIC_zKPVfg%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "I F",
+          "text": "Qualité de service médiocre\n3 semaines d’attente pour une connexion d’internet deja payée\nProblème non encore résolu\nPlusieurs relances au service technique mais sans suite..",
+          "rating": 1.0,
+          "date": "2025-01-07T12:34:49.780Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURma2NQTTF3RRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgIDfkcPM1wE%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Selim Hanayen",
+          "text": "Bug trop en ce moment ils sont degueullasse",
+          "rating": 1.0,
+          "date": "2024-11-23T19:10:26.341Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNQeHZDSU9nEAE!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgICPxvCIOg%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Akram Ayari",
+          "text": "Le service est acceptable jusqu'à ce qu'un problème technique ou commercial survienne, auquel cas il faut beaucoup de temps et d'énergie pour le résoudre.",
+          "rating": 2.0,
+          "date": "2024-09-28T21:51:52.400Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNudWYyRXVBRRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgICnuf2EuAE%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "NEILA HICHRI",
+          "text": "Pour un changement du service internet fibre optique depuis le 6 mars je galère jusqu'à ce jour sans internet en plus je dois payer les frais et les factures et\nils ont résilié le contrat sans m'avoir informé on m'appelle pour nous dire désolé par erreur on va vous rendre la ligne aujourd'hui et on attends depuis 2 semaines sachant que je suis sans internet depuis plusque un mois......",
+          "rating": 1.0,
+          "date": "2024-08-19T12:07:02.050Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUM3NzRLUHdRRRAB!2m1!1s0x0:0xf36072d32dd9dda4!3m1!1s2@1:CIHM0ogKEICAgIC774KPwQE%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "zarbout meriem",
+          "text": "0 services clients 0 , ils répondent pas au appels téléphonique , aux email , aux demande de transfert des clients qui ont plus de 2 semaines !",
+          "rating": 1.0,
+          "date": "2026-07-13T11:39:35.616Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xGZk1tRm9hMmxvY25ZNVYxcFJkVVJyUjBjMmNXYxAB!2m1!1s0x0:0xb82dc4609b655b45!3m1!1s2@1:CAIQACodChtycF9oOlFfMmFoa2locnY5V1pRdURrR0c2cWc%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "LEKHEMISSI",
+          "text": "لا بأس",
+          "rating": 4.0,
+          "date": "2026-06-24T16:25:48.835Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT21GS1lsbEJjVVphWldSbmFHVmphMmxwU0c4elYwRRAB!2m1!1s0x0:0xb82dc4609b655b45!3m1!1s2@1:CAIQACodChtycF9oOmFKYllBcUZaZWRnaGVja2lpSG8zV0E%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "imen chatty",
+          "text": "Service médiocre.",
+          "rating": 1.0,
+          "date": "2026-06-19T07:00:42.091Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xOMFJqUldXbTFaWnpkb1J6RXphSGRDTnprMVFYYxAB!2m1!1s0x0:0xb82dc4609b655b45!3m1!1s2@1:CAIQACodChtycF9oOlN0RjRWWm1ZZzdoRzEzaHdCNzk1QXc%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Hamza Sassi",
+          "text": "Acceptable",
+          "rating": 3.0,
+          "date": "2026-05-10T05:28:03.450Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2paa1VVRnZlV3BRVTFjMFgyVlRhWFZrUzIxa1VVRRAB!2m1!1s0x0:0xb82dc4609b655b45!3m1!1s2@1:CAIQACodChtycF9oOjZkUUFveWpQU1c0X2VTaXVkS21kUUE%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Dhouha Ben Mrad",
+          "text": "Par où commencer un service nul, l’ADSL est coupé subitement sans aviser ou prendre en compte qu’on l’utilise pour le travail, pour la surveillance ou même pour se divertir à chacun son choix.\nLe pire est de l’arrêter alors que l’abonnement est payé et que tout est en règle.\nEt quand on appelle pour s’informer on doit s’expliquer plus d’une fois que c’est eux qui ont coupé et que ce n’est pas nous qui avons demandé, tout ça par téléphone.\nQuand on se rend sur place personne ne comprend la problématique, résultat on est obligé de s’y rendre plus d’une fois.\nEt même celui qui vient pour installer la fibre optique trouve un prétexte pour ne rien faire.\nA la fin plus de 15 jours à attendre pour avoir VDSL.",
+          "rating": 1.0,
+          "date": "2026-03-24T08:56:40.977Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2xwSk1URTBiR0YyWHpGS1NUVnlUbWxMUTFGaWJsRRAB!2m1!1s0x0:0xc6c9486a2a9850ec!3m1!1s2@1:CAIQACodChtycF9oOlpJMTE0bGF2XzFKSTVyTmlLQ1FiblE%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Anis",
+          "text": "Comme tous les telecomme aucun service",
+          "rating": 1.0,
+          "date": "2026-03-08T23:36:47.712Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2pWbmVtRnBRV0YxUWtKQ1gwNU5XRkpPVW05dFFuYxAB!2m1!1s0x0:0xc6c9486a2a9850ec!3m1!1s2@1:CAIQACodChtycF9oOjVnemFpQWF1QkJCX05NWFJOUm9tQnc%7C%7C?hl=fr",
+          "classification": null
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Ghazi DH",
+          "text": "Excellent service",
+          "rating": 5.0,
+          "date": "2024-04-16T21:40:17.317Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNqa0xmZ0F3EAE!2m1!1s0x0:0xc6c9486a2a9850ec!3m1!1s2@1:CIHM0ogKEICAgICjkLfgAw%7C%7C?hl=fr",
+          "classification": null
+        }
+      ],
+      "error_message": null
+    },
+    {
+      "platform": "Facebook",
+      "status": "success",
+      "review_count": 14,
+      "reviews": [
+        {
+          "platform": "Facebook",
+          "author": "Walid Sessi",
+          "text": "اتصالات.تونس.قطعة.من.قلوبنا",
+          "rating": null,
+          "date": "2026-07-13T17:46:47.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid0Q4kazAn9E6TxjZzN4u8ZxqbJ6mGtZ3oKTceq6MSSpg2PzRKUhL4dzpntNQ4wgnE2l?locale=en_US&comment_id=1381628583852009",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "محمد فرح",
+          "text": "شكرا اتصالات تونس 🇹🇳 🇹🇳 🇹🇳",
+          "rating": null,
+          "date": "2026-07-13T13:23:29.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid0Q4kazAn9E6TxjZzN4u8ZxqbJ6mGtZ3oKTceq6MSSpg2PzRKUhL4dzpntNQ4wgnE2l?locale=en_US&comment_id=1029199342855085",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Youssef Ghrir",
+          "text": "Khdhit Box 5G men andkom 30 mbps/sec \nDébit après test : 1.37 mbps/sec … \nBch nlaw7o l chobek box 😉",
+          "rating": null,
+          "date": "2026-07-13T16:50:41.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid0Q4kazAn9E6TxjZzN4u8ZxqbJ6mGtZ3oKTceq6MSSpg2PzRKUhL4dzpntNQ4wgnE2l?locale=en_US&comment_id=4438226513172642",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Wadie Ahmed",
+          "text": "مسائـ الخير : 🌌...",
+          "rating": null,
+          "date": "2026-07-15T07:24:56.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid0Q4kazAn9E6TxjZzN4u8ZxqbJ6mGtZ3oKTceq6MSSpg2PzRKUhL4dzpntNQ4wgnE2l?locale=en_US&comment_id=2715531962175799",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Faouzia Ben Feguir",
+          "text": "شكرا اتصالات تونس ❤️🇹🇳🇹🇳🇹🇳",
+          "rating": null,
+          "date": "2026-07-13T15:48:22.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid0Q4kazAn9E6TxjZzN4u8ZxqbJ6mGtZ3oKTceq6MSSpg2PzRKUhL4dzpntNQ4wgnE2l?locale=en_US&comment_id=1510092604225885",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "هندة احمد",
+          "text": "حفظكم الله وراعاكم تحياتي لكم جميعا الف شكر وتقدير 💦💫💦",
+          "rating": null,
+          "date": "2026-07-13T14:18:57.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid0Q4kazAn9E6TxjZzN4u8ZxqbJ6mGtZ3oKTceq6MSSpg2PzRKUhL4dzpntNQ4wgnE2l?locale=en_US&comment_id=1671627510578264",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Wadii Kadri",
+          "text": "اشبيه الريزو حموم الضو يقص ويرجع والريزو تحبلو 15 دقيقة باش يرجع يزيد الضو يقص يتبخر معاه الريزو يعديه النهار الكل هكاكة لعب",
+          "rating": null,
+          "date": "2026-07-15T14:52:20.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=2255276755291312",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Awatef Zariate Ep Boukkharata",
+          "text": "شكر خاص ليكم",
+          "rating": null,
+          "date": "2026-07-15T09:21:58.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=1060538936433321",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Wassim Mastouri",
+          "text": "من بين أكثر حاجات إلي ندمت عليهم في حياتي أني عملت اشتراك modem waffi مع Tunisie Télécom\n3 أشهر ملي خذيت Modem و انا كل يوم نكلمهم و نعمل réclamation اخرتها 23.39 متع الليل\nمع العلم كل المكالمات مسجلة و موثقة \nانترنات تقصلي يوميا بالساعات و لا نهار عديتو مرتاح ضرتني في خدمتي و في راحتي \nو زيد يبعثولي يقولولي لازمك تخلص ههههه\nيا و الله أحوال و ملا دنيا شنوة إلي نخلص \nيحبو 180 دينار هههه كان جاو عندهم شوية احترام للمشتركين هوما يعوضو عالضرر الحاصل معنوي و مادي 1/53038375210 هذاكا عدد آخر réclamation واحد حاشم ولا منهم و ليس العكس",
+          "rating": null,
+          "date": "2026-07-14T23:46:59.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=2107644653151190",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "محمد فرح",
+          "text": "شكرا اتصالات تونس 🇹🇳 🇹🇳 🇹🇳",
+          "rating": null,
+          "date": "2026-07-14T15:26:04.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=2124005398463129",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Aymen Nouira",
+          "text": "عسلامة اتصالات تونس بالهي صبيت الوتساپ  قلي لازم الكود",
+          "rating": null,
+          "date": "2026-07-15T13:05:17.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=957904753930089",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Amoula Rebhi",
+          "text": "نقصوا في البيس الي عنا و ألا بيس خاصة",
+          "rating": null,
+          "date": "2026-07-15T15:09:57.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=1548912800093125",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "Faouzia Ben Feguir",
+          "text": "شكرا اتصالات تونس ♥️🇹🇳🇹🇳🇹🇳",
+          "rating": null,
+          "date": "2026-07-14T19:53:21.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=27532167269726312",
+          "classification": null
+        },
+        {
+          "platform": "Facebook",
+          "author": "هندة احمد",
+          "text": "💦💎💦 حفظكم الله وراعاكم تحياتي لكم 💦💎💦",
+          "rating": null,
+          "date": "2026-07-14T19:55:37.000Z",
+          "url": "https://www.facebook.com/TunisieTelecom/posts/pfbid022VRSn1mQNpSZGBpHqGWptz9zJLxuVXMDgcUU9sTW2BARjWND3UN8GgAEKhWbPaECl?locale=en_US&comment_id=1009776892040822",
+          "classification": null
+        }
+      ],
+      "error_message": null
+    }
+  ],
+  "total_reviews": 109,
+  "analysis": {
+    "positive_pct": 18.18,
+    "neutral_pct": 5.45,
+    "negative_pct": 76.36,
+    "top_themes": [
+      "Qualité de service",
+      "Support client",
+      "Problème technique"
+    ],
+    "top_complaints": [
+      {
+        "topic": "Qualité globale du service",
+        "count": 15
+      },
+      {
+        "topic": "Incompétence du personnel",
+        "count": 8
+      },
+      {
+        "topic": "Coupure de connexion",
+        "count": 7
+      },
+      {
+        "topic": "Temps d'attente",
+        "count": 6
+      },
+      {
+        "topic": "Lenteur de résolution",
+        "count": 6
+      }
+    ],
+    "summary_text": "L'expérience client de Tunisie Telecom est majoritairement négative (76,4%), avec des plaintes récurrentes sur la qualité globale du service, l'incompétence du personnel et les coupures de connexion. Les clients soulignent également des problèmes de support client, des temps d'attente excessifs et un manque de professionnalisme. Les avis positifs (18,2%) mettent en avant un bon accueil et une organisation efficace dans certaines agences. Les attentes portent surtout sur une amélioration de la réactivité et de la transparence."
+  }
+}

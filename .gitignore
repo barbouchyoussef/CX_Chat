@@ -8,7 +8,7 @@ ENV/
 backend/.venv/
 backend/venv/
 backend/env/
-
+backend/.env
 # Build and Output
 dist/
 dist-ssr/

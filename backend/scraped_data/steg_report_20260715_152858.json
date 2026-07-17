@@ -1,0 +1,534 @@
+{
+  "brand_name": "steg",
+  "scraped_at": "2026-07-15T15:28:58.930069+00:00",
+  "platforms": [
+    {
+      "platform": "Google Maps",
+      "status": "empty",
+      "review_count": 0,
+      "reviews": [],
+      "error_message": null
+    },
+    {
+      "platform": "Facebook",
+      "status": "success",
+      "review_count": 28,
+      "reviews": [
+        {
+          "platform": "Facebook",
+          "author": "Zouhaier Kd Ra Ni",
+          "text": "Initiative louable, bonne continuation",
+          "rating": null,
+          "date": "2026-07-12T11:56:22.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=1969040053767255",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Initiative",
+              "Encouragement"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Lÿ LY",
+          "text": "يا أولادي علاه قصان الضو اليومي بالطريقة هذه؟؟تي قدر علينا ربي و ولينا بالحصص \nاعملوا جدول اعلموا به سكان المناطق بتوقيت قطع الكهرباء، باش نسلوا الفيشات \nراهو الأجهزة الكهربائية باش تفسد جرتكم \nقص رجع قص رجع بالوقت، و المرة الثالثة عاد ثابتة يقص و ما يرجعش \nاحترموا مشتركي الشركة و خلي عندكم شوية روح مسؤولية",
+          "rating": null,
+          "date": "2026-07-14T13:00:05.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=1005484215596332",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Coupures d'électricité",
+              "Communication",
+              "Responsabilité"
+            ],
+            "complaint_category": "Coupures d'électricité répétées"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Abed Mansour",
+          "text": "زايدة حتا هيا قصت الضو تو 😭😂😂",
+          "rating": null,
+          "date": "2026-07-13T13:56:18.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=2182107982639733",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.9,
+            "themes": [
+              "Coupures d'électricité",
+              "Frustration"
+            ],
+            "complaint_category": "Coupures d'électricité"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Mouhamed Amine Bejaoui",
+          "text": "nikom ay wehd 3ndo dakhel fi 9assan e dhaw",
+          "rating": null,
+          "date": "2026-07-15T05:24:51.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=27546092028389803",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.85,
+            "themes": [
+              "Coupures d'électricité",
+              "Problème personnel"
+            ],
+            "complaint_category": "Coupures d'électricité"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Maryem H'i",
+          "text": "t7elo ma9ar jdid o tkoso edhao ala b9iyet l wileyet bl 5 marrat fnhar o zid tkmlo t9osoih flil",
+          "rating": null,
+          "date": "2026-07-14T23:32:16.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=1546715226362500",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.92,
+            "themes": [
+              "Coupures d'électricité",
+              "Fréquence",
+              "Gestion"
+            ],
+            "complaint_category": "Coupures d'électricité fréquentes"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Mey Akrimi",
+          "text": "Manadher mgalba",
+          "rating": null,
+          "date": "2026-07-15T13:27:45.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=1510968803674944",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.8,
+            "themes": [
+              "Gestion",
+              "Corruption"
+            ],
+            "complaint_category": "Mauvaise gestion"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Basi Basi Basi",
+          "text": "مبروك على الجهة وكل عام والستاغ بخير بمجهودات أبناءها",
+          "rating": null,
+          "date": "2026-07-11T20:35:47.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=2493174677863846",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Félicitations",
+              "Reconnaissance"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "ناجح فريجة",
+          "text": "إن شاء الله مبروك المولود الجديد للشركة التونسية للكهرباء و الغاز ونتمنى النجاح للوكالة بعيدا عن المصالح الضيقة حتى تؤدي رسالتها على أحسن وجه.",
+          "rating": null,
+          "date": "2026-07-11T22:04:18.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=914314338362424",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.9,
+            "themes": [
+              "Félicitations",
+              "Succès"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Maryem Kort",
+          "text": "Raj3ouuu dhaaw heey !!!",
+          "rating": null,
+          "date": "2026-07-14T14:05:48.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=990233807160947",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.85,
+            "themes": [
+              "Coupures d'électricité",
+              "Frustration"
+            ],
+            "complaint_category": "Retour des coupures"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Anis Abdelmajid Aoun",
+          "text": "Ben Abdallah Bassem الف مبروك",
+          "rating": null,
+          "date": "2026-07-11T20:25:26.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid02zLA5ELBk71ntihp9H9Pb4PF87ggGDT2rJuCiN69CRzLAS58DL54TMrvzWWSpSN8fl?locale=en_US&comment_id=1747470446421782",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Félicitations"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Noussair Nou",
+          "text": "الله لا تربحكم من صفاقس",
+          "rating": null,
+          "date": "2026-07-14T16:07:46.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=2016730922566990",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.9,
+            "themes": [
+              "Colère",
+              "Désapprobation"
+            ],
+            "complaint_category": "Mauvaise gestion"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Güedri Õümaymā",
+          "text": "الله يرزيكم في أعماركم إن شاء الله",
+          "rating": null,
+          "date": "2026-07-14T22:12:33.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=1769031384287500",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.9,
+            "themes": [
+              "Bénédictions",
+              "Encouragement"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Maawya Chellouf",
+          "text": "الله لا تربح المخير فيكم",
+          "rating": null,
+          "date": "2026-07-14T20:12:23.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=1786178332550456",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.88,
+            "themes": [
+              "Colère",
+              "Désapprobation"
+            ],
+            "complaint_category": "Mauvaise gestion"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Haykel Rh",
+          "text": "إ\nيا طحانة في الخلاص تلقاكم لولانين وفي حقنا لي نخلصو فيه تمرضونا يعن زك أمكم واحد واحد حوانت تضرت صغار تفغم وظيار باش تشعل يعن زك أم لمخير فيكم",
+          "rating": null,
+          "date": "2026-07-15T15:25:56.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=2160794311233851",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.95,
+            "themes": [
+              "Coupures d'électricité",
+              "Souffrance",
+              "Santé"
+            ],
+            "complaint_category": "Impact des coupures sur la santé"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Mouhamed Amine Bejaoui",
+          "text": "Raja3 e dhaw nayk",
+          "rating": null,
+          "date": "2026-07-14T14:26:44.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=1411229234149760",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.85,
+            "themes": [
+              "Coupures d'électricité",
+              "Frustration"
+            ],
+            "complaint_category": "Retour des coupures"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Maryem H'i",
+          "text": "dhao fnhar y9os bl 4 o 5 mardat o zid tkmlo t9osoih flil mkholin laabed ala chma3 o te7taflo b enjezetkom allah latraba7kom",
+          "rating": null,
+          "date": "2026-07-14T23:31:19.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=1421813069774410",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.92,
+            "themes": [
+              "Coupures d'électricité",
+              "Fréquence",
+              "Gestion"
+            ],
+            "complaint_category": "Coupures d'électricité fréquentes"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "El Homryy Ha'med",
+          "text": "Yrajjaaaaa3 dhawww nkmmk",
+          "rating": null,
+          "date": "2026-07-15T12:46:27.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=1747498369595116",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.88,
+            "themes": [
+              "Coupures d'électricité",
+              "Frustration"
+            ],
+            "complaint_category": "Retour des coupures"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Mohamed Mouelhi",
+          "text": "أبدعتو اليوم بقصان الضو مشكورين",
+          "rating": null,
+          "date": "2026-07-15T01:35:59.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=1744159673444122",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.8,
+            "themes": [
+              "Reconnaissance",
+              "Coupures d'électricité"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Mohamed Yassine Gamoudii",
+          "text": "نحب نقلكم أنا و بعض الأخوة الله لا تباركلكم لا دنيا و لا آخرة",
+          "rating": null,
+          "date": "2026-07-15T05:02:19.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=1397429245819380",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.95,
+            "themes": [
+              "Colère",
+              "Désapprobation"
+            ],
+            "complaint_category": "Mauvaise gestion"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Dhekrayet Ben Abdelkader",
+          "text": "Khouloud Benabdelkader o5ti 40 s5ana 9ases 3lina edhaw 3andou presque 2h",
+          "rating": null,
+          "date": "2026-07-14T22:50:41.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0EshRWwvBrenDQ3Ci1m6zDkeEy3vioUCdMZvFfE1oFhuFsAp9jWthmWL72bHZW5d7l?locale=en_US&comment_id=2884852671869869",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.9,
+            "themes": [
+              "Coupures d'électricité",
+              "Durée",
+              "Service client"
+            ],
+            "complaint_category": "Durée excessive des coupures"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Dorra Dorra",
+          "text": "باهي و انا اللي خسرت دواء سرطان اللي عطاتهولي الكنام و هو سومو ب 12 مليون و زيد موش ديما نلقاه و فسد باش تعوضهولي الشركة متاع الضوء و صحتي اللي ماعادش نجم نقاوم السخانة و قلبي اللي كل يقص الضوء و تشدني السخانة و نوصل نمشي للاستعجالي خاطر السخانة تفوت 38 باش تعوضهالي شركة الضو ياخي فايقين بالعباد المرضى و الا داكم كان في رواحكم راكم قاعدين تقتلو في العباد حرفيا كيما البارح في جرت قصان الضو فما شكون مات في بني معڨل في جربة بالله علاش ايجاو اضربو علينا كرتوشة في روسنا نموتو و نرتاحو خير من الموت البطيئ اللي تخليو فينا نشوفو فيه حسبي الله و نعم الوكيل",
+          "rating": null,
+          "date": "2026-07-15T14:08:23.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=1785882616103528",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 1.0,
+            "themes": [
+              "Coupures d'électricité",
+              "Santé",
+              "Urgence"
+            ],
+            "complaint_category": "Impact des coupures sur la santé"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Emina Amina",
+          "text": "Yhr9 wldykm nshlh",
+          "rating": null,
+          "date": "2026-07-15T09:45:41.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=1059159589884708",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.85,
+            "themes": [
+              "Encouragement",
+              "Amélioration"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Sahnoun Firas",
+          "text": "#ميهمنيش . 19 دقيقة حتى كملة نعتذرو من المواطنين متسمعهاش . الحرارة متوقعة من سنوات و احنا نقعدوا نتفرجو من غير حلول و نقولو شوفو اسبانيا شوفو فرانسا . كفى من التبريرات الي مش قد المسؤولية يشد دارهم و طبيعية جو باهي موش بش يخلص فاتورة فيها 800 دينار دجا ياخو فيه بلاش .",
+          "rating": null,
+          "date": "2026-07-15T15:01:30.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=1345147877076619",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.95,
+            "themes": [
+              "Communication",
+              "Responsabilité",
+              "Facturation"
+            ],
+            "complaint_category": "Manque de communication"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Anas Hmida",
+          "text": "mochkla fina a7na wela fil systeme ?",
+          "rating": null,
+          "date": "2026-07-15T15:16:33.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=1511628034032874",
+          "classification": {
+            "sentiment": "neutral",
+            "confidence": 0.7,
+            "themes": [
+              "Problème technique",
+              "Interrogation"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Aouidet Simo Nesrine",
+          "text": "من غير المقبول ألا يرد أيّ من أعوان مصلحة الحرفاء على اتصالات المواطنين. فأرقام إقليم المنيهلة لا يجيب عنها أحد، وعند الاتصال بالرقم المركزي يتم إنهاء المكالمة أو قطعها دون تقديم أي مساعدة أو توضيح. إن الحد الأدنى من الاحترام والتقدير للمواطن يقتضي توفير خدمة حقيقية والرد على استفساراته.\n\nإن تسيير شبكة الكهرباء، بما في ذلك الانقطاعات المبرمجة عند الضرورة، أمر مفهوم ومعمول به في العديد من دول العالم. لكن ما لا يمكن قبوله هو غياب التواصل بشكل كامل. فمن حق المواطنين أن يتم إعلامهم مسبقًا بمواعيد الانقطاعات المبرمجة، وأن يتلقوا رسالة نصية قصيرة (SMS) أو إشعارًا عند حدوث عطب مفاجئ، يوضح سبب الانقطاع والمدة التقديرية لإعادة التيار الكهربائي. فهذه من أبسط معايير جودة الخدمات واحترام الحريف.\n\nلقد حان الوقت لتعزيز علاقتكم بالحرفاء وتحسين جودة التواصل معهم. إن توفير قنوات اتصال فعّالة، والرد على الشكاوى، واعتماد سياسة تواصل شفافة، كلها أمور أساسية. فالمواطن من حقه أن يكون على علم بما يحدث، وأن يجد من يستمع إليه، وأن يُعامل بكل احترام وتقدير.\n\nSociété Tunisienne de l'Electricité et du Gaz",
+          "rating": null,
+          "date": "2026-07-15T10:54:47.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=2547785072339300",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.98,
+            "themes": [
+              "Communication",
+              "Service client",
+              "Transparence"
+            ],
+            "complaint_category": "Manque de communication"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Sähar Bën AbdÄllah",
+          "text": "Alah layberkelkoum w la yarahmelkoum weldin ychwikoum kima chwitouna",
+          "rating": null,
+          "date": "2026-07-15T11:18:29.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=966221423129729",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.9,
+            "themes": [
+              "Colère",
+              "Désapprobation"
+            ],
+            "complaint_category": "Mauvaise gestion"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Ahlem Zarrouk",
+          "text": "عمي فيصل راو حتى ليوم مقصوص راو 🙃",
+          "rating": null,
+          "date": "2026-07-15T10:14:10.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=1394509205885087",
+          "classification": {
+            "sentiment": "negative",
+            "confidence": 0.85,
+            "themes": [
+              "Coupures d'électricité",
+              "Frustration"
+            ],
+            "complaint_category": "Coupures d'électricité"
+          }
+        },
+        {
+          "platform": "Facebook",
+          "author": "Antonio Adolfo Thomson",
+          "text": "اعلموا الناس اعلموا الناس \nتعلموا تعلموا الناس \nيرزينا فيكم",
+          "rating": null,
+          "date": "2026-07-15T13:18:45.000Z",
+          "url": "https://www.facebook.com/steg.tunisie/posts/pfbid0X1Qkpe8HxvKUExMCu7pUF7VsuQT72uSTmWmi9H98NhTn9Fuv7GF1NjTpZtksrMCQl?locale=en_US&comment_id=1582967253602342",
+          "classification": {
+            "sentiment": "neutral",
+            "confidence": 0.75,
+            "themes": [
+              "Communication",
+              "Transparence"
+            ],
+            "complaint_category": null
+          }
+        }
+      ],
+      "error_message": null
+    }
+  ],
+  "total_reviews": 28,
+  "analysis": {
+    "positive_pct": 22.22,
+    "neutral_pct": 7.41,
+    "negative_pct": 70.37,
+    "top_themes": [
+      "Coupures d'électricité",
+      "Communication",
+      "Gestion"
+    ],
+    "top_complaints": [
+      {
+        "topic": "Coupures d'électricité",
+        "count": 12
+      },
+      {
+        "topic": "Manque de communication",
+        "count": 3
+      },
+      {
+        "topic": "Mauvaise gestion",
+        "count": 5
+      },
+      {
+        "topic": "Impact des coupures sur la santé",
+        "count": 2
+      }
+    ],
+    "summary_text": "Les avis clients de la marque STEG révèlent une forte insatisfaction, principalement liée aux coupures d'électricité fréquentes et à leur impact sur la vie quotidienne et la santé. Les clients critiquent également le manque de communication et de transparence de l'entreprise, ainsi qu'une gestion perçue comme inefficace. Les rares commentaires positifs concernent des félicitations ou des encouragements ponctuels. Une amélioration urgente de la fiabilité du service et de la communication est nécessaire pour restaurer la confiance."
+  }
+}

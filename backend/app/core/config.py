@@ -26,8 +26,12 @@ class Settings:
     mistral_api_key: str | None
     mistral_model: str
     mistral_base_url: str
+    moonshot_api_key: str | None
+    moonshot_model: str
+    moonshot_base_url: str
     langsearch_api_key: str | None
     langsearch_base_url: str
+    apify_api_token: str | None
     consultation_receiver_email: str | None
     metabase_site_url: str | None
     metabase_embed_secret: str | None
@@ -181,13 +185,17 @@ def get_settings() -> Settings:
         mistral_api_key=os.getenv("MISTRAL_API_KEY"),
         mistral_model=os.getenv("MISTRAL_MODEL", "mistral-medium"),
         mistral_base_url=os.getenv("MISTRAL_BASE_URL", "https://api.mistral.ai/v1"),
+        moonshot_api_key=os.getenv("MOONSHOT_API_KEY", "sk-znfWzGzdugFvoEHYeVWxoqtpL3Kfv3hqa1IHGYEQOLfvt44k"),
+        moonshot_model=os.getenv("MOONSHOT_MODEL", "kimi-k2.7-code"),
+        moonshot_base_url=os.getenv("MOONSHOT_BASE_URL", "https://api.moonshot.ai/v1"),
         langsearch_api_key=os.getenv("LANGSEARCH_API_KEY"),
         langsearch_base_url=os.getenv("LANGSEARCH_BASE_URL", "https://api.langsearch.com/v1"),
+        apify_api_token=os.getenv("APIFY_API_TOKEN"),
         consultation_receiver_email=os.getenv("CONSULTATION_RECEIVER_EMAIL"),
         metabase_site_url=os.getenv("METABASE_SITE_URL"),
         metabase_embed_secret=os.getenv("METABASE_EMBED_SECRET"),
         metabase_dashboard_id=int(os.getenv("METABASE_DASHBOARD_ID")) if os.getenv("METABASE_DASHBOARD_ID") else None,
-        llm_request_timeout_seconds=_get_float("LLM_REQUEST_TIMEOUT_SECONDS", 30.0),
+        llm_request_timeout_seconds=_get_float("LLM_REQUEST_TIMEOUT_SECONDS", 300.0),
         llm_max_history_turns=_get_int("LLM_MAX_HISTORY_TURNS", 12),
         llm_max_history_chars=_get_int("LLM_MAX_HISTORY_CHARS", 6000),
         llm_temperature=_get_float("LLM_TEMPERATURE", 0.2),

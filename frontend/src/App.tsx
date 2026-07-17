@@ -12,8 +12,9 @@ const AssessmentChatStatic = lazy(() => import("./components/ui/assessment-chat-
 const AdminDashboard = lazy(() => import("./components/ui/admin-dashboard"));
 const AdminAssessmentDetail = lazy(() => import("./components/ui/admin-assessment-detail"));
 const AdminAssessmentReport = lazy(() => import("./components/ui/admin-assessment-report"));
+const ClientInterviewHub = lazy(() => import("./components/ui/client-interview-hub"));
 const CustomizedTimeline = lazy(() => import("./components/CustomizedTimeline"));
-const BenchmarkTester = lazy(() => import("./components/ui/benchmark-tester"));
+const SocialScraping = lazy(() => import("./components/ui/social-scraping"));
 
 function RouteLoader() {
   return (
@@ -36,7 +37,7 @@ function RouteLoader() {
 export default function App() {
   const [showChat, setShowChat] = useState(false);
   const [language, setLanguage] = useState<string>("en");
-  const [adminView, setAdminView] = useState<"dashboard" | "details" | "report">("dashboard");
+  const [adminView, setAdminView] = useState<"dashboard" | "details" | "report" | "interview-guide">("dashboard");
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | null>(null);
   const [pathname, setPathname] = useState(() => (typeof window === "undefined" ? "/" : window.location.pathname));
 
@@ -48,7 +49,8 @@ export default function App() {
 
   const showAdmin = pathname.startsWith("/admin");
   const showTimelinePreview = pathname === "/timeline-preview";
-  const showBenchmarkTester = pathname === "/test-benchmarks" || pathname === "/debug/benchmarks";
+  const showInterviewHub = pathname.startsWith("/client-interview-hub") || pathname.startsWith("/interview-hub");
+  const showSocialScraping = pathname.startsWith("/social-scraping");
 
   if (showTimelinePreview) {
     return (
@@ -65,6 +67,32 @@ export default function App() {
           <CustomizedTimeline />
         </Suspense>
       </main>
+    );
+  }
+
+  if (showInterviewHub) {
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <ClientInterviewHub
+          onBack={() => {
+            window.history.pushState({}, "", "/");
+            setPathname("/");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  if (showSocialScraping) {
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <SocialScraping
+          onBack={() => {
+            window.history.pushState({}, "", "/");
+            setPathname("/");
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -91,19 +119,6 @@ export default function App() {
             }}
           />
         )}
-      </Suspense>
-    );
-  }
-
-  if (showBenchmarkTester) {
-    return (
-      <Suspense fallback={<RouteLoader />}>
-        <BenchmarkTester
-          onBack={() => {
-            window.history.pushState({}, "", "/");
-            setPathname("/");
-          }}
-        />
       </Suspense>
     );
   }

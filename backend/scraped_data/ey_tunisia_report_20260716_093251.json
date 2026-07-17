@@ -1,0 +1,130 @@
+{
+  "brand_name": "EY tunisia",
+  "scraped_at": "2026-07-16T09:32:51.323665+00:00",
+  "platforms": [
+    {
+      "platform": "Google Maps",
+      "status": "success",
+      "review_count": 6,
+      "reviews": [
+        {
+          "platform": "Google Maps",
+          "author": "Arfaoui Belhsan",
+          "text": "Lougha",
+          "rating": 5.0,
+          "date": "2024-09-30T19:36:39.851Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNuNTZTVDh3RRAB!2m1!1s0x0:0x44c12f81c4b2c94a!3m1!1s2@1:CIHM0ogKEICAgICn56ST8wE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "neutral",
+            "confidence": 0.5,
+            "themes": [],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Dali Ben Ayed",
+          "text": "Very professional and clean, good work environment and a very decent restaurant",
+          "rating": 5.0,
+          "date": "2024-03-10T19:33:11.149Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUM5NTdMamdBRRAB!2m1!1s0x0:0x44c12f81c4b2c94a!3m1!1s2@1:CIHM0ogKEICAgIC957LjgAE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.98,
+            "themes": [
+              "Professionnalisme",
+              "Environnement de travail",
+              "Restauration"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Skander Arfaoui",
+          "text": "Magnifique tower 😍",
+          "rating": 5.0,
+          "date": "2022-04-27T04:16:34.043Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUMyX1lEUm1BRRAB!2m1!1s0x0:0x44c12f81c4b2c94a!3m1!1s2@1:CIHM0ogKEICAgIC2_YDRmAE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Infrastructure"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "MohamadRiad Arabi",
+          "text": "مكان جدا رائع",
+          "rating": 4.0,
+          "date": "2019-09-07T19:17:26.581Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSURVdF9qUjJRRRAB!2m1!1s0x0:0x44c12f81c4b2c94a!3m1!1s2@1:CIHM0ogKEICAgIDUt_jR2QE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.9,
+            "themes": [
+              "Environnement"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Hela Abidi",
+          "text": "très pro",
+          "rating": 5.0,
+          "date": "2017-09-24T00:10:46.861Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChZDSUhNMG9nS0VJQ0FnSUNnLXRYWlpREAE!2m1!1s0x0:0x44c12f81c4b2c94a!3m1!1s2@1:CIHM0ogKEICAgICg-tXZZQ%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.95,
+            "themes": [
+              "Professionnalisme"
+            ],
+            "complaint_category": null
+          }
+        },
+        {
+          "platform": "Google Maps",
+          "author": "Mehdi Bouricha",
+          "text": "Boite de consulting réputée",
+          "rating": 5.0,
+          "date": "2017-08-02T23:10:57.525Z",
+          "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sChdDSUhNMG9nS0VJQ0FnSUNRd3ZiZ2x3RRAB!2m1!1s0x0:0x44c12f81c4b2c94a!3m1!1s2@1:CIHM0ogKEICAgICQwvbglwE%7C%7C?hl=fr",
+          "classification": {
+            "sentiment": "positive",
+            "confidence": 0.98,
+            "themes": [
+              "Réputation"
+            ],
+            "complaint_category": null
+          }
+        }
+      ],
+      "error_message": null
+    },
+    {
+      "platform": "Facebook",
+      "status": "empty",
+      "review_count": 0,
+      "reviews": [],
+      "error_message": null
+    }
+  ],
+  "total_reviews": 6,
+  "analysis": {
+    "positive_pct": 83.33,
+    "neutral_pct": 16.67,
+    "negative_pct": 0.0,
+    "top_themes": [
+      "Professionnalisme",
+      "Environnement",
+      "Infrastructure"
+    ],
+    "top_complaints": [],
+    "summary_text": "Les clients d'EY Tunisia expriment une satisfaction globale très élevée, soulignant notamment le professionnalisme, la qualité de l'environnement de travail et l'infrastructure. Aucun avis négatif n'a été relevé, et les retours neutres sont rares. La réputation de l'entreprise en tant que cabinet de conseil est également mise en avant. L'expérience client semble donc très positive."
+  }
+}
