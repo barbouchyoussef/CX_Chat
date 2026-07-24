@@ -17,6 +17,7 @@ from app.db.models.recommendation_output import RecommendationOutput
 from app.db.models.region import Region
 from app.db.models.sector import Sector
 from app.db.models.interview_guide import InterviewGuide
+from app.db.models.scraping_job import ScrapingJob
 
 __all__ = [
     "Assessment",
@@ -38,4 +39,5 @@ __all__ = [
     "Region",
     "Sector",
     "InterviewGuide",
+    "ScrapingJob",
 ]

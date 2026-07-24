@@ -1,171 +1,417 @@
-"""Service to classify and summarize scraped reviews using Mistral LLM."""
+"""Classify scraped reviews with Mistral, then aggregate them deterministically.
+
+The LLM's only job here is per-review labelling (sentiment / themes / complaint category).
+Every statistic derived from those labels is computed in Python, so the numbers the report
+quotes cannot drift with the model's mood.
+"""
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
-from typing import Any
+from collections import Counter, defaultdict
 
 from app.core.config import get_settings
 from app.services.llm.core.gateway import build_mistral_gateway
 from app.services.llm.utils import extract_json
 from app.schemas.scraping import (
-    ScrapedReview,
-    ReviewClassification,
     AnalysisSummary,
+    ReviewClassification,
+    ScrapedReview,
     TopicCount,
 )
 
 logger = logging.getLogger(__name__)
+
+# Total reviews sent for classification across all channels. Higher coverage means the
+# frequency counts mean something. Deliberately set to exactly one concurrency wave
+# (_MAX_CONCURRENCY * _CHUNK_SIZE): the report only surfaces the main complaint dimensions
+# and headline sentiment, both of which are stable well below this, so a second wave would
+# spend extra Mistral calls and latency to sharpen a long tail nobody reads. Note the rating
+# histogram is computed from every collected review regardless -- the cap only bounds the
+# semantic layer, never the headline numbers.
+_MAX_CONCURRENCY = 4
+_CHUNK_SIZE = 30
+_MAX_REVIEWS_TO_CLASSIFY = _MAX_CONCURRENCY * _CHUNK_SIZE  # 120, one wave
+
+
+def _select_balanced_sample(reviews: list[ScrapedReview]) -> list[ScrapedReview]:
+    """Pick which reviews to classify, giving every channel a fair share.
+
+    Round-robin across channels rather than a fixed per-channel quota, so the logic holds
+    for any number of platforms and a quiet channel never starves a busy one.
+    """
+    if len(reviews) <= _MAX_REVIEWS_TO_CLASSIFY:
+        return list(reviews)
+
+    by_platform: dict[str, list[ScrapedReview]] = defaultdict(list)
+    for review in reviews:
+        by_platform[review.platform].append(review)
+
+    selected: list[ScrapedReview] = []
+    queues = list(by_platform.values())
+    cursor = 0
+    while len(selected) < _MAX_REVIEWS_TO_CLASSIFY and any(queues):
+        queue = queues[cursor % len(queues)]
+        if queue:
+            selected.append(queue.pop(0))
+        else:
+            queues.remove(queue)
+            continue
+        cursor += 1
+    return selected
+
+
+def _build_prompt(brand_name: str, chunk: list[ScrapedReview]) -> str:
+    payload = [
+        {"index": idx, "platform": r.platform, "text": r.text, "rating": r.rating}
+        for idx, r in enumerate(chunk)
+    ]
+    dimensions_block = "\n".join(f"- {d}" for d in _COMPLAINT_DIMENSIONS)
+    return f"""You are an expert customer experience (CX) analyst.
+Classify each of the following reviews about the brand '{brand_name}'.
+
+The reviews may be in French, Arabic, English or any other language. ALWAYS respond in
+ENGLISH: every label you produce is printed in an English-language client report.
+
+For EACH review, determine:
+1. Sentiment polarity: "positive", "neutral", or "negative".
+2. A confidence score (0.0 to 1.0).
+3. The key topics discussed. Maximum 3 topics.
+4. If the sentiment is "negative", the matching complaint category. Otherwise null.
+
+No industry is assumed: derive the TOPICS from what the reviews actually say. For a telecom
+they will concern network or billing, for a restaurant the food or table service, for a bank
+fees or processing times.
+
+RULE for 'themes' — the specific SUBJECT the review is about, in the brand's own domain:
+SHORT English labels (1 to 3 words), reused verbatim from one review to the next
+(for example "Network", "Fibre", "Food quality", "Delivery", "Bank fees"). These labels are
+counted, so two phrasings of one subject would corrupt the statistics.
+
+RULE for 'complaint_category' — the DIMENSION of the problem, which MUST be chosen from the
+closed list below and copied exactly. These dimensions are universal and apply to any
+industry; the precise detail of the problem belongs in the topic, not here.
+Never invent another value: use "Other" if none fits.
+{dimensions_block}
+
+You must return EXACTLY one object per review, carrying its original index.
+
+Expected response format (JSON only, no markdown):
+{{
+  "classifications": [
+    {{"index": 0, "sentiment": "negative", "confidence": 0.9,
+      "themes": ["Billing"], "complaint_category": "Pricing, billing and fees"}}
+  ]
+}}
+
+Reviews to classify:
+{json.dumps(payload, ensure_ascii=False, indent=2)}
+
+Return only valid JSON, with no surrounding text or markdown.
+"""
+
+
+def _parse_response(response_text: str) -> list[dict]:
+    result_dict = extract_json(response_text)
+    if not result_dict:
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            cleaned = "\n".join(lines).strip()
+        result_dict = json.loads(cleaned)
+    return result_dict.get("classifications", []) or []
+
+
+_VALID_SENTIMENTS = {"positive", "neutral", "negative"}
+
+# Universal CX complaint dimensions. NOT a domain vocabulary -- these are the axes any
+# business is judged on, so they map onto a restaurant, a bank or a telecom equally well
+# (food -> quality, waiter -> staff, table wait -> waiting; app outage -> reliability...).
+# Themes stay fully open and carry the domain-specific detail; complaints snap to this fixed
+# analytical frame because an open complaint vocabulary fragments into synonyms ("service
+# nul" / "service médiocre" / "mauvaise qualité") that no structural merge can reunite,
+# which understates the very problems the report is meant to rank.
+_COMPLAINT_DIMENSIONS = [
+    "Product or service quality",
+    "Staff and customer relations",
+    "Wait times and delays",
+    "Pricing, billing and fees",
+    "Reliability and outages",
+    "Information and communication",
+    "Access and availability",
+    "Administrative processes",
+    "Other",
+]
+
+
+def _clean_labels(raw_labels, limit: int) -> list[str]:
+    """Trim, de-duplicate and cap a label list coming back from the model."""
+    labels: list[str] = []
+    seen: set[str] = set()
+    for value in raw_labels:
+        label = str(value).strip()
+        if not label or label.casefold() in seen:
+            continue
+        seen.add(label.casefold())
+        labels.append(label)
+    return labels[:limit]
+
+
+def _fold(value: str) -> str:
+    import unicodedata
+
+    stripped = unicodedata.normalize("NFKD", value.strip().casefold())
+    return "".join(ch for ch in stripped if not unicodedata.combining(ch))
+
+
+_DIMENSION_BY_FOLD = {_fold(d): d for d in _COMPLAINT_DIMENSIONS}
+
+
+def _snap_complaint(raw: str | None) -> str | None:
+    """Snap a returned complaint onto the fixed dimension list.
+
+    Exact match (accent/case tolerant) first; then a token-overlap fallback so a close
+    paraphrase still lands on a dimension rather than silently becoming 'Autre'. Anything
+    genuinely unrecognised becomes 'Autre' -- never free text, or the counting fragments.
+    """
+    if not raw:
+        return None
+    folded = _fold(raw)
+    if folded in _DIMENSION_BY_FOLD:
+        return _DIMENSION_BY_FOLD[folded]
+
+    raw_tokens = {t for t in folded.split() if len(t) > 3}
+    best, best_overlap = "Other", 0
+    for dimension in _COMPLAINT_DIMENSIONS[:-1]:  # skip 'Other' itself
+        dim_tokens = {t for t in _fold(dimension).split() if len(t) > 3}
+        overlap = len(raw_tokens & dim_tokens)
+        if overlap > best_overlap:
+            best, best_overlap = dimension, overlap
+    return best
+
+
+async def _classify_chunk(
+    gateway,
+    brand_name: str,
+    chunk: list[ScrapedReview],
+    semaphore: asyncio.Semaphore,
+) -> None:
+    """Classify one chunk in place.
+
+    Indices are resolved against `chunk` itself -- the exact list that was serialised into
+    the prompt -- so a label can never be attached to a different review than the one it
+    describes.
+    """
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that outputs only valid JSON objects."},
+        {"role": "user", "content": _build_prompt(brand_name, chunk)},
+    ]
+    try:
+        async with semaphore:
+            response_text = await gateway.chat_messages(messages)
+        entries = _parse_response(response_text)
+    except Exception:
+        logger.exception("Classification chunk failed (%d reviews) — left unclassified", len(chunk))
+        return
+
+    for entry in entries:
+        index = entry.get("index")
+        if not isinstance(index, int) or not 0 <= index < len(chunk):
+            continue
+        sentiment = (entry.get("sentiment") or "").strip().lower()
+        if sentiment not in _VALID_SENTIMENTS:
+            sentiment = "neutral"
+        try:
+            confidence = float(entry.get("confidence") or 0.8)
+        except (TypeError, ValueError):
+            confidence = 0.8
+        chunk[index].classification = ReviewClassification(
+            sentiment=sentiment,
+            confidence=max(0.0, min(1.0, confidence)),
+            # Themes stay open (canonicalized across chunks later); complaints snap to the
+            # fixed dimensions immediately so counting is stable regardless of phrasing.
+            themes=_clean_labels(entry.get("themes") or [], limit=3),
+            complaint_category=_snap_complaint(entry.get("complaint_category")) if sentiment == "negative" else None,
+        )
+
+
+# Words carrying no topical meaning, ignored when deciding whether two theme labels are
+# variants of each other.
+_THEME_STOPWORDS = {
+    "de", "du", "des", "d", "la", "le", "les", "l", "un", "une",
+    "et", "ou", "a", "au", "aux", "en", "sur", "pour", "par", "avec",
+}
+
+
+def _theme_tokens(label: str) -> frozenset[str]:
+    """Reduce a label to its meaningful word stems for comparison.
+
+    Accent-, case-, punctuation- and plural-insensitive, so 'Délais' and 'delai' collapse
+    onto the same token.
+    """
+    import re
+    import unicodedata
+
+    folded = unicodedata.normalize("NFKD", label.casefold())
+    folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
+    tokens = set()
+    for word in re.split(r"[^a-z0-9]+", folded):
+        if not word or word in _THEME_STOPWORDS:
+            continue
+        # Crude singular form: enough to merge 'delais'/'delai', 'pannes'/'panne'.
+        if len(word) > 3 and word.endswith("s"):
+            word = word[:-1]
+        tokens.add(word)
+    return frozenset(tokens)
+
+
+def _build_mapping(counts: Counter[str]) -> dict[str, str]:
+    """Map every label variant onto the dominant spelling of its group.
+
+    Two labels merge when one's meaningful tokens are a subset of the other's. The variant
+    that occurs most often wins, since the dominant phrasing is the one the reader should
+    see. Labels with no subset relation are left alone: 'Qualité du réseau' and 'Qualité du
+    service' share a token but neither contains the other, so they stay distinct.
+    """
+    if not counts:
+        return {}
+
+    # Most frequent first, so a variant always merges into the dominant spelling.
+    ordered = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+    canonical_tokens: list[tuple[frozenset[str], str]] = []
+    mapping: dict[str, str] = {}
+    for label, _count in ordered:
+        tokens = _theme_tokens(label)
+        if not tokens:
+            mapping[label] = label
+            continue
+        for known_tokens, known_label in canonical_tokens:
+            if tokens <= known_tokens or known_tokens <= tokens:
+                mapping[label] = known_label
+                break
+        else:
+            canonical_tokens.append((tokens, label))
+            mapping[label] = label
+    return mapping
+
+
+def canonicalize_themes(reviews: list[ScrapedReview]) -> dict[str, str]:
+    """Reconcile the open theme vocabulary across chunks.
+
+    Chunks are independent LLM calls, so one may answer 'Qualité du réseau' where another
+    answers 'Réseau'. Counting the raw strings splits one topic into several small rows and
+    understates it. No prompt can fix this -- the calls never see each other -- so themes
+    are reconciled here, once, after every chunk has returned. This is what lets the theme
+    vocabulary stay open and still work for a telecom, a restaurant or a bank.
+
+    Complaints are NOT reconciled here: they were snapped to the fixed dimension list at
+    classification time, precisely because an open complaint vocabulary fragments into
+    synonyms ('service nul' / 'service médiocre') that share no token and so never merge.
+    """
+    theme_counts: Counter[str] = Counter()
+    for review in reviews:
+        if review.classification:
+            for theme in set(review.classification.themes or []):
+                theme_counts[theme] += 1
+
+    theme_map = _build_mapping(theme_counts)
+    merged = {src: dst for src, dst in theme_map.items() if src != dst}
+    if merged:
+        logger.info("Merged %d theme variant(s): %s", len(merged), merged)
+
+    for review in reviews:
+        if not review.classification:
+            continue
+        rewritten: list[str] = []
+        for theme in review.classification.themes or []:
+            canonical = theme_map.get(theme, theme)
+            if canonical not in rewritten:  # a review can hold two variants of one theme
+                rewritten.append(canonical)
+        review.classification.themes = rewritten
+
+    return theme_map
+
+
+def _build_summary(reviews: list[ScrapedReview]) -> AnalysisSummary | None:
+    """Aggregate the labels arithmetically. No LLM involved, so the percentages always
+    add up and always match the reviews actually shown in the report."""
+    classified = [r for r in reviews if r.classification]
+    total = len(classified)
+    if total == 0:
+        return None
+
+    pos = sum(1 for r in classified if r.classification.sentiment == "positive")
+    neu = sum(1 for r in classified if r.classification.sentiment == "neutral")
+    neg = sum(1 for r in classified if r.classification.sentiment == "negative")
+
+    theme_counts: Counter[str] = Counter()
+    complaint_counts: Counter[str] = Counter()
+    for review in classified:
+        for theme in set(review.classification.themes or []):
+            theme_counts[theme] += 1
+        if review.classification.sentiment == "negative" and review.classification.complaint_category:
+            complaint_counts[review.classification.complaint_category] += 1
+
+    return AnalysisSummary(
+        positive_pct=round(pos / total * 100, 1),
+        neutral_pct=round(neu / total * 100, 1),
+        negative_pct=round(neg / total * 100, 1),
+        top_themes=[label for label, _ in theme_counts.most_common(5)],
+        top_complaints=[TopicCount(topic=label, count=n) for label, n in complaint_counts.most_common(5)],
+        summary_text=None,  # the narrative lives in the unified report's executive summary
+    )
 
 
 async def classify_reviews(
     reviews: list[ScrapedReview],
     brand_name: str,
 ) -> tuple[list[ScrapedReview], AnalysisSummary | None]:
-    """Classify a list of reviews using Mistral.
+    """Classify reviews in place and return them alongside a deterministic summary.
 
-    Returns the updated reviews (with classification field populated) and an AnalysisSummary.
+    Reviews outside the sampled subset keep `classification = None` and are simply excluded
+    from every statistic, rather than inheriting a neighbour's label.
     """
     if not reviews:
         return reviews, None
 
-    # Limit to top 80 reviews total, taking up to 40 from Google Maps and 40 from Facebook to represent both platforms fairly
-    gm_reviews = [r for r in reviews if r.platform == "Google Maps"]
-    fb_reviews = [r for r in reviews if r.platform == "Facebook"]
-    
-    gm_count = min(40, len(gm_reviews))
-    fb_count = min(40, len(fb_reviews))
-    
-    if len(gm_reviews) < 40:
-        fb_count = min(80 - len(gm_reviews), len(fb_reviews))
-    elif len(fb_reviews) < 40:
-        gm_count = min(80 - len(fb_reviews), len(gm_reviews))
-        
-    analysis_reviews = gm_reviews[:gm_count] + fb_reviews[:fb_count]
-    
-    # Format reviews for the prompt
-    formatted_reviews = []
-    for idx, r in enumerate(analysis_reviews):
-        formatted_reviews.append({
-            "index": idx,
-            "platform": r.platform,
-            "text": r.text,
-            "rating": r.rating,
-        })
+    # Star-only reviews carry no text to classify. They still count toward the rating
+    # distribution, but sending them to the model would waste a slot in the sample.
+    with_text = [r for r in reviews if r.text.strip()]
+    if not with_text:
+        return reviews, None
 
-    prompt = f"""Vous êtes un analyste expert de l'expérience client (CX).
-Analysez les avis suivants sur la marque '{brand_name}' et renvoyez un objet JSON valide contenant l'analyse complète.
-
-Pour chaque avis, déterminez :
-1. La polarité du sentiment : "positive", "neutral", ou "negative".
-2. Le score de confiance (de 0.0 à 1.0).
-3. Les thèmes clés abordés (ex: "Qualité de service", "Attente", "Prix", "Support client"). Max 3 thèmes.
-4. Si le sentiment est "negative", identifiez la catégorie de plainte correspondante (ex: "Temps d'attente", "Accueil client", "Rupture de stock", "Problème technique", etc.). Sinon, mettez null.
-
-Calculez également les statistiques globales (pourcentages de sentiments, top thèmes, top plaintes) et rédigez un court résumé de l'opinion client en français (max 4 phrases).
-
-Format de réponse attendu :
-```json
-{{
-  "classifications": [
-    {{
-      "index": 0,
-      "sentiment": "positive",
-      "confidence": 0.95,
-      "themes": ["Accueil", "Professionnalisme"],
-      "complaint_category": null
-    }}
-  ],
-  "analysis": {{
-    "positive_pct": 80.0,
-    "neutral_pct": 10.0,
-    "negative_pct": 10.0,
-    "top_themes": ["Thème A", "Thème B", "Thème C"],
-    "top_complaints": [
-      {{
-        "topic": "Sujet A",
-        "count": 5
-      }}
-    ],
-    "summary_text": "Résumé synthétique en français de l'expérience globale des clients..."
-  }}
-}}
-```
-
-Voici la liste des avis à analyser :
-{json.dumps(formatted_reviews, ensure_ascii=False, indent=2)}
-
-Renvoie uniquement le code JSON valide dans ta réponse, sans autre explication ni markdown autour.
-"""
+    sample = _select_balanced_sample(with_text)
+    chunks = [sample[i : i + _CHUNK_SIZE] for i in range(0, len(sample), _CHUNK_SIZE)]
 
     try:
         settings = get_settings()
         gateway = build_mistral_gateway(settings)
-        
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant that outputs only valid JSON objects."},
-            {"role": "user", "content": prompt}
-        ]
-        
-        logger.info("Sending batch reviews to Mistral for classification. Count: %d", len(analysis_reviews))
-        response_text = await gateway.chat_messages(messages)
-        
-        # Parse JSON output
-        result_dict = extract_json(response_text)
-        if not result_dict:
-            # Try parsing direct text if extract_json missed it (e.g. if it starts with markdown code block)
-            cleaned = response_text.strip()
-            if cleaned.startswith("```"):
-                # strip out markdown blocks
-                lines = cleaned.splitlines()
-                if lines[0].startswith("```"):
-                    lines = lines[1:]
-                if lines and lines[-1].strip() == "```":
-                    lines = lines[:-1]
-                cleaned = "\n".join(lines).strip()
-            try:
-                result_dict = json.loads(cleaned)
-            except Exception:
-                logger.error("Failed to parse JSON response from Mistral: %s", response_text[:1000])
-                return reviews, None
-                
-        # Build structured object
-        classifications_list = result_dict.get("classifications", [])
-        classifications_by_idx = {item.get("index"): item for item in classifications_list if "index" in item}
-
-        for idx, review in enumerate(reviews):
-            if idx in classifications_by_idx:
-                c_data = classifications_by_idx[idx]
-                review.classification = ReviewClassification(
-                    sentiment=c_data.get("sentiment") or "neutral",
-                    confidence=float(c_data.get("confidence") or 0.8),
-                    themes=c_data.get("themes") or [],
-                    complaint_category=c_data.get("complaint_category"),
-                )
-            else:
-                # Default fallback
-                review.classification = None
-
-        # Build analysis summary
-        analysis_data = result_dict.get("analysis", {})
-        
-        top_complaints = []
-        for tc in analysis_data.get("top_complaints", []):
-            if isinstance(tc, dict) and "topic" in tc and "count" in tc:
-                top_complaints.append(TopicCount(topic=tc["topic"], count=tc["count"]))
-
-        summary = AnalysisSummary(
-            positive_pct=float(analysis_data.get("positive_pct") or 0.0),
-            neutral_pct=float(analysis_data.get("neutral_pct") or 0.0),
-            negative_pct=float(analysis_data.get("negative_pct") or 0.0),
-            top_themes=analysis_data.get("top_themes") or [],
-            top_complaints=top_complaints,
-            summary_text=analysis_data.get("summary_text"),
-        )
-        
-        return reviews, summary
-
-    except Exception as exc:
-        logger.exception("Error running LLM classification on reviews")
+    except Exception:
+        logger.exception("Could not build the Mistral gateway — reviews left unclassified")
         return reviews, None
+
+    logger.info(
+        "Classifying %d of %d commented reviews (%d collected incl. star-only) for '%s' in %d chunk(s)",
+        len(sample), len(with_text), len(reviews), brand_name, len(chunks),
+    )
+    semaphore = asyncio.Semaphore(_MAX_CONCURRENCY)
+    # Chunks mutate their own review objects, so failures stay contained to one chunk.
+    await asyncio.gather(
+        *(_classify_chunk(gateway, brand_name, chunk, semaphore) for chunk in chunks)
+    )
+
+    classified_count = sum(1 for r in reviews if r.classification)
+    logger.info("Classified %d/%d reviews for '%s'", classified_count, len(reviews), brand_name)
+
+    # Reconcile the open theme vocabulary across chunks before anything counts it.
+    # (Complaints were already snapped to fixed dimensions at classification time.)
+    canonicalize_themes(reviews)
+
+    return reviews, _build_summary(reviews)

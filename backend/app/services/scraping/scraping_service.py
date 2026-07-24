@@ -11,12 +11,14 @@ from datetime import datetime, timezone
 import httpx
 import os
 
+from app.schemas.manual_analysis import ManualAnalysisWorkbook
 from app.schemas.scraping import (
     PlatformResult,
     ScrapedReview,
     ScrapingResponse,
 )
 from app.services.scraping.classification_service import classify_reviews
+from app.services.scraping.social_report_service import generate_detailed_social_report
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,76 @@ def _save_raw_data(platform: str, brand: str, items: list[dict]):
         logger.warning("Failed to save raw scraped data for %s on %s: %s", brand, platform, e)
 
 
+# Statuses worth retrying: the provider is briefly unhealthy, the work itself is fine.
+_TRANSIENT_STATUSES = {408, 425, 429, 500, 502, 503, 504}
+_MAX_ATTEMPTS = 4
+_POLL_INTERVAL = 4
+
+
+def _redact(text: str) -> str:
+    """Strip credentials from anything that may be logged, stored or shown to a user.
+
+    httpx puts the full URL in its error text, so a token passed as a query parameter ends
+    up inside exception messages -- which are persisted to the report JSON, the job row and
+    the browser. Auth now travels in a header, and this is the belt-and-braces net for any
+    other path (a provider echoing the URL back, a hardcoded key in a message, ...).
+    """
+    if not text:
+        return text
+    redacted = re.sub(r"([?&](?:token|key|api_key|apiKey)=)[^&\s\"']+", r"\1***", text)
+    redacted = re.sub(r"\bapify_api_[A-Za-z0-9]+", "apify_api_***", redacted)
+    redacted = re.sub(r"(Bearer\s+)[A-Za-z0-9._\-]+", r"\1***", redacted)
+    return redacted
+
+
+def _apify_headers(token: str) -> dict:
+    """Bearer auth keeps the token out of URLs, and therefore out of error text and logs."""
+    return {"Authorization": f"Bearer {token}"}
+
+
+async def _request_with_retry(
+    client: httpx.AsyncClient,
+    method: str,
+    url: str,
+    *,
+    headers: dict | None = None,
+    json_body: dict | None = None,
+    what: str = "request",
+) -> httpx.Response:
+    """Issue a request, retrying transient provider failures with exponential backoff.
+
+    Used for the one-shot calls (starting a run, fetching the dataset) where giving up
+    means losing work already paid for. A non-transient status fails immediately -- retrying
+    a 401 or a 404 only wastes time.
+    """
+    last_error: Exception | None = None
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            response = await client.request(method, url, headers=headers, json=json_body)
+            if response.status_code in _TRANSIENT_STATUSES:
+                raise httpx.HTTPStatusError(
+                    f"transient {response.status_code}", request=response.request, response=response
+                )
+            response.raise_for_status()
+            return response
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code not in _TRANSIENT_STATUSES:
+                raise
+            last_error = exc
+        except httpx.TransportError as exc:  # timeouts, connection resets, DNS failures
+            last_error = exc
+
+        if attempt < _MAX_ATTEMPTS:
+            delay = 2**attempt  # 2s, 4s, 8s
+            logger.warning(
+                "%s failed (attempt %d/%d): %s -- retrying in %ds",
+                what, attempt, _MAX_ATTEMPTS, _redact(str(last_error))[:200], delay,
+            )
+            await asyncio.sleep(delay)
+
+    raise RuntimeError(f"{what} failed after {_MAX_ATTEMPTS} attempts: {_redact(str(last_error))[:200]}")
+
+
 async def _run_actor(
     client: httpx.AsyncClient,
     actor_id: str,
@@ -53,36 +125,63 @@ async def _run_actor(
     timeout: int = _RUN_TIMEOUT,
 ) -> list[dict]:
     """Run an Apify actor asynchronously and poll for results to prevent gateway timeouts."""
-    # Start the run
-    start_url = f"{_APIFY_BASE}/acts/{actor_id}/runs?token={token}&memory={memory_mb}"
-    start_resp = await client.post(start_url, json=run_input)
-    start_resp.raise_for_status()
+    headers = _apify_headers(token)
+
+    start_resp = await _request_with_retry(
+        client,
+        "POST",
+        f"{_APIFY_BASE}/acts/{actor_id}/runs?memory={memory_mb}",
+        headers=headers,
+        json_body=run_input,
+        what=f"Apify start run for {actor_id}",
+    )
     run_data = start_resp.json().get("data", {})
     run_id = run_data.get("id")
     dataset_id = run_data.get("defaultDatasetId")
-    
+
     if not run_id or not dataset_id:
         raise ValueError(f"Failed to start actor run for {actor_id}")
 
-    # Poll status
-    status_url = f"{_APIFY_BASE}/actor-runs/{run_id}?token={token}"
+    status_url = f"{_APIFY_BASE}/actor-runs/{run_id}"
     start_time = datetime.now(timezone.utc)
-    
+    consecutive_poll_errors = 0
+
     while (datetime.now(timezone.utc) - start_time).total_seconds() < timeout:
-        status_resp = await client.get(status_url)
-        status_resp.raise_for_status()
+        try:
+            status_resp = await client.get(status_url, headers=headers)
+            status_resp.raise_for_status()
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
+            status_code = getattr(getattr(exc, "response", None), "status_code", None)
+            if status_code is not None and status_code not in _TRANSIENT_STATUSES:
+                raise
+            # The actor keeps running on Apify regardless of our ability to ask about it, so
+            # a blip must not discard a scrape that is still in progress and already billed.
+            consecutive_poll_errors += 1
+            logger.warning(
+                "Apify status poll failed for run %s (%d in a row): %s -- still polling",
+                run_id, consecutive_poll_errors, _redact(str(exc))[:200],
+            )
+            await asyncio.sleep(min(_POLL_INTERVAL * consecutive_poll_errors, 30))
+            continue
+
+        consecutive_poll_errors = 0
         run_status = status_resp.json().get("data", {}).get("status")
-        
+
         if run_status == "SUCCEEDED":
-            items_url = f"{_APIFY_BASE}/datasets/{dataset_id}/items?token={token}"
-            items_resp = await client.get(items_url)
-            items_resp.raise_for_status()
+            # The run is done and paid for; this fetch is the last place to lose it.
+            items_resp = await _request_with_retry(
+                client,
+                "GET",
+                f"{_APIFY_BASE}/datasets/{dataset_id}/items",
+                headers=headers,
+                what=f"Apify dataset fetch for run {run_id}",
+            )
             return items_resp.json()
-        elif run_status in ["FAILED", "TIMED-OUT", "ABORTED"]:
+        if run_status in ("FAILED", "TIMED-OUT", "ABORTED"):
             raise RuntimeError(f"Actor run {run_id} finished with status: {run_status}")
-            
-        await asyncio.sleep(4)
-        
+
+        await asyncio.sleep(_POLL_INTERVAL)
+
     raise TimeoutError(f"Actor run {run_id} timed out after {timeout} seconds")
 
 
@@ -131,37 +230,58 @@ async def _run_brightdata_dataset(
     }
     
     logger.info("Triggering Bright Data dataset scrape for ID: %s", dataset_id)
-    resp = await client.post(url, headers=headers, json=payload)
-    resp.raise_for_status()
-    
+    resp = await _request_with_retry(
+        client, "POST", url, headers=headers, json_body=payload,
+        what=f"Bright Data trigger for dataset {dataset_id}",
+    )
+
     parsed = _parse_brightdata_response(resp.content)
-    
+
     # If the response is a metadata dict with snapshot_id, we poll
     if len(parsed) == 1 and "snapshot_id" in parsed[0]:
         snapshot_id = parsed[0]["snapshot_id"]
         logger.info("Bright Data async snapshot created: %s. Polling...", snapshot_id)
-        
+
         progress_url = f"https://api.brightdata.com/datasets/v3/progress/{snapshot_id}"
         snapshot_url = f"https://api.brightdata.com/datasets/v3/snapshot/{snapshot_id}"
-        
+        auth = {"Authorization": f"Bearer {bearer_token}"}
+
         start_time = datetime.now(timezone.utc)
+        consecutive_poll_errors = 0
         while (datetime.now(timezone.utc) - start_time).total_seconds() < 180:
-            p_resp = await client.get(progress_url, headers={"Authorization": f"Bearer {bearer_token}"})
-            p_resp.raise_for_status()
+            try:
+                p_resp = await client.get(progress_url, headers=auth)
+                p_resp.raise_for_status()
+            except (httpx.HTTPStatusError, httpx.TransportError) as exc:
+                status_code = getattr(getattr(exc, "response", None), "status_code", None)
+                if status_code is not None and status_code not in _TRANSIENT_STATUSES:
+                    raise
+                # Same reasoning as the Apify poll: the snapshot keeps building regardless.
+                consecutive_poll_errors += 1
+                logger.warning(
+                    "Bright Data progress poll failed for %s (%d in a row): %s -- still polling",
+                    snapshot_id, consecutive_poll_errors, _redact(str(exc))[:200],
+                )
+                await asyncio.sleep(min(5 * consecutive_poll_errors, 30))
+                continue
+
+            consecutive_poll_errors = 0
             status = p_resp.json().get("status")
             logger.info("Bright Data snapshot %s status: %s", snapshot_id, status)
-            
+
             if status == "ready":
-                d_resp = await client.get(snapshot_url, headers={"Authorization": f"Bearer {bearer_token}"})
-                d_resp.raise_for_status()
+                d_resp = await _request_with_retry(
+                    client, "GET", snapshot_url, headers=auth,
+                    what=f"Bright Data snapshot fetch {snapshot_id}",
+                )
                 return _parse_brightdata_response(d_resp.content)
-            elif status in ["failed", "cancelled"]:
+            if status in ("failed", "cancelled"):
                 raise RuntimeError(f"Bright Data dataset run failed: {status}")
-                
+
             await asyncio.sleep(5)
-            
+
         raise TimeoutError(f"Bright Data snapshot {snapshot_id} timed out")
-        
+
     return parsed
 
 
@@ -188,6 +308,75 @@ def _brand_matches(text: str, brand: str) -> bool:
     parts = brand.lower().split()
     text_lower = text.lower()
     return any(p in text_lower for p in parts if len(p) > 2)
+
+
+# ISO codes for the countries this is realistically used in, plus the French and English
+# spellings that turn up in Apify addresses. Anything not listed still works via the
+# free-text address match below, so the map only has to cover the common cases.
+_COUNTRY_ALIASES = {
+    "tn": {"tunisie", "tunisia", "tn"},
+    "fr": {"france", "fr"},
+    "ma": {"maroc", "morocco", "ma"},
+    "dz": {"algerie", "algeria", "dz"},
+    "be": {"belgique", "belgium", "be"},
+    "ch": {"suisse", "switzerland", "ch"},
+    "ca": {"canada", "ca"},
+    "us": {"etats-unis", "united states", "usa", "us"},
+    "gb": {"royaume-uni", "united kingdom", "uk", "gb"},
+    "de": {"allemagne", "germany", "de"},
+    "es": {"espagne", "spain", "es"},
+    "it": {"italie", "italy", "it"},
+    "eg": {"egypte", "egypt", "eg"},
+    "sa": {"arabie saoudite", "saudi arabia", "sa"},
+    "ae": {"emirats arabes unis", "united arab emirates", "uae", "ae"},
+}
+
+
+def _fold_text(value: str) -> str:
+    """Lowercase and strip accents so 'Tunisie' and 'TUNISIE' compare equal."""
+    import unicodedata
+
+    stripped = unicodedata.normalize("NFKD", (value or "").casefold())
+    return "".join(ch for ch in stripped if not unicodedata.combining(ch))
+
+
+def _location_matches(item: dict, location: str) -> bool:
+    """Return True if a Google Maps place sits in the requested country or city.
+
+    A brand-name search is global: 'Mytek' returned IT firms in Phoenix and wholesalers in
+    Mexico alongside nothing from Tunisia. Name matching cannot separate them -- every one
+    of those places legitimately contains 'mytek' -- so geography is the only discriminator.
+
+    Matching is per-token: consultants type things like "Mytek Tunisie" or "Tunis, Tunisia",
+    and requiring the whole string to match would reject every genuine place.
+    """
+    wanted = _fold_text(location).strip()
+    if not wanted:
+        return True
+
+    tokens = [t for t in re.split(r"[^a-z0-9]+", wanted) if len(t) > 1]
+    if not tokens:
+        return True
+
+    country_code = _fold_text(str(item.get("countryCode") or ""))
+    aliases = _COUNTRY_ALIASES.get(country_code, {country_code}) if country_code else set()
+
+    haystack = " ".join(
+        _fold_text(str(item.get(f) or ""))
+        for f in ("address", "city", "state", "neighborhood", "street")
+    )
+
+    for token in tokens:
+        # Country code or one of its spellings ("tn", "tunisie", "tunisia").
+        if token in aliases:
+            return True
+        # A city or region typed instead of the country ("tunis" -> TN, "ariana").
+        if any(len(a) > 2 and (a.startswith(token) or token.startswith(a)) for a in aliases):
+            return True
+        # Anything appearing in the human-readable address fields.
+        if len(token) > 2 and token in haystack:
+            return True
+    return False
 
 
 def _is_relevant_comment(text: str) -> bool:
@@ -240,64 +429,221 @@ def _format_date_val(val) -> str | None:
 # ---------------------------------------------------------------------------
 
 async def _scrape_google_maps(
-    client: httpx.AsyncClient, brand: str, token: str,
+    client: httpx.AsyncClient, brand: str, token: str, location: str | None = None,
 ) -> PlatformResult:
-    """Scrape Google Maps reviews for the given brand."""
+    """Scrape Google Maps reviews for the given brand, restricted to `location`."""
     try:
+        actor_input: dict = {
+            "startUrls": [],
+            "searchStringsArray": [brand],
+            "maxReviews": 40,
+            "language": "fr",
+            # Reviewer identities are never used analytically, and the saved report is
+            # kept on disk, so we do not collect them at all (GDPR / INPDP data minimisation).
+            "personalData": False,
+        }
+        if location and location.strip():
+            # Narrows the search server-side; the post-filter below is the real guarantee.
+            actor_input["locationQuery"] = location.strip()
+
         items = await _run_actor(
             client,
             "compass~google-maps-reviews-scraper",
             token,
-            {
-                "startUrls": [],
-                "searchStringsArray": [brand],
-                "maxReviews": 40,
-                "language": "fr",
-                "personalData": True,
-            },
+            actor_input,
             memory_mb=2048,
         )
         _save_raw_data("Google Maps", brand, items)
 
+        # Drop places outside the requested location before anything is counted. Without
+        # this a generic brand name silently blends unrelated businesses from other
+        # countries into the sentiment, and the report reads perfectly while being wrong.
+        matched_places: set[str] = set()
+        excluded_places: set[str] = set()
+        if location and location.strip():
+            kept: list[dict] = []
+            for item in items:
+                title = (item.get("title") or "?").strip()
+                if _location_matches(item, location):
+                    kept.append(item)
+                    matched_places.add(title)
+                else:
+                    excluded_places.add(title)
+            if excluded_places:
+                logger.info(
+                    "Google Maps: kept %d/%d reviews for '%s' in '%s'; excluded places: %s",
+                    len(kept), len(items), brand, location, sorted(excluded_places),
+                )
+            items = kept
+        else:
+            for item in items:
+                matched_places.add((item.get("title") or "?").strip())
+            logger.warning(
+                "Google Maps scraped '%s' with no location filter -- results may include "
+                "same-named businesses elsewhere. Matched places: %s",
+                brand, sorted(matched_places),
+            )
+
+        if not items:
+            return PlatformResult(
+                platform="Google Maps",
+                status="empty",
+                excluded_places=sorted(excluded_places),
+            )
+
         reviews: list[ScrapedReview] = []
         for item in items:
             text = (item.get("text") or item.get("textTranslated") or "").strip()
-            if not text:
+            rating = _safe_float(item.get("stars") or item.get("reviewRating"))
+            # A star with no comment is still a customer verdict. Dropping these threw away
+            # the majority of the rating data (468 raw items collapsed to 196), which made
+            # the star distribution -- the most defensible figure in the report -- rest on a
+            # fraction of what was available. Only items with neither text nor rating are useless.
+            if not text and rating is None:
                 continue
             reviews.append(
                 ScrapedReview(
                     platform="Google Maps",
                     author=item.get("name") or item.get("reviewerName"),
                     text=text,
-                    rating=_safe_float(item.get("stars") or item.get("reviewRating")),
+                    rating=rating,
                     date=_format_date_val(item.get("publishedAtDate") or item.get("reviewDate")),
                     url=item.get("reviewUrl") or item.get("url"),
                 )
             )
 
         if not reviews:
-            return PlatformResult(platform="Google Maps", status="empty")
+            return PlatformResult(
+                platform="Google Maps",
+                status="empty",
+                excluded_places=sorted(excluded_places),
+            )
 
         return PlatformResult(
             platform="Google Maps",
             status="success",
             review_count=len(reviews),
             reviews=reviews,
+            matched_places=sorted(matched_places),
+            excluded_places=sorted(excluded_places),
         )
     except (RuntimeError, TimeoutError) as exc:
         logger.error("Google Maps scraping failed for '%s': %s", brand, exc)
         return PlatformResult(
             platform="Google Maps",
             status="error",
-            error_message=str(exc)[:300],
+            error_message=_redact(str(exc))[:300],
         )
     except Exception as exc:
         logger.exception("Google Maps scraping failed for '%s' with unexpected error", brand)
         return PlatformResult(
             platform="Google Maps",
             status="error",
-            error_message=str(exc)[:300],
+            error_message=_redact(str(exc))[:300],
         )
+
+
+# ---------------------------------------------------------------------------
+# Trustpilot
+# ---------------------------------------------------------------------------
+
+_TRUSTPILOT_ACTOR = "automation-lab~trustpilot"
+_TRUSTPILOT_PERIODS = {"", "last30days", "last3months", "last6months", "last12months"}
+
+
+def _normalize_trustpilot_domain(value: str) -> str:
+    """Accept a bare domain, a URL, or a full Trustpilot review URL and return the domain."""
+    cleaned = value.strip()
+    if not cleaned:
+        return ""
+    # Full Trustpilot URL -> take the segment after /review/
+    match = re.search(r"trustpilot\.[a-z.]+/review/([^/?#]+)", cleaned, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    cleaned = re.sub(r"^https?://", "", cleaned, flags=re.IGNORECASE)
+    return cleaned.split("/")[0].strip()
+
+
+async def _scrape_trustpilot(
+    client: httpx.AsyncClient,
+    brand: str,
+    token: str,
+    domain: str | None,
+    period: str | None = None,
+) -> PlatformResult:
+    """Scrape Trustpilot reviews for a company domain.
+
+    Skipped unless a domain is supplied: guessing it from the brand name produces the
+    wrong company far too often to be trustworthy in a client deliverable.
+    """
+    normalized = _normalize_trustpilot_domain(domain or "")
+    if not normalized:
+        return PlatformResult(platform="Trustpilot", status="empty")
+
+    window = period if period in _TRUSTPILOT_PERIODS else ""
+
+    try:
+        items = await _run_actor(
+            client,
+            _TRUSTPILOT_ACTOR,
+            token,
+            {
+                "companyUrls": [normalized],
+                "maxReviewsPerCompany": 60,
+                "sort": "recency",          # newest first, so the sample tracks the reporting period
+                "date": window,
+                "includeCompanyInfo": True,
+            },
+            memory_mb=1024,
+        )
+        _save_raw_data("Trustpilot", brand, items)
+
+        reviews: list[ScrapedReview] = []
+        replied = 0
+        summary_stat: str | None = None
+
+        for item in items:
+            # Trustpilot titles are usually a truncated head of the body, so prefer the body.
+            body = (item.get("text") or "").strip()
+            title = (item.get("title") or "").strip()
+            text = body or title
+            rating = _safe_float(item.get("rating"))
+            if not text and rating is None:
+                continue
+            if item.get("replyMessage"):
+                replied += 1
+            reviews.append(
+                ScrapedReview(
+                    platform="Trustpilot",
+                    author=item.get("authorName"),
+                    text=text,
+                    rating=rating,
+                    date=_format_date_val(item.get("publishedDate") or item.get("experienceDate")),
+                    url=item.get("reviewUrl"),
+                )
+            )
+            if summary_stat is None and item.get("companyTrustScore") is not None:
+                total = item.get("companyTotalReviews")
+                score = item.get("companyTrustScore")
+                summary_stat = f"TrustScore {score}/5" + (f" · {total:,} reviews total" if total else "")
+
+        if not reviews:
+            return PlatformResult(platform="Trustpilot", status="empty")
+
+        return PlatformResult(
+            platform="Trustpilot",
+            status="success",
+            review_count=len(reviews),
+            reviews=reviews,
+            summary_stat=summary_stat,
+            reply_rate_pct=round(replied / len(reviews) * 100, 1) if reviews else None,
+        )
+    except (RuntimeError, TimeoutError) as exc:
+        logger.error("Trustpilot scraping failed for '%s': %s", brand, exc)
+        return PlatformResult(platform="Trustpilot", status="error", error_message=_redact(str(exc))[:300])
+    except Exception as exc:
+        logger.exception("Trustpilot scraping failed for '%s' with unexpected error", brand)
+        return PlatformResult(platform="Trustpilot", status="error", error_message=_redact(str(exc))[:300])
 
 
 # ---------------------------------------------------------------------------
@@ -404,14 +750,14 @@ async def _scrape_facebook(
         return PlatformResult(
             platform="Facebook",
             status="error",
-            error_message=str(exc)[:300],
+            error_message=_redact(str(exc))[:300],
         )
     except Exception as exc:
         logger.exception("Bright Data Facebook comments scraping failed for '%s' with unexpected error", brand)
         return PlatformResult(
             platform="Facebook",
             status="error",
-            error_message=str(exc)[:300],
+            error_message=_redact(str(exc))[:300],
         )
 
 
@@ -419,19 +765,28 @@ async def _scrape_facebook(
 # Public API
 # ---------------------------------------------------------------------------
 
-async def run_full_scrape(brand_name: str, apify_token: str, facebook_url: str | None = None) -> ScrapingResponse:
+async def run_full_scrape(
+    brand_name: str,
+    apify_token: str,
+    facebook_url: str | None = None,
+    manual_analysis: ManualAnalysisWorkbook | None = None,
+    trustpilot_domain: str | None = None,
+    trustpilot_period: str | None = None,
+    google_location: str | None = None,
+) -> ScrapingResponse:
     """Run all scrapers concurrently and return a unified result."""
     async with httpx.AsyncClient(timeout=httpx.Timeout(_HTTP_TIMEOUT)) as client:
         # We run gather with return_exceptions=True to ensure that one failure doesn't crash the entire pipeline
         results = await asyncio.gather(
-            _scrape_google_maps(client, brand_name, apify_token),
+            _scrape_google_maps(client, brand_name, apify_token, google_location),
             _scrape_facebook(client, brand_name, apify_token, facebook_url),
+            _scrape_trustpilot(client, brand_name, apify_token, trustpilot_domain, trustpilot_period),
             return_exceptions=True
         )
 
     # Process results, checking for exceptions
     platforms = []
-    platform_names = ["Google Maps", "Facebook"]
+    platform_names = ["Google Maps", "Facebook", "Trustpilot"]
     for res, platform_name in zip(results, platform_names):
         if isinstance(res, Exception):
             logger.error("%s scraping raised exception: %s", platform_name, res, exc_info=True)
@@ -439,7 +794,7 @@ async def run_full_scrape(brand_name: str, apify_token: str, facebook_url: str |
                 PlatformResult(
                     platform=platform_name,
                     status="error",
-                    error_message=f"System exception: {str(res)[:100]}",
+                    error_message=f"System exception: {_redact(str(res))[:150]}",
                 )
             )
         else:
@@ -460,10 +815,21 @@ async def run_full_scrape(brand_name: str, apify_token: str, facebook_url: str |
         except Exception:
             logger.exception("Failed to classify reviews for '%s'", brand_name)
 
+    # One unified report covering everything available: always generated when there is any
+    # data at all -- scraped reviews and/or the consultant's manual analysis.
+    detailed_report = None
+    if all_reviews or manual_analysis is not None:
+        try:
+            detailed_report = await generate_detailed_social_report(brand_name, platforms, manual_analysis)
+        except Exception:
+            logger.exception("Failed to generate detailed social report for '%s'", brand_name)
+
     return ScrapingResponse(
         brand_name=brand_name,
         scraped_at=datetime.now(timezone.utc).isoformat(),
         platforms=platforms,
         total_reviews=total,
         analysis=analysis,
+        detailed_report=detailed_report,
+        manual_analysis=manual_analysis,
     )

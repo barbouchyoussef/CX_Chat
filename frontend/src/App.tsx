@@ -15,6 +15,7 @@ const AdminAssessmentReport = lazy(() => import("./components/ui/admin-assessmen
 const ClientInterviewHub = lazy(() => import("./components/ui/client-interview-hub"));
 const CustomizedTimeline = lazy(() => import("./components/CustomizedTimeline"));
 const SocialScraping = lazy(() => import("./components/ui/social-scraping"));
+const ServicesHub = lazy(() => import("./components/ui/services-hub"));
 
 function RouteLoader() {
   return (
@@ -51,6 +52,12 @@ export default function App() {
   const showTimelinePreview = pathname === "/timeline-preview";
   const showInterviewHub = pathname.startsWith("/client-interview-hub") || pathname.startsWith("/interview-hub");
   const showSocialScraping = pathname.startsWith("/social-scraping");
+  const showServicesHub = pathname.startsWith("/services");
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, "", path);
+    setPathname(path);
+  };
 
   if (showTimelinePreview) {
     return (
@@ -96,6 +103,23 @@ export default function App() {
     );
   }
 
+  if (showServicesHub) {
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <ServicesHub
+          language={language}
+          onBack={() => navigateTo("/")}
+          onOpenAssessment={() => {
+            navigateTo("/");
+            setShowChat(true);
+          }}
+          onOpenInterviewHub={() => navigateTo("/client-interview-hub")}
+          onOpenSocialScraping={() => navigateTo("/social-scraping")}
+        />
+      </Suspense>
+    );
+  }
+
   if (showAdmin) {
     return (
       <Suspense fallback={<RouteLoader />}>
@@ -135,7 +159,7 @@ export default function App() {
     <>
       <NavBar onStartConversation={() => setShowChat(true)} language={language} onLanguageChange={setLanguage} />
       <main style={{ paddingTop: "80px" }}>
-        <Hero onStartConversation={() => setShowChat(true)} language={language} />
+        <Hero onStartConversation={() => navigateTo("/services")} language={language} />
         <HowItWorks language={language} />
         <Features language={language} />
         <CoreFeaturesShowcase language={language} />
