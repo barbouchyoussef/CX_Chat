@@ -1084,13 +1084,13 @@ export default function SocialScraping({ onBack }: { onBack: () => void }) {
               name="Facebook"
               color="#1877F2"
               active={!!facebookUrl.trim()}
-              note="Comments on the page's most recent posts."
+              note="Comments on recent posts (separate multiple URLs with commas)."
             >
               <input
                 type="text"
                 value={facebookUrl}
                 onChange={(e) => setFacebookUrl(e.target.value)}
-                placeholder="https://www.facebook.com/YourBrand/"
+                placeholder="https://facebook.com/Page1, https://facebook.com/Page2"
                 className={INPUT_CLS}
               />
             </SourceRow>

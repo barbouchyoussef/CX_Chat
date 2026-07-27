@@ -663,87 +663,147 @@ def _resolve_facebook_url(brand: str) -> str:
     return f"https://www.facebook.com/{clean_handle}/"
 
 
+def _parse_facebook_urls(value: str | None, brand: str) -> list[str]:
+    """Parse a single or comma/newline-separated string of Facebook URLs or handles."""
+    if not value or not value.strip():
+        return [_resolve_facebook_url(brand)]
+
+    raw_parts = re.split(r"[\n,;]+", value.strip())
+    resolved: list[str] = []
+    seen: set[str] = set()
+    for part in raw_parts:
+        part_clean = part.strip()
+        if not part_clean:
+            continue
+        url = _resolve_facebook_url(part_clean)
+        if url and "facebook.com/" in url.lower() and url not in seen:
+            seen.add(url)
+            resolved.append(url)
+
+    return resolved if resolved else [_resolve_facebook_url(brand)]
+
+
+async def _scrape_facebook_single_page(
+    client: httpx.AsyncClient,
+    brand: str,
+    bd_token: str,
+    posts_dataset_id: str,
+    comments_dataset_id: str,
+    page_url: str,
+) -> tuple[list[ScrapedReview], str | None]:
+    """Scrape a single Facebook page URL robustly.
+
+    Swallows page-level non-fatal errors (e.g. invalid URL, 404, no posts) so
+    other pages in a multi-page request continue without interrupting the pipeline.
+    """
+    logger.info("Resolving Facebook posts via Bright Data for page: %s", page_url)
+    posts_inputs = [{"url": page_url, "num_of_posts": 10}]
+    try:
+        posts = await _run_brightdata_dataset(client, posts_dataset_id, bd_token, posts_inputs)
+    except httpx.HTTPStatusError as http_err:
+        body_text = http_err.response.text
+        if "Customer is not active" in body_text:
+            raise http_err  # Re-raise account status errors
+        logger.warning("Facebook single page scrape HTTP error for %s: %s", page_url, http_err)
+        return [], page_url
+    except Exception as exc:
+        logger.warning("Facebook single page scrape failed for %s: %s", page_url, exc)
+        return [], page_url
+
+    post_urls = [p.get("url") for p in posts if p.get("url") and ("/posts/" in p.get("url") or "pfbid" in p.get("url"))]
+    if not post_urls:
+        logger.warning("No public post URLs resolved for Facebook page: %s", page_url)
+        return [], page_url
+
+    logger.info("Scraping Facebook comments from %d posts on page: %s", len(post_urls), page_url)
+    comments_inputs = [{"url": purl, "limit_records": 15} for purl in post_urls]
+    try:
+        comments = await _run_brightdata_dataset(client, comments_dataset_id, bd_token, comments_inputs)
+    except Exception as exc:
+        logger.warning("Facebook comments fetch failed for %s: %s", page_url, exc)
+        return [], page_url
+
+    _save_raw_data("Facebook", brand, comments)
+
+    reviews: list[ScrapedReview] = []
+    for item in comments:
+        if "error" in item:
+            err_msg = item.get("error") or ""
+            if "no comments" in err_msg.lower():
+                logger.info("Bright Data post has no comments: %s", item.get("input", {}).get("url"))
+            else:
+                logger.warning("Bright Data comment item error: %s", err_msg)
+            continue
+
+        text = (item.get("comment_text") or "").strip()
+        if not _is_relevant_comment(text):
+            continue
+
+        author = item.get("user_name") or "Anonymous"
+        reviews.append(
+            ScrapedReview(
+                platform="Facebook",
+                author=author,
+                text=text,
+                date=_format_date_val(item.get("date_created") or item.get("timestamp")),
+                url=item.get("comment_link") or item.get("post_url"),
+            )
+        )
+    return reviews, page_url
+
+
 async def _scrape_facebook(
     client: httpx.AsyncClient, brand: str, token: str, facebook_url: str | None = None
 ) -> PlatformResult:
-    """Scrape Facebook comments from the latest posts of the brand's page using Bright Data."""
+    """Scrape Facebook comments across one or more pages using Bright Data concurrently."""
     try:
-        page_url = facebook_url or _resolve_facebook_url(brand)
-        if not page_url or "facebook.com/" not in page_url.lower():
+        urls = _parse_facebook_urls(facebook_url, brand)
+        if not urls:
             return PlatformResult(platform="Facebook", status="empty")
 
-        logger.info("Resolving Facebook posts via Bright Data for page: %s", page_url)
-        
-        # Bright Data Auth Token and Dataset IDs
         bd_token = "bf384e33-b646-4045-b03e-96b2f28d7e12"
         posts_dataset_id = "gd_lkaxegm826bjpoo9m5"
         comments_dataset_id = "gd_lkay758p1eanlolqw8"
-        
-        # Step 1: Fetch latest posts
-        posts_inputs = [{
-            "url": page_url,
-            "num_of_posts": 10
-        }]
-        
-        try:
-            posts = await _run_brightdata_dataset(client, posts_dataset_id, bd_token, posts_inputs)
-        except httpx.HTTPStatusError as http_err:
-            body_text = http_err.response.text
-            if "Customer is not active" in body_text:
-                return PlatformResult(
-                    platform="Facebook",
-                    status="error",
-                    error_message="Bright Data API error: Customer is not active. Please fund/activate your account.",
-                )
-            raise http_err
 
-        # Extract post URLs containing "/posts/" or post identifier "pfbid"
-        post_urls = [p.get("url") for p in posts if p.get("url") and ("/posts/" in p.get("url") or "pfbid" in p.get("url"))]
-        
-        if not post_urls:
-            logger.warning("No public post URLs resolved for Facebook page: %s", page_url)
-            return PlatformResult(platform="Facebook", status="empty")
+        logger.info("Scraping %d Facebook page(s) for brand '%s': %s", len(urls), brand, urls)
 
-        logger.info("Scraping Facebook comments from %d posts...", len(post_urls))
-        
-        # Step 2: Fetch comments for resolved posts (up to 15 comments per post)
-        comments_inputs = [{"url": purl, "limit_records": 15} for purl in post_urls]
-        comments = await _run_brightdata_dataset(client, comments_dataset_id, bd_token, comments_inputs)
-        _save_raw_data("Facebook", brand, comments)
+        page_tasks = [
+            _scrape_facebook_single_page(client, brand, bd_token, posts_dataset_id, comments_dataset_id, page_url)
+            for page_url in urls
+        ]
+        page_results = await asyncio.gather(*page_tasks, return_exceptions=True)
 
-        reviews: list[ScrapedReview] = []
-        for item in comments:
-            if "error" in item:
-                err_msg = item.get("error") or ""
-                if "no comments" in err_msg.lower():
-                    logger.info("Bright Data post has no comments: %s", item.get("input", {}).get("url"))
-                else:
-                    logger.warning("Bright Data comment item error: %s", err_msg)
+        all_reviews: list[ScrapedReview] = []
+        matched_places: list[str] = []
+        fatal_error: str | None = None
+
+        for res in page_results:
+            if isinstance(res, Exception):
+                if isinstance(res, httpx.HTTPStatusError) and "Customer is not active" in res.response.text:
+                    fatal_error = "Bright Data API error: Customer is not active. Please fund/activate your account."
                 continue
-                
-            text = (item.get("comment_text") or "").strip()
-            if not _is_relevant_comment(text):
-                continue
-            
-            author = item.get("user_name") or "Anonymous"
-            reviews.append(
-                ScrapedReview(
-                    platform="Facebook",
-                    author=author,
-                    text=text,
-                    date=_format_date_val(item.get("date_created") or item.get("timestamp")),
-                    url=item.get("comment_link") or item.get("post_url"),
-                )
+            reviews, page_url = res
+            if reviews:
+                all_reviews.extend(reviews)
+            if page_url:
+                matched_places.append(page_url)
+
+        if fatal_error and not all_reviews:
+            return PlatformResult(platform="Facebook", status="error", error_message=fatal_error)
+
+        if not all_reviews:
+            return PlatformResult(
+                platform="Facebook",
+                status="empty",
+                matched_places=matched_places,
             )
-
-        if not reviews:
-            return PlatformResult(platform="Facebook", status="empty")
 
         return PlatformResult(
             platform="Facebook",
             status="success",
-            review_count=len(reviews),
-            reviews=reviews,
+            review_count=len(all_reviews),
+            reviews=all_reviews,
+            matched_places=matched_places,
         )
     except (RuntimeError, TimeoutError) as exc:
         logger.error("Bright Data Facebook comments scraping failed for '%s': %s", brand, exc)
