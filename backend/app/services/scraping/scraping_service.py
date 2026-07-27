@@ -682,7 +682,7 @@ async def _scrape_facebook(
         # Step 1: Fetch latest posts
         posts_inputs = [{
             "url": page_url,
-            "num_of_posts": 3
+            "num_of_posts": 10
         }]
         
         try:
@@ -706,8 +706,8 @@ async def _scrape_facebook(
 
         logger.info("Scraping Facebook comments from %d posts...", len(post_urls))
         
-        # Step 2: Fetch comments for resolved posts
-        comments_inputs = [{"url": purl, "limit_records": 10} for purl in post_urls]
+        # Step 2: Fetch comments for resolved posts (up to 15 comments per post)
+        comments_inputs = [{"url": purl, "limit_records": 15} for purl in post_urls]
         comments = await _run_brightdata_dataset(client, comments_dataset_id, bd_token, comments_inputs)
         _save_raw_data("Facebook", brand, comments)
 

@@ -31,9 +31,9 @@ logger = logging.getLogger(__name__)
 # spend extra Mistral calls and latency to sharpen a long tail nobody reads. Note the rating
 # histogram is computed from every collected review regardless -- the cap only bounds the
 # semantic layer, never the headline numbers.
-_MAX_CONCURRENCY = 4
+_MAX_CONCURRENCY = 5
 _CHUNK_SIZE = 30
-_MAX_REVIEWS_TO_CLASSIFY = _MAX_CONCURRENCY * _CHUNK_SIZE  # 120, one wave
+_MAX_REVIEWS_TO_CLASSIFY = _MAX_CONCURRENCY * _CHUNK_SIZE  # 150, one wave
 
 
 def _select_balanced_sample(reviews: list[ScrapedReview]) -> list[ScrapedReview]:
