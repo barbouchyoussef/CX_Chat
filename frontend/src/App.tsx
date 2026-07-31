@@ -15,6 +15,7 @@ const AdminAssessmentReport = lazy(() => import("./components/ui/admin-assessmen
 const ClientInterviewHub = lazy(() => import("./components/ui/client-interview-hub"));
 const CustomizedTimeline = lazy(() => import("./components/CustomizedTimeline"));
 const SocialScraping = lazy(() => import("./components/ui/social-scraping"));
+const DeskResearch = lazy(() => import("./components/ui/desk-research"));
 const ServicesHub = lazy(() => import("./components/ui/services-hub"));
 
 function RouteLoader() {
@@ -52,6 +53,7 @@ export default function App() {
   const showTimelinePreview = pathname === "/timeline-preview";
   const showInterviewHub = pathname.startsWith("/client-interview-hub") || pathname.startsWith("/interview-hub");
   const showSocialScraping = pathname.startsWith("/social-scraping");
+  const showDeskResearch = pathname.startsWith("/desk-research");
   const showServicesHub = pathname.startsWith("/services");
 
   const navigateTo = (path: string) => {
@@ -103,6 +105,19 @@ export default function App() {
     );
   }
 
+  if (showDeskResearch) {
+    return (
+      <Suspense fallback={<RouteLoader />}>
+        <DeskResearch
+          onBack={() => {
+            window.history.pushState({}, "", "/services");
+            setPathname("/services");
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   if (showServicesHub) {
     return (
       <Suspense fallback={<RouteLoader />}>
@@ -115,6 +130,7 @@ export default function App() {
           }}
           onOpenInterviewHub={() => navigateTo("/client-interview-hub")}
           onOpenSocialScraping={() => navigateTo("/social-scraping")}
+          onOpenDeskResearch={() => navigateTo("/desk-research")}
         />
       </Suspense>
     );

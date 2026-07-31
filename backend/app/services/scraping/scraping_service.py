@@ -165,7 +165,13 @@ async def _run_actor(
             continue
 
         consecutive_poll_errors = 0
-        run_status = status_resp.json().get("data", {}).get("status")
+        try:
+            run_status = status_resp.json().get("data", {}).get("status")
+        except (ValueError, KeyError):
+            consecutive_poll_errors += 1
+            logger.warning("Apify poll returned non-JSON for run %s — retrying", run_id)
+            await asyncio.sleep(min(_POLL_INTERVAL * consecutive_poll_errors, 30))
+            continue
 
         if run_status == "SUCCEEDED":
             # The run is done and paid for; this fetch is the last place to lose it.
@@ -266,7 +272,13 @@ async def _run_brightdata_dataset(
                 continue
 
             consecutive_poll_errors = 0
-            status = p_resp.json().get("status")
+            try:
+                status = p_resp.json().get("status")
+            except (ValueError, KeyError):
+                consecutive_poll_errors += 1
+                logger.warning("Bright Data poll returned non-JSON for %s — retrying", snapshot_id)
+                await asyncio.sleep(min(5 * consecutive_poll_errors, 30))
+                continue
             logger.info("Bright Data snapshot %s status: %s", snapshot_id, status)
 
             if status == "ready":
@@ -752,41 +764,116 @@ async def _scrape_facebook_single_page(
     return reviews, page_url
 
 
+_NON_FEEDBACK_KEYWORDS = [
+    "عرض عمل", "مطلوب", "recrutement", "offre d'emploi", "cherche un travail",
+    "سيرة ذاتية", "شغور", "مطلوب منشط", "animateur de vente", "recrute",
+    "rabais", "concours", "ربح", "تشارك", "شارك و إربح"
+]
+
+
+def _is_customer_feedback(text: str) -> bool:
+    """Filter out job offers, recruitment ads, and promotional contest spam."""
+    if not text or len(text.strip()) < 15:
+        return False
+    text_lower = text.lower()
+    for kw in _NON_FEEDBACK_KEYWORDS:
+        if kw in text_lower:
+            return False
+    return True
+
+
+async def _scrape_facebook_keywords(
+    client: httpx.AsyncClient, brand: str, token: str, keywords: str | None = None
+) -> list[ScrapedReview]:
+    """Scrape public Facebook post & comment mentions by keyword via Apify."""
+    query_str = keywords.strip() if keywords and keywords.strip() else brand
+    logger.info("Scraping Facebook keyword mentions via Apify for query: '%s'", query_str)
+    
+    try:
+        raw_items = await _run_actor(
+            client,
+            actor_id="scrapeforge~facebook-search-posts",
+            token=token,
+            run_input={"query": query_str, "max_results": 15},
+            memory_mb=2048,
+            timeout=120,
+        )
+        reviews: list[ScrapedReview] = []
+        for idx, item in enumerate(raw_items, 1):
+            text = item.get("message") or item.get("postText") or item.get("content") or ""
+            if not _is_customer_feedback(text):
+                continue
+            post_id = item.get("post_id") or str(idx)
+            url = item.get("url") or f"https://www.facebook.com/search/posts/?q={query_str}"
+            timestamp_val = str(item.get("timestamp") or "")
+
+            reviews.append(
+                ScrapedReview(
+                    platform="Facebook",
+                    author="Anonymous",  # Presented anonymously as requested
+                    text=text,
+                    rating=None,
+                    date=timestamp_val,
+                    url=url,
+                )
+            )
+        logger.info("Retained %d valid Facebook keyword mention review(s) for '%s'", len(reviews), query_str)
+        return reviews
+    except Exception as exc:
+        logger.warning("Apify Facebook keyword search failed for '%s': %s", query_str, exc)
+        return []
+
+
 async def _scrape_facebook(
-    client: httpx.AsyncClient, brand: str, token: str, facebook_url: str | None = None
+    client: httpx.AsyncClient,
+    brand: str,
+    token: str,
+    facebook_url: str | None = None,
+    keywords: str | None = None,
 ) -> PlatformResult:
-    """Scrape Facebook comments across one or more pages using Bright Data concurrently."""
+    """Scrape Facebook comments across pages (Bright Data) and keyword mentions (Apify) concurrently."""
     try:
         urls = _parse_facebook_urls(facebook_url, brand)
-        if not urls:
-            return PlatformResult(platform="Facebook", status="empty")
-
-        bd_token = "bf384e33-b646-4045-b03e-96b2f28d7e12"
-        posts_dataset_id = "gd_lkaxegm826bjpoo9m5"
-        comments_dataset_id = "gd_lkay758p1eanlolqw8"
-
-        logger.info("Scraping %d Facebook page(s) for brand '%s': %s", len(urls), brand, urls)
-
-        page_tasks = [
-            _scrape_facebook_single_page(client, brand, bd_token, posts_dataset_id, comments_dataset_id, page_url)
-            for page_url in urls
-        ]
-        page_results = await asyncio.gather(*page_tasks, return_exceptions=True)
-
         all_reviews: list[ScrapedReview] = []
         matched_places: list[str] = []
         fatal_error: str | None = None
 
-        for res in page_results:
+        tasks = []
+        # 1. Page Scraper task via Bright Data (if URLs exist and a token is configured)
+        bd_token = os.getenv("BRIGHTDATA_API_TOKEN", "")
+        if urls and bd_token:
+            posts_dataset_id = os.getenv("BRIGHTDATA_FB_POSTS_DATASET_ID", "gd_lkaxegm826bjpoo9m5")
+            comments_dataset_id = os.getenv("BRIGHTDATA_FB_COMMENTS_DATASET_ID", "gd_lkay758p1eanlolqw8")
+            for page_url in urls:
+                tasks.append(
+                    _scrape_facebook_single_page(client, brand, bd_token, posts_dataset_id, comments_dataset_id, page_url)
+                )
+
+        # 2. Keyword Mentions task via Apify (if keywords provided OR if no page URLs provided)
+        should_run_keywords = bool(keywords and keywords.strip()) or not urls
+        if should_run_keywords:
+            tasks.append(_scrape_facebook_keywords(client, brand, token, keywords))
+
+        if not tasks:
+            return PlatformResult(platform="Facebook", status="empty")
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for res in results:
             if isinstance(res, Exception):
-                if isinstance(res, httpx.HTTPStatusError) and "Customer is not active" in res.response.text:
+                err_text = getattr(getattr(res, "response", None), "text", "")
+                if isinstance(res, httpx.HTTPStatusError) and "Customer is not active" in err_text:
                     fatal_error = "Bright Data API error: Customer is not active. Please fund/activate your account."
                 continue
-            reviews, page_url = res
-            if reviews:
-                all_reviews.extend(reviews)
-            if page_url:
-                matched_places.append(page_url)
+            if isinstance(res, tuple):
+                reviews, page_url = res
+                if reviews:
+                    all_reviews.extend(reviews)
+                if page_url:
+                    matched_places.append(page_url)
+            elif isinstance(res, list):
+                all_reviews.extend(res)
+                matched_places.append(f"Keyword Mentions ('{keywords.strip() if keywords else brand}')")
 
         if fatal_error and not all_reviews:
             return PlatformResult(platform="Facebook", status="error", error_message=fatal_error)
@@ -806,16 +893,129 @@ async def _scrape_facebook(
             matched_places=matched_places,
         )
     except (RuntimeError, TimeoutError) as exc:
-        logger.error("Bright Data Facebook comments scraping failed for '%s': %s", brand, exc)
+        logger.error("Facebook comments & keyword scraping failed for '%s': %s", brand, exc)
         return PlatformResult(
             platform="Facebook",
             status="error",
             error_message=_redact(str(exc))[:300],
         )
     except Exception as exc:
-        logger.exception("Bright Data Facebook comments scraping failed for '%s' with unexpected error", brand)
+        logger.exception("Facebook comments & keyword scraping failed for '%s' with unexpected error", brand)
         return PlatformResult(
             platform="Facebook",
+            status="error",
+            error_message=_redact(str(exc))[:300],
+        )
+
+
+def _is_meaningful_instagram_comment(text: str) -> bool:
+    """Filter out emoji-only, tag-only (@user), single-word, spam, and non-feedback Instagram comments."""
+    if not text:
+        return False
+    text_clean = text.strip()
+    text_no_mentions = re.sub(r'@[A-Za-z0-9._-]+', '', text_clean).strip()
+    if len(text_no_mentions) < 10:
+        return False
+    letters_only = re.sub(r'[^\w\s\u0600-\u06FF]', '', text_no_mentions)
+    if len(letters_only.strip()) < 6:
+        return False
+    text_lower = text_clean.lower()
+    for kw in _NON_FEEDBACK_KEYWORDS:
+        if kw in text_lower:
+            return False
+    return True
+
+
+async def _scrape_instagram(
+    client: httpx.AsyncClient, brand: str, token: str, instagram_url: str | None = None
+) -> PlatformResult:
+    """Scrape Instagram profile posts & comments using an automated 2-step pipeline via Apify."""
+    if not instagram_url or not instagram_url.strip():
+        return PlatformResult(platform="Instagram", status="empty")
+
+    clean_input = instagram_url.strip()
+    logger.info("Scraping Instagram for brand '%s' with input: %s", brand, clean_input)
+
+    try:
+        # Step 1: Discover recent post URLs from Instagram Profile or handle
+        username = clean_input.split("?")[0].rstrip("/").split("/")[-1].replace("@", "")
+        clean_profile_url = f"https://www.instagram.com/{username}/"
+
+        posts_data = await _run_actor(
+            client,
+            actor_id="apify~instagram-scraper",
+            token=token,
+            run_input={
+                "directUrls": [clean_profile_url],
+                "resultsType": "posts",
+                "resultsLimit": 5,
+            },
+            memory_mb=2048,
+            timeout=90,
+        )
+
+        post_urls = []
+        for item in posts_data:
+            short_code = item.get("shortCode")
+            if short_code:
+                post_urls.append(f"https://www.instagram.com/p/{short_code}/")
+            elif item.get("url") and ("/p/" in item["url"] or "/reel/" in item["url"]):
+                post_urls.append(item["url"])
+
+        if not post_urls:
+            return PlatformResult(
+                platform="Instagram",
+                status="empty",
+                matched_places=[clean_profile_url],
+            )
+
+        # Step 2: Fetch comments under discovered posts/reels
+        raw_comments = await _run_actor(
+            client,
+            actor_id="apify~instagram-comment-scraper",
+            token=token,
+            run_input={"directUrls": post_urls, "resultsLimit": 25},
+            memory_mb=2048,
+            timeout=90,
+        )
+
+        reviews: list[ScrapedReview] = []
+        for idx, c in enumerate(raw_comments, 1):
+            text = c.get("text") or c.get("commentText") or ""
+            post_url = c.get("postUrl") or post_urls[0]
+            timestamp_val = str(c.get("timestamp") or c.get("created_at") or "")
+
+            if _is_meaningful_instagram_comment(text):
+                reviews.append(
+                    ScrapedReview(
+                        platform="Instagram",
+                        author="Anonymous",  # Presented anonymously as requested
+                        rating=None,
+                        text=text,
+                        date=timestamp_val,
+                        url=post_url,
+                    )
+                )
+
+        if not reviews:
+            return PlatformResult(
+                platform="Instagram",
+                status="empty",
+                matched_places=[clean_profile_url],
+            )
+
+        return PlatformResult(
+            platform="Instagram",
+            status="success",
+            review_count=len(reviews),
+            reviews=reviews,
+            matched_places=[clean_profile_url],
+        )
+
+    except Exception as exc:
+        logger.exception("Instagram scraping failed for '%s'", brand)
+        return PlatformResult(
+            platform="Instagram",
             status="error",
             error_message=_redact(str(exc))[:300],
         )
@@ -833,20 +1033,23 @@ async def run_full_scrape(
     trustpilot_domain: str | None = None,
     trustpilot_period: str | None = None,
     google_location: str | None = None,
+    keywords: str | None = None,
+    instagram_url: str | None = None,
 ) -> ScrapingResponse:
     """Run all scrapers concurrently and return a unified result."""
     async with httpx.AsyncClient(timeout=httpx.Timeout(_HTTP_TIMEOUT)) as client:
         # We run gather with return_exceptions=True to ensure that one failure doesn't crash the entire pipeline
         results = await asyncio.gather(
             _scrape_google_maps(client, brand_name, apify_token, google_location),
-            _scrape_facebook(client, brand_name, apify_token, facebook_url),
+            _scrape_facebook(client, brand_name, apify_token, facebook_url, keywords),
             _scrape_trustpilot(client, brand_name, apify_token, trustpilot_domain, trustpilot_period),
+            _scrape_instagram(client, brand_name, apify_token, instagram_url),
             return_exceptions=True
         )
 
     # Process results, checking for exceptions
     platforms = []
-    platform_names = ["Google Maps", "Facebook", "Trustpilot"]
+    platform_names = ["Google Maps", "Facebook", "Trustpilot", "Instagram"]
     for res, platform_name in zip(results, platform_names):
         if isinstance(res, Exception):
             logger.error("%s scraping raised exception: %s", platform_name, res, exc_info=True)
@@ -893,3 +1096,4 @@ async def run_full_scrape(
         detailed_report=detailed_report,
         manual_analysis=manual_analysis,
     )
+

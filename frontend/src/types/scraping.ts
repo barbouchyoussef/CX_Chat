@@ -236,6 +236,10 @@ export interface ScrapingResponse {
   detailed_report?: DetailedSocialReport | null;
   /** The consultant's workbook, echoed back so a past report can be reopened and re-run. */
   manual_analysis?: ManualAnalysisWorkbook | null;
+  /** The saved report's filename, used to address this report (e.g. its chatbot endpoint). */
+  report_filename?: string | null;
+  /** Persisted chat history for this report's assistant (loaded with the report). */
+  chat_messages?: { id: string; role: string; text: string; sources?: string[]; ts?: number }[] | null;
 }
 
 export interface PastReportItem {

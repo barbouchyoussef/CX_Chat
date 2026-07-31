@@ -110,7 +110,11 @@ async def _archive_run(response: ScrapingResponse) -> None:
         os.makedirs("scraped_data", exist_ok=True)
         safe_brand = re.sub(r"[^a-zA-Z0-9_-]", "_", response.brand_name.strip().lower())
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        filepath = os.path.join("scraped_data", f"{safe_brand}_report_{timestamp}.json")
+        filename = f"{safe_brand}_report_{timestamp}.json"
+        filepath = os.path.join("scraped_data", filename)
+        # Stamp the filename onto the response so it is saved into the file AND carried in the
+        # job result -- the UI needs it to address this report (e.g. its chatbot).
+        response.report_filename = filename
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(response.model_dump(), f, indent=2, ensure_ascii=False)
         logger.info("Saved full scraping report to %s", filepath)
@@ -155,6 +159,8 @@ async def _run_job(job_id: int, req: ScrapeRequest, apify_token: str) -> None:
                 req.trustpilot_domain,
                 req.trustpilot_period,
                 req.google_location,
+                req.keywords,
+                req.instagram_url,
             )
             # Archiving is best-effort and must never turn a completed scrape into a failed
             # job: the result is already in hand, and the job row is what the browser reads.

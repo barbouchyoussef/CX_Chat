@@ -10,6 +10,9 @@ class ScrapeRequest(BaseModel):
     # a search for "Mytek" returned IT firms in Phoenix and wholesalers in Mexico.
     google_location: str | None = None
     facebook_url: str | None = None
+    instagram_url: str | None = None
+    # Brand mention keywords to search public Facebook posts & comments by keyword (e.g. "tunisie telecom", "mytek tn")
+    keywords: str | None = None
     # Trustpilot company domain, e.g. "orange.fr". Optional: skipped when not provided,
     # because resolving it from the brand name alone is unreliable.
     trustpilot_domain: str | None = None
@@ -310,6 +313,9 @@ class ScrapingResponse(BaseModel):
     # browser lost it, past reports could not be regenerated against an improved prompt,
     # and there was no record of where a figure in the report came from.
     manual_analysis: ManualAnalysisWorkbook | None = None
+    # The saved report's filename (set at archive time). Lets the UI address this report --
+    # e.g. to open the report chatbot against it -- for both fresh runs and reloaded archives.
+    report_filename: str | None = None
 
 
 class CompanyOption(BaseModel):

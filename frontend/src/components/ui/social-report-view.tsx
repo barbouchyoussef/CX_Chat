@@ -20,6 +20,8 @@ import {
   Users,
 } from "lucide-react";
 import type {
+  ChannelReportSection,
+  PlatformResult,
   PlatformSentiment,
   RatingDistribution,
   RatingSentimentCheck,
@@ -31,6 +33,9 @@ import type {
 } from "../../types/scraping";
 import { sourceLabel } from "../../types/scraping";
 import type { ChannelAnalysis, ChannelPost } from "../../types/manual-analysis";
+import ModuleChat, { type ModuleChatMessage } from "./module-chat";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 
 /* ------------------------------------------------------------------ */
 /*  Formatting helpers                                                 */
@@ -126,11 +131,18 @@ const NEUTRAL_MARK = "#cbd5e1";
 const POSITIVE_MARK = "#10b981";
 
 function buildChannelColors(names: string[]): Record<string, string> {
-  const map: Record<string, string> = {};
+  const map: Record<string, string> = {
+    "Google Maps": "#1A73E8",
+    "Facebook": "#1877F2",
+    "Instagram": "#E4405F",
+    "Trustpilot": "#00B67A",
+  };
   Array.from(new Set(names))
     .sort()
     .forEach((name, i) => {
-      map[name] = CHANNEL_HUES[i % CHANNEL_HUES.length];
+      if (!map[name]) {
+        map[name] = CHANNEL_HUES[i % CHANNEL_HUES.length];
+      }
     });
   return map;
 }
@@ -606,70 +618,82 @@ function TopicChart({ items }: { items: ThemeFrequency[] }) {
  * growing, not just how big it is now — so rising problems (rose) are what the eye should
  * catch first, and the list is already ordered by size of movement. */
 function MomentumChart({ momentum }: { momentum: TopicMomentum }) {
-  const max = Math.max(10, ...momentum.items.flatMap((i) => [i.earlier_share, i.recent_share]));
-  const dirColor = (d: string) =>
-    d === "rising" ? NEGATIVE_MARK : d === "falling" ? POSITIVE_MARK : "#94a3b8";
-  const dirWord = (d: string) => (d === "rising" ? "rising" : d === "falling" ? "easing" : "steady");
+  // Diverging by direction: easing extends left (green), rising extends right (red). Direction
+  // is encoded by position + icon + text as well as colour, so it never rests on colour alone.
+  const maxDelta = Math.max(1, ...momentum.items.map((i) => Math.abs(i.delta)));
+  const GRID = "grid grid-cols-[minmax(10rem,1.2fr)_1.6fr_auto] items-center gap-4";
+  const color = (d: string) => (d === "rising" ? NEGATIVE_MARK : d === "falling" ? POSITIVE_MARK : "#94a3b8");
+  const word = (d: string) => (d === "rising" ? "rising" : d === "falling" ? "easing" : "steady");
+  const icon = (d: string) => (d === "rising" ? "▲" : d === "falling" ? "▼" : "→");
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] text-slate-500">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-4 rounded-full bg-slate-300" />
-          {momentum.earlier_label}{" "}
-          <span className="tabular-nums text-slate-400">(n={momentum.earlier_total})</span>
-        </span>
-        <span className="text-slate-300">→</span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-slate-800" />
-          {momentum.recent_label}{" "}
-          <span className="tabular-nums text-slate-400">(n={momentum.recent_total})</span>
-        </span>
+      <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+        <span className="font-medium text-slate-600">{momentum.earlier_label}</span>
+        <span className="tabular-nums text-slate-400">(n={momentum.earlier_total})</span>
+        <span className="mx-1 text-slate-300">→</span>
+        <span className="font-medium text-slate-600">{momentum.recent_label}</span>
+        <span className="tabular-nums text-slate-400">(n={momentum.recent_total})</span>
       </div>
 
-      <div className="space-y-3.5">
+      <div className="space-y-3">
         {momentum.items.map((it) => {
-          const color = dirColor(it.direction);
-          const lo = Math.min(it.earlier_share, it.recent_share);
-          const hi = Math.max(it.earlier_share, it.recent_share);
+          const c = color(it.direction);
+          const w = (Math.abs(it.delta) / maxDelta) * 46; // % of the plot's half-width
+          const rising = it.direction === "rising";
+          const steady = it.direction !== "rising" && it.direction !== "falling";
           return (
-            <div key={it.label} className="grid grid-cols-[minmax(9rem,1.1fr)_2fr_auto] items-center gap-3">
-              <span className="truncate text-[13px] font-semibold text-slate-800" title={it.label}>
-                {it.label}
-              </span>
-              {/* Dumbbell: the connecting bar is the change, the dark dot is "now". */}
-              <div className="relative h-4">
-                <div className="absolute inset-y-0 left-0 right-0 my-auto h-px bg-slate-100" />
-                <div
-                  className="absolute inset-y-0 my-auto h-[3px] rounded-full"
-                  style={{ left: `${(lo / max) * 100}%`, width: `${((hi - lo) / max) * 100}%`, background: color }}
-                />
-                <span
-                  className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-slate-300"
-                  style={{ left: `${(it.earlier_share / max) * 100}%` }}
-                  title={`${momentum.earlier_label}: ${it.earlier_share}%`}
-                />
-                <span
-                  className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white"
-                  style={{ left: `${(it.recent_share / max) * 100}%`, background: color }}
-                  title={`${momentum.recent_label}: ${it.recent_share}%`}
-                />
+            <div key={it.label} className={GRID}>
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-semibold text-slate-800" title={it.label}>{it.label}</div>
+                <div className="mt-0.5 text-[11px] tabular-nums text-slate-400">
+                  {it.earlier_share}% <span className="text-slate-300">→</span>{" "}
+                  <span className="font-semibold text-slate-600">{it.recent_share}%</span>
+                </div>
               </div>
-              <span className="flex items-center gap-1 whitespace-nowrap text-[12px] font-semibold tabular-nums" style={{ color }}>
-                {it.direction === "rising" ? "▲" : it.direction === "falling" ? "▼" : "→"}
-                {it.delta > 0 ? "+" : ""}{it.delta} pts
-                <span className="font-normal text-slate-400">{dirWord(it.direction)}</span>
+
+              <div
+                className="relative h-5"
+                title={`${it.earlier_share}% → ${it.recent_share}% (${it.delta > 0 ? "+" : ""}${it.delta} pts)`}
+              >
+                <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-200" />
+                {!steady && (
+                  <>
+                    <div
+                      className="absolute top-1/2 h-[6px] -translate-y-1/2 rounded-full"
+                      style={rising ? { left: "50%", width: `${w}%`, background: c } : { right: "50%", width: `${w}%`, background: c }}
+                    />
+                    <span
+                      className="absolute top-1/2 h-2.5 w-2.5 rounded-full border-2 border-white"
+                      style={{ left: `calc(50% ${rising ? "+" : "-"} ${w}%)`, transform: "translate(-50%,-50%)", background: c }}
+                    />
+                  </>
+                )}
+              </div>
+
+              <span className="flex items-center gap-1 whitespace-nowrap text-[12px] font-semibold tabular-nums" style={{ color: c }}>
+                {icon(it.direction)} {Math.abs(it.delta)} pts
+                <span className="font-normal text-slate-400">{word(it.direction)}</span>
               </span>
             </div>
           );
         })}
       </div>
 
-      <p className="mt-4 border-t border-slate-100 pt-3 text-[11px] leading-relaxed text-slate-500">
-        Share of all analysed feedback in each half of the collected history, split into two
-        equal-sized samples. <span style={{ color: NEGATIVE_MARK }} className="font-semibold">Rising</span>{" "}
-        categories are growing as a proportion of what customers raise;{" "}
-        <span style={{ color: POSITIVE_MARK }} className="font-semibold">easing</span> ones are shrinking.
+      <div className={`mt-2 ${GRID}`}>
+        <div />
+        <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wide">
+          <span style={{ color: POSITIVE_MARK }}>← easing</span>
+          <span style={{ color: NEGATIVE_MARK }}>rising →</span>
+        </div>
+        <div />
+      </div>
+
+      <p className="mt-3 border-t border-slate-100 pt-3 text-[11px] leading-relaxed text-slate-500">
+        Share of all analysed feedback in each half of the collected history (two equal-sized samples).{" "}
+        <span style={{ color: NEGATIVE_MARK }} className="font-semibold">Rising</span> categories grow as a
+        proportion of what customers raise; <span style={{ color: POSITIVE_MARK }} className="font-semibold">easing</span>{" "}
+        ones shrink.
       </p>
     </div>
   );
@@ -1032,6 +1056,463 @@ function VerbatimGroups({ verbatims }: { verbatims: ThemeVerbatim[] }) {
   );
 }
 
+/** Interactive per-channel sentiment & feedbacks component.
+ * Allows viewing each channel's sentiment stats, AI summary, strengths, friction points,
+ * and direct customer feedbacks via dedicated channel tabs. */
+function ChannelSentimentTabbedView({
+  rows,
+  colors,
+  verbatims = [],
+  scrapedPlatforms = [],
+  channelBreakdown = [],
+}: {
+  rows: PlatformSentiment[];
+  colors: Record<string, string>;
+  verbatims?: ThemeVerbatim[];
+  scrapedPlatforms?: PlatformResult[];
+  channelBreakdown?: ChannelReportSection[];
+}) {
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [sentimentFilter, setSentimentFilter] = useState<"all" | "negative" | "neutral" | "positive">("all");
+
+  const activeRow = useMemo(
+    () => (activeTab === "all" ? null : rows.find((r) => r.platform === activeTab)),
+    [activeTab, rows]
+  );
+
+  const activeBreakdown = useMemo(
+    () =>
+      activeTab === "all"
+        ? null
+        : channelBreakdown.find((b) => b.channel.toLowerCase() === activeTab.toLowerCase()),
+    [activeTab, channelBreakdown]
+  );
+
+  const channelFeedbacks = useMemo(() => {
+    let items: {
+      text: string;
+      sentiment: "positive" | "neutral" | "negative";
+      rating?: number | null;
+      date?: string | null;
+      platform: string;
+      label?: string;
+      url?: string | null;
+      author?: string | null;
+    }[] = [];
+
+    if (activeTab === "all") {
+      items = verbatims.map((v) => ({
+        text: v.text,
+        sentiment: (v.sentiment as "positive" | "neutral" | "negative") || "neutral",
+        rating: v.rating,
+        date: v.date,
+        platform: v.platform,
+        label: v.label,
+        url: v.url,
+      }));
+    } else {
+      const verbMatches = verbatims.filter(
+        (v) => v.platform.toLowerCase() === activeTab.toLowerCase()
+      );
+      items = verbMatches.map((v) => ({
+        text: v.text,
+        sentiment: (v.sentiment as "positive" | "neutral" | "negative") || "neutral",
+        rating: v.rating,
+        date: v.date,
+        platform: v.platform,
+        label: v.label,
+        url: v.url,
+      }));
+
+      const pResult = scrapedPlatforms.find(
+        (p) => p.platform.toLowerCase() === activeTab.toLowerCase()
+      );
+      if (pResult?.reviews) {
+        for (const r of pResult.reviews) {
+          if (!r.text || r.text.trim().length < 10) continue;
+          if (items.some((existing) => existing.text.slice(0, 40) === r.text.slice(0, 40))) continue;
+
+          let sent: "positive" | "neutral" | "negative" = "neutral";
+          if (r.classification?.sentiment) {
+            sent = r.classification.sentiment;
+          } else if (r.rating != null) {
+            if (r.rating <= 2) sent = "negative";
+            else if (r.rating >= 4) sent = "positive";
+          }
+
+          items.push({
+            text: r.text,
+            sentiment: sent,
+            rating: r.rating,
+            date: r.date,
+            platform: r.platform,
+            author: r.author,
+            url: r.url,
+            label: r.classification?.complaint_category || r.classification?.themes?.[0],
+          });
+        }
+      }
+    }
+
+    if (sentimentFilter !== "all") {
+      items = items.filter((i) => i.sentiment === sentimentFilter);
+    }
+
+    return items;
+  }, [activeTab, verbatims, scrapedPlatforms, sentimentFilter]);
+
+  return (
+    <div className="space-y-6">
+      {/* ── Channel Tab Selector ── */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+        <button
+          onClick={() => {
+            setActiveTab("all");
+            setSentimentFilter("all");
+          }}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+            activeTab === "all"
+              ? "bg-[#111827] text-white shadow-sm"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <BarChart3 className="h-3.5 w-3.5" />
+          <span>All Channels</span>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-extrabold">
+            {rows.length}
+          </span>
+        </button>
+
+        {rows.map((row) => {
+          const isActive = activeTab === row.platform;
+          const hue = colors[row.platform] ?? "#64748b";
+          return (
+            <button
+              key={row.platform}
+              onClick={() => {
+                setActiveTab(row.platform);
+                setSentimentFilter("all");
+              }}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+                isActive
+                  ? "bg-[#111827] text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: hue }} />
+              <span>{row.platform}</span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                  isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {row.classified_count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Tab Content: All Channels Overview ── */}
+      {activeTab === "all" && (
+        <div className="space-y-6">
+          {rows.length <= 3 ? (
+            <div className={`grid gap-4 ${rows.length > 1 ? "sm:grid-cols-2" : ""}`}>
+              {rows.map((row) => (
+                <ChannelSentimentCard key={row.platform} row={row} accent={colors[row.platform]} />
+              ))}
+            </div>
+          ) : (
+            <Panel>
+              <ScrapedChannelTable rows={rows} />
+            </Panel>
+          )}
+
+          {verbatims.length > 0 && (
+            <Panel
+              title="Consolidated Customer Feedbacks Across Channels"
+              hint="Top extracts supporting sentiment breakdown"
+            >
+              <VerbatimGroups verbatims={verbatims} />
+            </Panel>
+          )}
+        </div>
+      )}
+
+      {/* ── Tab Content: Specific Channel View ── */}
+      {activeTab !== "all" && activeRow && (
+        <div className="space-y-6">
+          {/* Header Card / Scorecard for the specific channel */}
+          <div
+            className="pdf-block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            style={{ borderTop: `4px solid ${colors[activeRow.platform] ?? "#2a78d6"}` }}
+          >
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: colors[activeRow.platform] ?? "#2a78d6" }}
+                  />
+                  <h3 className="text-xl font-bold text-slate-900">{activeRow.platform}</h3>
+                </div>
+                {activeRow.summary_stat && (
+                  <p className="mt-1 text-xs text-slate-500">{activeRow.summary_stat}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                  {activeRow.classified_count} Analysed Reviews
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                  {activeRow.review_count} Total Collected
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Donut Chart */}
+              <div className="flex items-center gap-4 rounded-xl bg-slate-50 p-4">
+                <Donut
+                  pos={activeRow.positive_pct}
+                  neu={activeRow.neutral_pct}
+                  neg={activeRow.negative_pct}
+                />
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Sentiment Split
+                  </p>
+                  <p className="text-xs font-semibold text-emerald-600">
+                    {activeRow.positive_pct}% Pos
+                  </p>
+                  <p className="text-xs font-semibold text-slate-500">
+                    {activeRow.neutral_pct}% Neu
+                  </p>
+                  <p className="text-xs font-semibold text-rose-600">
+                    {activeRow.negative_pct}% Neg
+                  </p>
+                </div>
+              </div>
+
+              {/* Avg Rating */}
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Avg Score / Rating
+                </p>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-2xl font-extrabold text-slate-900">
+                    {activeRow.avg_rating != null ? activeRow.avg_rating.toFixed(1) : "—"}
+                  </span>
+                  <span className="text-xs text-slate-400">/ 5</span>
+                </div>
+                <div className="mt-1.5 flex items-center text-amber-500">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-3.5 w-3.5 ${
+                        (activeRow.avg_rating ?? 0) >= star
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-slate-200"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Brand Reply Rate */}
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Brand Reply Rate
+                </p>
+                <p
+                  className={`mt-1 text-2xl font-extrabold ${
+                    activeRow.reply_rate_pct != null && activeRow.reply_rate_pct < 10
+                      ? "text-rose-600"
+                      : "text-slate-900"
+                  }`}
+                >
+                  {activeRow.reply_rate_pct != null ? `${activeRow.reply_rate_pct}%` : "N/A"}
+                </p>
+                <p className="mt-1 text-[11px] text-slate-400">Public responses to feedback</p>
+              </div>
+
+              {/* Negative Share */}
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Negative Share
+                </p>
+                <p
+                  className="mt-1 text-2xl font-extrabold tabular-nums"
+                  style={{ color: NEGATIVE_MARK }}
+                >
+                  {activeRow.negative_pct}%
+                </p>
+                <p className="mt-1 text-[11px] text-slate-400">Critical complaints ratio</p>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Channel Breakdown (Summary, Strengths, Friction Points) */}
+          {activeBreakdown && (
+            <Panel
+              title={`${activeRow.platform} AI Analysis & Diagnostic`}
+              hint="Extracted channel summary and observations"
+            >
+              <div className="space-y-4">
+                {activeBreakdown.summary && (
+                  <p className="text-sm leading-relaxed text-slate-700">
+                    {activeBreakdown.summary}
+                  </p>
+                )}
+
+                {activeBreakdown.strengths && activeBreakdown.strengths.length > 0 && (
+                  <div>
+                    <h5 className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-700">
+                      Channel Strengths
+                    </h5>
+                    <div className="flex flex-wrap gap-2">
+                      {activeBreakdown.strengths.map((str: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 border border-emerald-200/60"
+                        >
+                          <ThumbsUp className="h-3.5 w-3.5 text-emerald-600" />
+                          {str}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeBreakdown.friction_points && activeBreakdown.friction_points.length > 0 && (
+                  <div>
+                    <h5 className="mb-2 text-xs font-bold uppercase tracking-wider text-rose-700">
+                      Channel Friction Points
+                    </h5>
+                    <div className="flex flex-wrap gap-2">
+                      {activeBreakdown.friction_points.map((fric: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 border border-rose-200/60"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+                          {fric}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Panel>
+          )}
+
+          {/* Feedbacks / Reviews list for this channel */}
+          <Panel
+            title={`Customer Feedbacks for ${activeRow.platform}`}
+            hint={`${channelFeedbacks.length} items matching active filters`}
+          >
+            <div className="space-y-4">
+              {/* Sentiment Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-3">
+                <span className="mr-2 text-xs font-semibold text-slate-500">Filter Sentiment:</span>
+                {(["all", "negative", "neutral", "positive"] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setSentimentFilter(st)}
+                    className={`rounded-lg px-3 py-1 text-xs font-bold capitalize transition ${
+                      sentimentFilter === st
+                        ? st === "negative"
+                          ? "bg-rose-600 text-white"
+                          : st === "positive"
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-700 text-white"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+
+              {channelFeedbacks.length === 0 ? (
+                <p className="py-6 text-center text-xs text-slate-400">
+                  No feedback items found for this sentiment filter.
+                </p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {channelFeedbacks.map((fb, idx) => (
+                    <blockquote
+                      key={idx}
+                      className={`pdf-block flex flex-col justify-between rounded-xl border-l-4 bg-slate-50/70 p-4 transition hover:bg-slate-100/80 ${
+                        fb.sentiment === "negative"
+                          ? "border-rose-500"
+                          : fb.sentiment === "positive"
+                            ? "border-emerald-500"
+                            : "border-slate-400"
+                      }`}
+                    >
+                      <div>
+                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                          {fb.label && (
+                            <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-700 border border-slate-200">
+                              {fb.label}
+                            </span>
+                          )}
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            {fb.rating != null && (
+                              <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200/60">
+                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                {fb.rating}/5
+                              </span>
+                            )}
+                            <span
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                                fb.sentiment === "negative"
+                                  ? "bg-rose-100 text-rose-800"
+                                  : fb.sentiment === "positive"
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : "bg-slate-200 text-slate-700"
+                              }`}
+                            >
+                              {fb.sentiment}
+                            </span>
+                          </div>
+                        </div>
+
+                        <p className="text-[13px] italic leading-relaxed text-slate-700">
+                          "{fb.text}"
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between border-t border-slate-200/60 pt-2 text-[11px] text-slate-400">
+                        <span>
+                          {fb.author || fb.platform}
+                          {fb.date && ` · ${new Date(fb.date).toLocaleDateString()}`}
+                        </span>
+                        {fb.url && (
+                          <a
+                            href={fb.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#8a6d2f] hover:underline"
+                          >
+                            View
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    </blockquote>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Panel>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Owned-channel visuals (from the consultant's workbook)             */
 /* ------------------------------------------------------------------ */
@@ -1150,6 +1631,27 @@ export default function SocialReportView({ result, onBack, onExportExcel, onReus
   const report = result.detailed_report;
   const evidence = report?.evidence ?? null;
   const manual = result.manual_analysis ?? null;
+
+  // Report chatbot: answers from this report's computed findings, persisted per report.
+  const [chatMessages, setChatMessages] = useState<ModuleChatMessage[]>([]);
+  const appendChatMessage = (m: ModuleChatMessage) => setChatMessages((prev) => [...prev, m]);
+  const canChat = Boolean(result.report_filename && report);
+
+  // Load the persisted conversation when a report opens (and switch cleanly between reports).
+  useEffect(() => {
+    const stored = result.chat_messages;
+    setChatMessages(
+      Array.isArray(stored) && stored.length
+        ? stored.map((m) => ({
+            id: m.id ?? `${Math.random()}`,
+            role: m.role === "assistant" ? "assistant" : "user",
+            text: m.text ?? "",
+            sources: m.sources,
+            ts: m.ts ?? Date.now(),
+          }))
+        : [],
+    );
+  }, [result.report_filename, result.chat_messages]);
   /* Memoised because the `?? []` fallback would otherwise mint a new array on every render,
      re-running the section memo and re-subscribing the scroll listener each time. */
   const channels = useMemo(() => manual?.channels ?? [], [manual]);
@@ -1805,27 +2307,15 @@ export default function SocialReportView({ result, onBack, onExportExcel, onReus
                 <Section
                   id="sentiment"
                   title="Sentiment by channel"
-                  subtitle="Public reviews"
+                  subtitle="Public reviews & customer feedbacks per channel"
                 >
-                  {/* Few channels render as rich cards with a donut; a one-row table reads
-                      as broken. Four or more switch to a table, where scanning wins. */}
-                  {platformRows.length <= 3 ? (
-                    <div
-                      className={`grid gap-4 ${platformRows.length > 1 ? "sm:grid-cols-2" : ""}`}
-                    >
-                      {platformRows.map((row) => (
-                        <ChannelSentimentCard
-                          key={row.platform}
-                          row={row}
-                          accent={channelColors[row.platform]}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Panel>
-                      <ScrapedChannelTable rows={platformRows} />
-                    </Panel>
-                  )}
+                  <ChannelSentimentTabbedView
+                    rows={platformRows}
+                    colors={channelColors}
+                    verbatims={evidence?.verbatims ?? []}
+                    scrapedPlatforms={result.platforms}
+                    channelBreakdown={report?.channel_breakdown ?? []}
+                  />
                 </Section>
               )}
 
@@ -1944,6 +2434,22 @@ export default function SocialReportView({ result, onBack, onExportExcel, onReus
         {/* Mirrors the sidebar so the document stays optically centred on screen. */}
         <div className="no-print hidden w-56 shrink-0 xl:block" aria-hidden />
       </main>
+
+      {/* Floating report assistant — answers from this report's computed findings. */}
+      <div className="no-print">
+        <ModuleChat
+          endpoint={`${API_BASE_URL}/scraping/reports/${result.report_filename}/chat`}
+          messages={chatMessages}
+          onAppendMessage={appendChatMessage}
+          title="Report Assistant"
+          subtitle={result.brand_name}
+          emptyTitle="Ask about this report"
+          emptyHint="Sentiment, complaints, channels, trends, recommendations — I answer from the report."
+          placeholder="Ask about the findings..."
+          disabled={!canChat}
+          disabledHint="Chat is available once the report is saved."
+        />
+      </div>
     </div>
   );
 }

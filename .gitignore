@@ -79,3 +79,25 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Generated runtime data (per-session / report / project / chat stores) — never source
+scraped_data/
+backend/scraped_data/
+desk_research_data/
+backend/desk_research_data/
+rag_data/
+backend/rag_data/
+projects_data/
+backend/projects_data/
+interview_chat_data/
+backend/interview_chat_data/
+
+# Local sample inputs / scratch (not needed for the app to run)
+scratch/
+backend/scratch/
+frontend/scratch/
+
+# Keep env templates tracked (they must not be caught by the .env rules above)
+!.env.example
+!backend/.env.example
+!frontend/.env.example

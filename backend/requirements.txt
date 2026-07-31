@@ -10,3 +10,6 @@ Pillow==11.0.0
 playwright==1.49.1
 openpyxl==3.1.5
 python-multipart==0.0.32
+# RAG chatbot: multilingual embeddings for semantic retrieval (rides on the torch already
+# installed for EasyOCR). Optional -- without it the chatbot falls back to lexical retrieval.
+sentence-transformers==3.3.1

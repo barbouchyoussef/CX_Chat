@@ -69,11 +69,23 @@ def _build_prompt(brand_name: str, chunk: list[ScrapedReview]) -> str:
         for idx, r in enumerate(chunk)
     ]
     dimensions_block = "\n".join(f"- {d}" for d in _COMPLAINT_DIMENSIONS)
-    return f"""You are an expert customer experience (CX) analyst.
+    return f"""You are an expert customer experience (CX) analyst specializing in multi-lingual social media feedback analysis.
 Classify each of the following reviews about the brand '{brand_name}'.
 
-The reviews may be in French, Arabic, English or any other language. ALWAYS respond in
-ENGLISH: every label you produce is printed in an English-language client report.
+The reviews may be in French, Arabic (Standard & North African / Tunisian Derja / Arabizi), English, or mixed languages.
+ALWAYS respond in ENGLISH: every label you produce is printed in an English-language client report.
+
+SPECIAL SENSITIVITY & NUANCE RULES:
+1. SARCASM & IRONY DETECTION:
+   - Carefully analyze sarcastic praise or ironic compliments (e.g. "Bravo TT 👏 10h sans internet", "يعطيهم الصحة على السيرفيس الروعة", "شكرا على خدماتكم الممتازة" when followed by complaints).
+   - Sarcastic or ironic statements where the customer is expressing frustration MUST be classified as "negative".
+2. NORTH AFRICAN & TUNISIAN DERJA DIALECT:
+   - Recognize regional expressions, idioms, and mixed French-Arabic phrases (e.g. "ريزوا قاصص", "تحيل", "تعبتونا", "خايب", "ما لقاوش حل").
+   - Focus on the true underlying customer emotion and satisfaction level rather than literal dictionary words.
+3. SPAM & NON-OPINION CHATTER:
+   - If a text carries no actual customer sentiment or opinion, classify sentiment as "neutral" with lower confidence.
+4. MIXED REVIEWS & UNRESOLVED ISSUES:
+   - If a customer begins with polite or surface praise but reports an unresolved complaint, long wait time, or persistent issue (e.g. "Service au top, 3 mois ntaba3 m3ahom ma l9awch 7al"), classify the overall sentiment as "negative".
 
 For EACH review, determine:
 1. Sentiment polarity: "positive", "neutral", or "negative".
@@ -111,6 +123,7 @@ Reviews to classify:
 
 Return only valid JSON, with no surrounding text or markdown.
 """
+
 
 
 def _parse_response(response_text: str) -> list[dict]:
@@ -221,24 +234,29 @@ async def _classify_chunk(
         return
 
     for entry in entries:
-        index = entry.get("index")
-        if not isinstance(index, int) or not 0 <= index < len(chunk):
-            continue
-        sentiment = (entry.get("sentiment") or "").strip().lower()
-        if sentiment not in _VALID_SENTIMENTS:
-            sentiment = "neutral"
         try:
-            confidence = float(entry.get("confidence") or 0.8)
-        except (TypeError, ValueError):
-            confidence = 0.8
-        chunk[index].classification = ReviewClassification(
-            sentiment=sentiment,
-            confidence=max(0.0, min(1.0, confidence)),
-            # Themes stay open (canonicalized across chunks later); complaints snap to the
-            # fixed dimensions immediately so counting is stable regardless of phrasing.
-            themes=_clean_labels(entry.get("themes") or [], limit=3),
-            complaint_category=_snap_complaint(entry.get("complaint_category")) if sentiment == "negative" else None,
-        )
+            index = entry.get("index")
+            if not isinstance(index, int) or not 0 <= index < len(chunk):
+                continue
+            sentiment = (entry.get("sentiment") or "").strip().lower()
+            if sentiment not in _VALID_SENTIMENTS:
+                sentiment = "neutral"
+            try:
+                confidence = float(entry.get("confidence") or 0.8)
+            except (TypeError, ValueError):
+                confidence = 0.8
+            raw_complaint = entry.get("complaint_category")
+            complaint = (
+                _snap_complaint(str(raw_complaint)) if raw_complaint and sentiment == "negative" else None
+            )
+            chunk[index].classification = ReviewClassification(
+                sentiment=sentiment,
+                confidence=max(0.0, min(1.0, confidence)),
+                themes=_clean_labels(entry.get("themes") or [], limit=3),
+                complaint_category=complaint,
+            )
+        except Exception:
+            logger.warning("Skipping malformed classification entry: %s", entry)
 
 
 # Words carrying no topical meaning, ignored when deciding whether two theme labels are

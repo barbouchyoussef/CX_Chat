@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { 
   ArrowLeft, ArrowRight, Printer, AlertTriangle, Sparkles, BookOpen, Layers, Users, 
   Compass, CheckCircle2, RefreshCw, ChevronRight, Building2, Target, 
@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronUp
 } from "lucide-react";
 import ExcelJS from "exceljs";
+import ModuleChat, { ChatMarkdown, type ModuleChatMessage } from "./module-chat";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 
@@ -72,6 +73,51 @@ export default function ClientInterviewHub({ onBack }: Props) {
   // Guide generation states
   const [guide, setGuide] = useState<InterviewGuide | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Interview assistant chat (per saved guide). The CURRENT guide is sent on every turn so the
+  // assistant always reasons over the consultant's live edits, not a stale copy.
+  const [chatMessages, setChatMessages] = useState<ModuleChatMessage[]>([]);
+  const appendChatMessage = (m: ModuleChatMessage) => setChatMessages((prev) => [...prev, m]);
+  // Always hold the freshest guide so the chat sends the latest edits/answers (no stale closure).
+  const guideRef = useRef<InterviewGuide | null>(guide);
+  guideRef.current = guide;
+
+  // Insights: cross-reference the Orion self-assessment against the interview answers.
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsText, setInsightsText] = useState<string | null>(null);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+
+  // Restore the persisted conversation when a SAVED guide is opened (unsaved guides start fresh).
+  useEffect(() => {
+    const gid = guide?.id;
+    if (!gid) {
+      setChatMessages([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`${API_BASE_URL}/assessments/interview-guide/${gid}/chat`)
+      .then((r) => (r.ok ? r.json() : { messages: [] }))
+      .then((d: { messages?: { id?: string; role: string; text: string; sources?: string[]; ts?: number }[] }) => {
+        if (cancelled) return;
+        const msgs = Array.isArray(d.messages) ? d.messages : [];
+        setChatMessages(
+          msgs.map((m) => ({
+            id: m.id ?? `${Math.random()}`,
+            role: m.role === "assistant" ? "assistant" : "user",
+            text: m.text ?? "",
+            sources: m.sources,
+            ts: m.ts ?? Date.now(),
+          })),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setChatMessages([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [guide?.id]);
   
   // Loader status text rotation
   const [loaderTextIndex, setLoaderTextIndex] = useState(0);
@@ -116,19 +162,24 @@ export default function ClientInterviewHub({ onBack }: Props) {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data && data.id && g.id !== data.id) {
-          setGuide((prev) => {
-            if (prev && prev.company_name === g.company_name) {
-              return { ...prev, id: data.id };
-            }
-            return prev;
-          });
+        if (data && data.id) {
+          if (g.id !== data.id) {
+            setGuide((prev) => {
+              if (prev && prev.company_name === g.company_name) {
+                return { ...prev, id: data.id };
+              }
+              return prev;
+            });
+          }
+          fetchSavedGuides();
+          return data.id as number;
         }
         fetchSavedGuides();
       }
     } catch (err) {
       console.error("Failed to save guide to DB:", err);
     }
+    return g.id ?? null;
   }, [profile, fetchSavedGuides]);
 
   const saveGuideToStorage = useCallback((g: InterviewGuide) => {
@@ -241,7 +292,45 @@ export default function ClientInterviewHub({ onBack }: Props) {
 
   // Dynamic loader text sequences
   const isFrench = language.toLowerCase().startsWith("fr");
-  const loaderTexts = isFrench 
+
+  const runInsights = async () => {
+    const g = guideRef.current;
+    if (!g) return;
+    setInsightsOpen(true);
+    setInsightsLoading(true);
+    setInsightsError(null);
+    setInsightsText(null);
+    try {
+      // Flush the latest answers to the DB so the cross-reference reads the freshest guide.
+      const savedId = await saveGuideToDb(g);
+      if (savedId && guideRef.current && !guideRef.current.id) {
+        guideRef.current = { ...guideRef.current, id: savedId };
+      }
+      const res = await fetch(`${API_BASE_URL}/assessments/interview-guide/insights`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guide_id: guideRef.current?.id ?? null, guide: guideRef.current }),
+      });
+      const data = res.ok ? await res.json() : null;
+      if (!data) {
+        setInsightsError(isFrench ? "Échec de la génération des insights." : "Failed to generate insights.");
+      } else if (data.status === "no_history" || data.status === "no_assessment") {
+        setInsightsError(
+          isFrench
+            ? "Aucune conversation d'auto-évaluation Orion à croiser avec cet entretien."
+            : "No Orion self-assessment conversation to cross-reference with this interview.",
+        );
+      } else {
+        setInsightsText(data.insights || "");
+      }
+    } catch {
+      setInsightsError(isFrench ? "Erreur réseau." : "Network error.");
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
+  const loaderTexts = isFrench
     ? [
         "Analyse de l'historique des conversations avec le bot Orion...",
         "Identification des dimensions CX non abordées dans l'auto-évaluation...",
@@ -1685,9 +1774,106 @@ export default function ClientInterviewHub({ onBack }: Props) {
               );
             })}
 
+            {/* Cross-reference insights — only when the guide came from an Orion self-assessment. */}
+            {guide?.assessment_id != null && (
+              <div className="no-print mt-8 flex flex-col items-center">
+                <button
+                  onClick={runInsights}
+                  disabled={insightsLoading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#1A1F36] px-5 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#2A2F46] disabled:opacity-50"
+                >
+                  <Sparkles className="h-4 w-4 text-[#C5A04F]" />
+                  {insightsLoading
+                    ? isFrench ? "Analyse en cours..." : "Analyzing..."
+                    : isFrench ? "Insights & recoupement avec l'auto-évaluation" : "Insights & cross-check with self-assessment"}
+                </button>
+                <p className="mt-2 text-[11px] text-slate-400">
+                  {isFrench
+                    ? "Compare les réponses de l'entretien à l'auto-évaluation Orion et repère les incohérences."
+                    : "Compares the interview answers with the Orion self-assessment and flags inconsistencies."}
+                </p>
+              </div>
+            )}
+
           </div>
         )}
       </main>
+
+      {/* Insights modal */}
+      {insightsOpen && (
+        <div
+          className="no-print fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setInsightsOpen(false)}
+        >
+          <div
+            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 bg-[#1A1F36] px-5 py-3">
+              <div className="flex items-center gap-2 text-white">
+                <Sparkles className="h-4 w-4 text-[#C5A04F]" />
+                <h3 className="text-sm font-semibold">
+                  {isFrench ? "Insights & recoupement" : "Insights & Cross-check"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setInsightsOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto px-6 py-5" style={{ maxHeight: "72vh" }}>
+              {insightsLoading ? (
+                <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-400">
+                  <RefreshCw className="h-4 w-4 animate-spin text-[#C5A04F]" />
+                  {isFrench ? "Recoupement des sources..." : "Cross-referencing the sources..."}
+                </div>
+              ) : insightsError ? (
+                <p className="py-8 text-center text-sm text-slate-500">{insightsError}</p>
+              ) : insightsText ? (
+                <ChatMarkdown text={insightsText} />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating interview assistant — sends the CURRENT (live-edited) guide on every turn. */}
+      {step === "result" && guide && (
+        <div className="no-print">
+          <ModuleChat
+            endpoint={`${API_BASE_URL}/assessments/interview-guide/chat`}
+            messages={chatMessages}
+            onAppendMessage={appendChatMessage}
+            title={isFrench ? "Assistant d'entretien" : "Interview Assistant"}
+            subtitle={guide.company_name}
+            emptyTitle={isFrench ? "Interroger ce guide" : "Ask about this guide"}
+            emptyHint={
+              isFrench
+                ? "Interprétez une réponse, repérez les lacunes, proposez des relances."
+                : "Interpret an answer, spot gaps, suggest follow-ups."
+            }
+            placeholder={isFrench ? "Poser une question sur le guide..." : "Ask about the guide..."}
+            // Flush the current guide (with the latest answers/edits) to the DB BEFORE asking, so
+            // the backend reads the freshest saved copy rather than trusting the chat payload.
+            beforeSend={async () => {
+              const g = guideRef.current;
+              if (!g) return;
+              const savedId = await saveGuideToDb(g);
+              if (savedId && guideRef.current && !guideRef.current.id) {
+                guideRef.current = { ...guideRef.current, id: savedId };
+              }
+            }}
+            buildBody={(query, history) => ({
+              query,
+              history,
+              guide_id: guideRef.current?.id ?? null,
+              guide: guideRef.current, // fallback for an unsaved guide
+            })}
+          />
+        </div>
+      )}
     </div>
   );
 }

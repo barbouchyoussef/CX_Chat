@@ -530,6 +530,8 @@ export default function SocialScraping({ onBack }: { onBack: () => void }) {
   // if the consultant explicitly resumes it.
   const [brandName, setBrandName] = useState("");
   const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [keywords, setKeywords] = useState("");
   const [trustpilotDomain, setTrustpilotDomain] = useState("");
   const [googleLocation, setGoogleLocation] = useState("");
   const [trustpilotPeriod, setTrustpilotPeriod] = useState("last12months");
@@ -561,8 +563,12 @@ export default function SocialScraping({ onBack }: { onBack: () => void }) {
      survives the auto-save overwriting localStorage as the consultant types. */
   const [recoverableDraft, setRecoverableDraft] = useState<SocialDraft | null>(() => readSocialDraft());
 
-  // Google Maps always runs; the other two switch on once a link is provided.
-  const activeSourceCount = 1 + (facebookUrl.trim() ? 1 : 0) + (trustpilotDomain.trim() ? 1 : 0);
+  // Google Maps always runs; Facebook, Instagram, and Trustpilot switch on when inputs are provided.
+  const activeSourceCount =
+    1 +
+    (facebookUrl.trim() || keywords.trim() ? 1 : 0) +
+    (instagramUrl.trim() ? 1 : 0) +
+    (trustpilotDomain.trim() ? 1 : 0);
 
   // Fetch companies list
   useEffect(() => {
@@ -786,6 +792,8 @@ export default function SocialScraping({ onBack }: { onBack: () => void }) {
         body: JSON.stringify({
           brand_name: brandName.trim(),
           facebook_url: facebookUrl.trim() || null,
+          instagram_url: instagramUrl.trim() || null,
+          keywords: keywords.trim() || null,
           trustpilot_domain: trustpilotDomain.trim() || null,
           google_location: googleLocation.trim() || null,
           trustpilot_period: trustpilotPeriod || null,
@@ -1083,16 +1091,52 @@ export default function SocialScraping({ onBack }: { onBack: () => void }) {
             <SourceRow
               name="Facebook"
               color="#1877F2"
-              active={!!facebookUrl.trim()}
-              note="Comments on recent posts (separate multiple URLs with commas)."
+              active={!!facebookUrl.trim() || !!keywords.trim()}
+              note="Extract official page posts/comments or search public posts & user mentions by keywords."
+            >
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500">Official Page URLs (Optional)</label>
+                  <input
+                    type="text"
+                    value={facebookUrl}
+                    onChange={(e) => setFacebookUrl(e.target.value)}
+                    placeholder="https://facebook.com/Page1, https://facebook.com/Page2"
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500">Keyword Mentions & Discussions (Optional)</label>
+                  <input
+                    type="text"
+                    value={keywords}
+                    onChange={(e) => setKeywords(e.target.value)}
+                    placeholder="e.g. tunisie telecom, mytek tn"
+                    className={INPUT_CLS}
+                  />
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    Searches public Facebook posts, group discussions, and user mentions matching brand keywords.
+                  </p>
+                </div>
+              </div>
+            </SourceRow>
+
+            <SourceRow
+              name="Instagram"
+              color="#E4405F"
+              active={!!instagramUrl.trim()}
+              note="Comments on recent posts & reels (Option A: profile link or handle)."
             >
               <input
                 type="text"
-                value={facebookUrl}
-                onChange={(e) => setFacebookUrl(e.target.value)}
-                placeholder="https://facebook.com/Page1, https://facebook.com/Page2"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/ooredootn or @tunisietelecom"
                 className={INPUT_CLS}
               />
+              <p className="mt-1 text-[11px] text-slate-400">
+                Automatically discovers recent posts/reels, extracts comments, and filters out emoji/tag-only spam.
+              </p>
             </SourceRow>
 
             <SourceRow

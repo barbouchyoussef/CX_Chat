@@ -9,11 +9,13 @@ from datetime import datetime, timezone
 import logging
 from pathlib import Path
 
+from pydantic import BaseModel, Field
+
 from app.core.config import get_settings
 from app.dependencies.db import get_db
 from app.db.models.company import Company
 from app.schemas.manual_analysis import ManualAnalysisParseResponse
-from app.schemas.scraping import CompanyOption, ScrapeRequest
+from app.schemas.scraping import CompanyOption, DetailedSocialReport, ScrapeRequest
 from app.services.scraping.job_service import (
     create_job,
     get_job,
@@ -120,9 +122,70 @@ async def get_report(filename: str) -> dict:
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load report: {e}")
+
+    # Ensure the filename is present so the UI can address this report (e.g. its chatbot),
+    # including older archives saved before the field existed.
+    from app.services.scraping import report_chat
+
+    data["report_filename"] = os.path.basename(filepath)
+    data["chat_messages"] = report_chat.load_chat(os.path.basename(filepath))
+    return data
+
+
+class _ReportChatMessage(BaseModel):
+    role: str = Field(..., description="'user' or 'assistant'")
+    text: str = ""
+
+
+class ReportChatRequest(BaseModel):
+    query: str = Field(..., description="User question about this social report")
+    history: list[_ReportChatMessage] = Field(default_factory=list)
+
+
+@router.post("/reports/{filename}/chat")
+async def chat_report(filename: str, body: ReportChatRequest) -> dict:
+    """Chat about one saved social report. Answers from the report's computed findings
+    (KPI injection via the shared agentic engine) -- no vector search needed."""
+    filepath = _resolve_report_path(filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load report: {e}")
+
+    detailed = data.get("detailed_report")
+    if not detailed:
+        raise HTTPException(status_code=400, detail="This report has no detailed analysis to chat about.")
+
+    report = DetailedSocialReport.model_validate(detailed)
+    from app.services.scraping import report_chat
+    from app.services.scraping.social_chat import chat_with_report
+
+    report_name = os.path.basename(filepath)
+    result = await chat_with_report(
+        report,
+        body.query,
+        report_id=report_name,
+        history=[m.model_dump() for m in body.history],
+    )
+
+    # Persist the turn so the conversation survives a reload.
+    import time
+    from uuid import uuid4
+
+    now = time.time() * 1000
+    report_chat.append_chat(report_name, [
+        {"id": uuid4().hex[:12], "role": "user", "text": body.query, "ts": now},
+        {"id": uuid4().hex[:12], "role": "assistant",
+         "text": result.get("answer", ""), "sources": result.get("sources", []), "ts": now + 1},
+    ])
+    return result
 
 
 @router.delete("/reports/{filename}", status_code=204)
@@ -142,6 +205,11 @@ async def delete_report(filename: str) -> Response:
     except OSError as e:
         logger.exception("Failed to delete report %s", filepath)
         raise HTTPException(status_code=500, detail=f"Failed to delete report: {e}")
+
+    # Remove the report's chat history alongside it.
+    from app.services.scraping import report_chat
+
+    report_chat.delete_chat(os.path.basename(filepath))
 
     logger.info("Deleted saved report %s", os.path.basename(filepath))
     return Response(status_code=204)

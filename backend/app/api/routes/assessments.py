@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -428,4 +429,125 @@ async def get_saved_interview_guide(
     payload = dict(guide.payload)
     payload["id"] = guide.id
     return payload
+
+
+async def _resolve_interview_guide(
+    guide_id: int | None,
+    guide_payload: "InterviewGuideResponse | None",
+    reporting: AssessmentReportingService,
+) -> "tuple[InterviewGuideResponse | None, int | None]":
+    """Load the guide from the DB (autosaved source of truth), falling back to the client's copy
+    for an unsaved guide. Returns (guide, guide_id)."""
+    gid = guide_id or (guide_payload.id if guide_payload else None)
+    guide: InterviewGuideResponse | None = None
+    if gid is not None:
+        row = await reporting.get_saved_interview_guide(gid)
+        if row is not None:
+            payload = dict(row.payload)
+            payload["id"] = row.id
+            try:
+                guide = InterviewGuideResponse.model_validate(payload)
+            except Exception:
+                guide = None
+    return (guide or guide_payload), gid
+
+
+class _InterviewChatMessage(BaseModel):
+    role: str = Field(..., description="'user' or 'assistant'")
+    text: str = ""
+
+
+class InterviewGuideChatRequest(BaseModel):
+    # The guide's saved id. The backend reloads the guide from the DB (the source of truth the
+    # editor autosaves to), so the assistant sees the latest saved edits/answers without relying
+    # on the chat request to carry them correctly.
+    guide_id: int | None = None
+    # Fallback only: the client's current guide, used when it has not been saved yet (no id / not
+    # yet in the DB) so a brand-new guide can still be chatted with.
+    guide: InterviewGuideResponse | None = None
+    query: str = Field(..., description="User question about the interview guide")
+    history: list[_InterviewChatMessage] = Field(default_factory=list)
+
+
+@router.post("/interview-guide/chat")
+async def chat_interview_guide(
+    req: InterviewGuideChatRequest,
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
+) -> dict:
+    """Chat about an interview guide, reading the guide from the DB (autosaved source of truth).
+
+    Injects the guide into the shared agentic engine to interpret answers, flag gaps, and suggest
+    follow-ups. Falls back to the guide sent in the request only when it isn't saved yet."""
+    guide, guide_id = await _resolve_interview_guide(req.guide_id, req.guide, reporting)
+    if guide is None:
+        raise HTTPException(status_code=400, detail="No interview guide available to chat about.")
+
+    # Give the assistant the client's prior Orion self-assessment too, when the guide came from one.
+    orion_items = None
+    if guide.assessment_id is not None:
+        trace = await reporting.get_trace(guide.assessment_id)
+        orion_items = getattr(trace, "items", None) if trace else None
+
+    from app.services.assessment import interview_chat_store
+    from app.services.assessment.interview_chat import chat_with_guide
+
+    result = await chat_with_guide(
+        guide,
+        req.query,
+        orion_trace_items=orion_items,
+        history=[m.model_dump() for m in req.history],
+    )
+
+    if guide_id is not None:
+        import time
+        from uuid import uuid4
+
+        now = time.time() * 1000
+        interview_chat_store.append_chat(guide_id, [
+            {"id": uuid4().hex[:12], "role": "user", "text": req.query, "ts": now},
+            {"id": uuid4().hex[:12], "role": "assistant",
+             "text": result.get("answer", ""), "sources": result.get("sources", []), "ts": now + 1},
+        ])
+    return result
+
+
+@router.get("/interview-guide/{guide_id}/chat")
+async def get_interview_guide_chat(guide_id: int) -> dict:
+    """Return a saved guide's persisted chat history (for restoring the conversation on open)."""
+    from app.services.assessment import interview_chat_store
+
+    return {"messages": interview_chat_store.load_chat(guide_id)}
+
+
+class InterviewInsightsRequest(BaseModel):
+    guide_id: int | None = None
+    guide: InterviewGuideResponse | None = None
+
+
+@router.post("/interview-guide/insights")
+async def interview_guide_insights(
+    req: InterviewInsightsRequest,
+    reporting: AssessmentReportingService = Depends(get_reporting_service),
+) -> dict:
+    """Cross-reference the Orion self-assessment against the interview answers.
+
+    Returns a short briefing (insights + inconsistencies). Only available when the guide was
+    generated from an assessment that has an Orion conversation — otherwise there is nothing to
+    cross-reference and status says so."""
+    guide, _ = await _resolve_interview_guide(req.guide_id, req.guide, reporting)
+    if guide is None:
+        raise HTTPException(status_code=400, detail="No interview guide available.")
+
+    assessment_id = guide.assessment_id
+    if assessment_id is None:
+        return {"status": "no_assessment", "insights": None}
+
+    trace = await reporting.get_trace(assessment_id)
+    if not trace or not getattr(trace, "items", None):
+        return {"status": "no_history", "insights": None}
+
+    from app.services.assessment.interview_insights import generate_insights
+
+    insights = await generate_insights(guide, trace.items)
+    return {"status": "success", "insights": insights}
 
